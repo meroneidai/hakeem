@@ -5,6 +5,8 @@ services:
       dockerfile: Dockerfile
     image: hakeem-testing:latest
     restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "${HAKEEM_HTTP_BIND:-127.0.0.1}:${HAKEEM_HTTP_PORT:-8080}:80"
     env_file:
@@ -13,20 +15,14 @@ services:
       APP_ENV: local
       APP_DEBUG: "true"
       DB_CONNECTION: pgsql
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_DATABASE: ${DB_DATABASE:-hakeem}
-      DB_USERNAME: ${DB_USERNAME:-hakeem}
-      DB_PASSWORD: ${DB_PASSWORD:-hakeem}
+      DB_HOST: host.docker.internal
+      DB_PORT: "5432"
       SESSION_DRIVER: database
       CACHE_STORE: database
       QUEUE_CONNECTION: database
       MAIL_MAILER: log
     volumes:
       - storage_data:/var/www/html/storage
-    depends_on:
-      postgres:
-        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://127.0.0.1/up >/dev/null"]
       interval: 20s
@@ -34,21 +30,5 @@ services:
       retries: 10
       start_period: 90s
 
-  postgres:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${DB_DATABASE:-hakeem}
-      POSTGRES_USER: ${DB_USERNAME:-hakeem}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-hakeem}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-hakeem} -d ${DB_DATABASE:-hakeem}"]
-      interval: 5s
-      timeout: 5s
-      retries: 20
-
 volumes:
-  postgres_data:
   storage_data:

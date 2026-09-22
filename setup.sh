@@ -10,14 +10,17 @@ DOMAIN="${HAKEEM_DOMAIN:-}"
 FRESH=0
 REBUILD=0
 COMPOSE=(docker compose)
+DB_NAME="hakeem"
+DB_USER="hakeem"
+DB_PASSWORD=""
 
 usage() {
     cat <<'EOF'
 Usage: ./setup.sh [options]
 
-Installs Docker if needed, starts Hakeem (PHP, PostgreSQL, queue) in
-containers, writes .env.docker for you, and publishes the site on port 80
-through host nginx. You do not install PHP or Composer on the server.
+Installs PostgreSQL on the server (user/database: hakeem, unique password),
+installs Docker if needed, starts Hakeem in containers, writes .env.docker
+for you, and publishes the site on port 80 through host nginx.
 
 Run this from the project directory, usually /var/hakeem.
 
@@ -66,9 +69,52 @@ is_debian() {
     [[ -f /etc/debian_version ]] || command -v apt-get >/dev/null 2>&1
 }
 
+as_postgres() {
+    if [[ "$(id -u)" -eq 0 ]]; then
+        if command -v runuser >/dev/null 2>&1; then
+            runuser -u postgres -- "$@"
+        else
+            su -s /bin/bash postgres -c "$(printf '%q ' "$@")"
+        fi
+    elif command -v sudo >/dev/null 2>&1; then
+        sudo -u postgres "$@"
+    else
+        echo "Run this script as root to configure PostgreSQL." >&2
+        exit 1
+    fi
+}
+
+env_value() {
+    local key="$1"
+    local file="$2"
+    if [[ ! -f "$file" ]]; then
+        return 0
+    fi
+    grep -E "^${key}=" "$file" | head -n1 | cut -d= -f2- || true
+}
+
+sql_literal() {
+    printf "%s" "$1" | sed "s/'/''/g"
+}
+
+resolve_db_password() {
+    local existing
+    existing="$(env_value DB_PASSWORD .env.docker)"
+
+    if [[ -n "$existing" ]]; then
+        DB_PASSWORD="$existing"
+        echo "==> Reusing PostgreSQL password from .env.docker"
+        return
+    fi
+
+    DB_PASSWORD="$(random_hex)"
+    echo "==> Generated unique PostgreSQL password"
+}
+
 install_host_packages() {
     if ! is_debian; then
-        return 0
+        echo "This setup installs packages with apt. Use Debian or Ubuntu." >&2
+        exit 1
     fi
 
     echo "==> Installing host packages (curl, nginx, openssl)"
@@ -80,6 +126,103 @@ install_host_packages() {
         gnupg \
         openssl \
         nginx
+}
+
+install_postgresql() {
+    if ! is_debian; then
+        echo "PostgreSQL install needs apt (Debian/Ubuntu)." >&2
+        exit 1
+    fi
+
+    echo "==> Installing PostgreSQL"
+    export DEBIAN_FRONTEND=noninteractive
+    as_root apt-get update -y
+    as_root apt-get install -y postgresql postgresql-contrib
+
+    if command -v systemctl >/dev/null 2>&1; then
+        as_root systemctl enable --now postgresql
+        as_root systemctl status postgresql --no-pager || true
+        if ! as_root systemctl is-active --quiet postgresql; then
+            echo "PostgreSQL failed to start." >&2
+            exit 1
+        fi
+    fi
+
+    local tries=0
+    until as_postgres pg_isready -q; do
+        tries=$((tries + 1))
+        if [[ "$tries" -ge 30 ]]; then
+            echo "PostgreSQL is installed but not ready." >&2
+            exit 1
+        fi
+        sleep 1
+    done
+
+    echo "==> Creating role and database (${DB_USER} / ${DB_NAME})"
+    local escaped_password
+    escaped_password="$(sql_literal "$DB_PASSWORD")"
+    as_postgres psql -v ON_ERROR_STOP=1 <<SQL
+DO \$\$
+BEGIN
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = '${DB_USER}') THEN
+        CREATE USER ${DB_USER} WITH PASSWORD '${escaped_password}';
+    ELSE
+        ALTER USER ${DB_USER} WITH PASSWORD '${escaped_password}';
+    END IF;
+END
+\$\$;
+SQL
+
+    if [[ "$FRESH" -eq 1 ]]; then
+        as_postgres psql -v ON_ERROR_STOP=1 <<SQL
+SELECT pg_terminate_backend(pid)
+FROM pg_stat_activity
+WHERE datname = '${DB_NAME}' AND pid <> pg_backend_pid();
+DROP DATABASE IF EXISTS ${DB_NAME};
+SQL
+    fi
+
+    as_postgres psql -v ON_ERROR_STOP=1 <<SQL
+SELECT 'CREATE DATABASE ${DB_NAME} OWNER ${DB_USER}'
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '${DB_NAME}')\gexec
+
+GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER};
+SQL
+
+    as_postgres psql -v ON_ERROR_STOP=1 -d "$DB_NAME" <<SQL
+GRANT ALL ON SCHEMA public TO ${DB_USER};
+ALTER SCHEMA public OWNER TO ${DB_USER};
+SQL
+
+    configure_postgres_access
+}
+
+configure_postgres_access() {
+    local conf hba
+    conf="$(as_postgres psql -tAc 'SHOW config_file' | tr -d '[:space:]')"
+    hba="$(as_postgres psql -tAc 'SHOW hba_file' | tr -d '[:space:]')"
+
+    if [[ -z "$conf" || ! -f "$conf" ]]; then
+        echo "Could not find postgresql.conf" >&2
+        exit 1
+    fi
+
+    echo "==> Allowing Docker containers to reach host PostgreSQL"
+    if as_root grep -qE "^#?listen_addresses" "$conf"; then
+        as_root sed -i -E "s/^#?listen_addresses.*/listen_addresses = '*'/" "$conf"
+    else
+        printf "\nlisten_addresses = '*'\n" | as_root tee -a "$conf" >/dev/null
+    fi
+
+    if [[ -n "$hba" && -f "$hba" ]] && ! as_root grep -qE "^host[[:space:]]+${DB_NAME}[[:space:]]+${DB_USER}[[:space:]]+172\\.16\\.0\\.0/12" "$hba"; then
+        printf '\nhost\t%s\t%s\t127.0.0.1/32\tscram-sha-256\nhost\t%s\t%s\t172.16.0.0/12\tscram-sha-256\nhost\t%s\t%s\t192.168.0.0/16\tscram-sha-256\nhost\t%s\t%s\t10.0.0.0/8\tscram-sha-256\n' \
+            "$DB_NAME" "$DB_USER" "$DB_NAME" "$DB_USER" "$DB_NAME" "$DB_USER" "$DB_NAME" "$DB_USER" \
+            | as_root tee -a "$hba" >/dev/null
+    fi
+
+    if command -v systemctl >/dev/null 2>&1; then
+        as_root systemctl reload postgresql
+    fi
 }
 
 install_docker() {
@@ -185,11 +328,11 @@ write_env_file() {
     set_env HAKEEM_HTTP_PORT "$PORT"
     set_env HAKEEM_HTTP_BIND 127.0.0.1
     set_env DB_CONNECTION pgsql
-    set_env DB_HOST postgres
+    set_env DB_HOST host.docker.internal
     set_env DB_PORT 5432
-    set_env DB_DATABASE hakeem
-    set_env DB_USERNAME hakeem
-    set_env DB_PASSWORD hakeem
+    set_env DB_DATABASE "$DB_NAME"
+    set_env DB_USERNAME "$DB_USER"
+    set_env DB_PASSWORD "$DB_PASSWORD"
 }
 
 publish_nginx() {
@@ -260,6 +403,8 @@ if [[ -z "$APP_URL" ]]; then
 fi
 
 install_host_packages
+resolve_db_password
+install_postgresql
 install_docker
 resolve_compose
 write_env_file
@@ -270,12 +415,15 @@ HERMES_KEY="$(grep -E '^HERMES_AGENT_KEY=' .env.docker | head -n1 | cut -d= -f2-
 
 cat <<EOF
 
-Hakeem is ready. PHP, Composer, and PostgreSQL are inside Docker.
+Hakeem is ready. Host PostgreSQL holds the data. PHP and Composer run in Docker.
 Host nginx publishes the site on port 80.
 
   Project:  ${ROOT}
   Site:     ${APP_URL}
   Health:   ${APP_URL}/up
+  Database: ${DB_NAME} @ 127.0.0.1:5432
+  DB user:  ${DB_USER}
+  DB pass:  ${DB_PASSWORD}
   Admin:    ${APP_URL}/admin/login
             admin@hakeem.test  or  01000000000 / password
   Clinic:   ${APP_URL}/login
