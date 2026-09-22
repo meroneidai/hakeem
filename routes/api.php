@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AgentController;
 use App\Http\Controllers\Api\V1\SearchController;
 use App\Models\Governorate;
 use App\Models\ServiceType;
@@ -60,6 +61,10 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                 'is_online' => $type->is_online,
             ]);
     })->name('reference.service-types');
+
+    Route::post('agent/messages', [AgentController::class, 'store'])
+        ->middleware('throttle:20,1')
+        ->name('agent.messages');
 
     Route::middleware('auth:sanctum')->get('me', function (Request $request) {
         return [

@@ -58,6 +58,9 @@ return [
 
     'hermes' => [
         'key' => env('HERMES_AGENT_KEY'),
+        'chat_url' => env('HERMES_CHAT_URL'),
+        'chat_key' => env('HERMES_CHAT_KEY', env('HERMES_AGENT_KEY')),
+        'chat_model' => env('HERMES_CHAT_MODEL', 'hermes-agent'),
     ],
 
     'google' => [

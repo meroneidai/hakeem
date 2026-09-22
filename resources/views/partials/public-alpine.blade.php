@@ -193,7 +193,7 @@
             message: '',
             conversationId: null,
             labels,
-            messages: [{ role: 'assistant', text: labels.empty, actions: [] }],
+            messages: [{ role: 'assistant', text: labels.empty, actions: [], cards: [] }],
             toggle() {
                 this.open = ! this.open;
             },
@@ -202,7 +202,7 @@
                 if (! text || this.sending) {
                     return;
                 }
-                this.messages.push({ role: 'user', text, actions: [] });
+                this.messages.push({ role: 'user', text, actions: [], cards: [] });
                 this.message = '';
                 this.sending = true;
                 try {
@@ -223,8 +223,16 @@
                     this.conversationId = data.conversation_id;
                     this.messages.push({
                         role: 'assistant',
-                        text: data.reply || '',
+                        text: data.reply || (response.ok ? '' : labels.error),
                         actions: data.actions || [],
+                        cards: data.cards || [],
+                    });
+                } catch {
+                    this.messages.push({
+                        role: 'assistant',
+                        text: labels.error,
+                        actions: [],
+                        cards: [],
                     });
                 } finally {
                     this.sending = false;

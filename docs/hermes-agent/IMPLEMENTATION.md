@@ -31,6 +31,8 @@ Do **not** rebuild these on the Hermes side. They are live on the platform.
 
 Hermes is a separate chat/WhatsApp service. It talks to Hakeem only through `/api/agent/v1`.
 
+The site widget talks to Hermes the other way: the browser posts to Hakeem (`POST /agent/messages`), and Hakeem forwards the turn to `HERMES_CHAT_URL`. The Hermes key never reaches the browser. Hermes then uses `/api/agent/v1` to search, share booking links, register a patient, list appointments, or open a ticket.
+
 ---
 
 ## What Hermes must implement
@@ -142,8 +144,10 @@ On **Hakeem**
 
 1. Set `HERMES_AGENT_KEY` in `.env` (long random string).
 2. Set `APP_URL` to the public origin Hermes will call.
-3. Run `php artisan config:clear` after changing env.
-4. Confirm: `curl -H "X-Hermes-Key: $HERMES_AGENT_KEY" $APP_URL/api/agent/v1`
+3. Set `HERMES_CHAT_URL` to the Hermes inbound chat endpoint (OpenAI-compatible `/v1/chat/completions`, or a webhook). Optional: `HERMES_CHAT_KEY`, `HERMES_CHAT_MODEL`.
+4. Run `php artisan config:clear` after changing env.
+5. Confirm tools: `curl -H "X-Hermes-Key: $HERMES_AGENT_KEY" $APP_URL/api/agent/v1`
+6. Confirm the widget: open the site chat and send a message. The panel shows `source: hermes` in the JSON response when the inbound URL is set.
 
 On **Hermes**
 

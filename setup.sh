@@ -29,7 +29,7 @@ Options:
   --domain NAME   Server name for nginx (example: hakeem.example.com)
   --port PORT     Internal Docker HTTP port (default: 8080)
   --fresh         Drop Docker volumes and reseed
-  --rebuild       Rebuild the app image
+  --rebuild       Rebuild the app image (setup always rebuilds Node/npm/Vite)
   -h, --help      Show this help
 EOF
 }
@@ -375,19 +375,28 @@ start_stack() {
         "${COMPOSE[@]}" --env-file .env.docker down -v --remove-orphans
     fi
 
-    local args=(up -d --wait)
-    if [[ "$REBUILD" -eq 1 || "$FRESH" -eq 1 ]]; then
-        args=(up -d --build --wait)
-    elif ! docker image inspect hakeem-testing:latest >/dev/null 2>&1; then
-        args=(up -d --build --wait)
-    fi
+    echo "==> Building image (Node 22, npm install, npm run build)"
+    "${COMPOSE[@]}" --env-file .env.docker up -d --build --wait
 
-    "${COMPOSE[@]}" --env-file .env.docker "${args[@]}"
+    verify_frontend_build
 
     echo "==> Migrating and seeding"
     "${COMPOSE[@]}" --env-file .env.docker exec -T app php artisan storage:link --force
     "${COMPOSE[@]}" --env-file .env.docker exec -T app php artisan migrate --force --no-interaction
     "${COMPOSE[@]}" --env-file .env.docker exec -T app php artisan db:seed --force --no-interaction
+}
+
+verify_frontend_build() {
+    echo "==> Verifying Node, npm, and Vite assets"
+    "${COMPOSE[@]}" --env-file .env.docker exec -T app node -v
+    "${COMPOSE[@]}" --env-file .env.docker exec -T app npm -v
+
+    if ! "${COMPOSE[@]}" --env-file .env.docker exec -T app test -f public/build/manifest.json; then
+        echo "Vite build is missing (public/build/manifest.json). Node/npm build failed." >&2
+        exit 1
+    fi
+
+    echo "==> Vite manifest is present"
 }
 
 if [[ -z "$APP_URL" ]]; then
@@ -415,7 +424,8 @@ HERMES_KEY="$(grep -E '^HERMES_AGENT_KEY=' .env.docker | head -n1 | cut -d= -f2-
 
 cat <<EOF
 
-Hakeem is ready. Host PostgreSQL holds the data. PHP and Composer run in Docker.
+Hakeem is ready. Host PostgreSQL holds the data. PHP, Composer, Node, and npm run in Docker.
+The image runs npm install and npm run build so Vite assets are in public/build.
 Host nginx publishes the site on port 80.
 
   Project:  ${ROOT}

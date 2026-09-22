@@ -9,12 +9,15 @@ use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class SiteAgent
 {
     public function __construct(
         private MarketplaceSearch $search,
         private BookingManager $bookings,
+        private HermesChatClient $hermes,
+        private AgentCustomerAuthenticator $customers,
     ) {}
 
     /**
@@ -22,15 +25,22 @@ class SiteAgent
      *     conversation_id: string,
      *     reply: string,
      *     intent: string,
+     *     source: string,
      *     results: array<string, mixed>,
-     *     actions: list<array{type: string, label: string, url?: string}>
+     *     actions: list<array{type: string, label: string, url?: string}>,
+     *     cards: list<array{title: string, subtitle: string, url: string, cta: string}>
      * }
      */
     public function reply(string $message, ?User $user, ?string $conversationId = null): array
     {
         $conversationId = $conversationId ?: (string) Str::uuid();
-        $state = Cache::get($this->cacheKey($conversationId), []);
         $text = trim($message);
+
+        if ($this->hermes->configured()) {
+            return $this->viaHermes($conversationId, $text, $user);
+        }
+
+        $state = Cache::get($this->cacheKey($conversationId), []);
 
         if ($text === '') {
             return $this->payload($conversationId, 'help', __('agent.empty'), []);
@@ -247,19 +257,153 @@ class SiteAgent
     }
 
     /**
+     * @return array<string, mixed>
+     */
+    private function viaHermes(string $conversationId, string $text, ?User $user): array
+    {
+        if ($text === '') {
+            return $this->payload($conversationId, 'help', __('agent.empty'), [], [], 'hermes');
+        }
+
+        $state = Cache::get($this->cacheKey($conversationId), []);
+        $history = is_array($state['history'] ?? null) ? $state['history'] : [];
+        $customerToken = is_string($state['customer_token'] ?? null) ? $state['customer_token'] : null;
+
+        if ($user && blank($customerToken)) {
+            $customerToken = $this->customers->issueToken($user, 'hermes-site');
+        }
+
+        $history[] = ['role' => 'user', 'content' => $text];
+
+        try {
+            $completed = $this->hermes->complete($history, [
+                'conversation_id' => $conversationId,
+                'locale' => app()->getLocale(),
+                'customer_token' => $customerToken,
+                'app_url' => url('/'),
+                'signed_in' => $user !== null,
+                'visitor_name' => $user?->name,
+            ]);
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return $this->payload($conversationId, 'error', __('agent.unavailable'), [], [], 'hermes');
+        }
+
+        $history[] = ['role' => 'assistant', 'content' => $completed['reply']];
+
+        Cache::put($this->cacheKey($conversationId), [
+            'history' => array_slice($history, -20),
+            'customer_token' => $customerToken,
+        ], now()->addHours(2));
+
+        return $this->payload(
+            $conversationId,
+            'hermes',
+            $completed['reply'],
+            $completed['results'],
+            $completed['actions'],
+            'hermes',
+        );
+    }
+
+    /**
      * @param  array<string, mixed>  $results
      * @param  list<array{type: string, label: string, url?: string}>  $actions
      * @return array<string, mixed>
      */
-    private function payload(string $conversationId, string $intent, string $reply, array $results, array $actions = []): array
+    private function payload(string $conversationId, string $intent, string $reply, array $results, array $actions = [], string $source = 'rules'): array
     {
         return [
             'conversation_id' => $conversationId,
             'reply' => $reply,
             'intent' => $intent,
+            'source' => $source,
             'results' => $results,
             'actions' => $actions,
+            'cards' => $this->cardsFromResults($results),
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $results
+     * @return list<array{title: string, subtitle: string, url: string, cta: string}>
+     */
+    private function cardsFromResults(array $results): array
+    {
+        $cards = [];
+
+        foreach ($results['doctors'] ?? [] as $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+
+            $url = (string) ($item['book_url'] ?? $item['url'] ?? '');
+
+            if ($url === '') {
+                continue;
+            }
+
+            $cards[] = [
+                'title' => (string) ($item['name'] ?? ''),
+                'subtitle' => (string) ($item['specialty'] ?? implode(' · ', $item['cities'] ?? [])),
+                'url' => $url,
+                'cta' => __('discover.book_now'),
+            ];
+        }
+
+        foreach ($results['clinics'] ?? [] as $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+
+            $url = (string) ($item['url'] ?? '');
+
+            if ($url === '') {
+                continue;
+            }
+
+            $cards[] = [
+                'title' => (string) ($item['name'] ?? ''),
+                'subtitle' => (string) ($item['city'] ?? ''),
+                'url' => $url,
+                'cta' => __('discover.nav.clinics'),
+            ];
+        }
+
+        foreach ($results['offers'] ?? [] as $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+
+            $url = (string) ($item['url'] ?? '');
+
+            if ($url === '') {
+                continue;
+            }
+
+            $cards[] = [
+                'title' => (string) ($item['title'] ?? $item['name'] ?? ''),
+                'subtitle' => trim(((string) ($item['clinic'] ?? '')).' · '.((string) ($item['price_label'] ?? '')), ' ·'),
+                'url' => $url,
+                'cta' => __('discover.nav.offers'),
+            ];
+        }
+
+        foreach ($results['appointments'] ?? [] as $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+
+            $cards[] = [
+                'title' => (string) ($item['doctor'] ?? __('booking.my_appointments')),
+                'subtitle' => trim(((string) ($item['clinic'] ?? '')).' · '.((string) ($item['scheduled_at'] ?? '')), ' ·'),
+                'url' => route('appointments.index'),
+                'cta' => __('booking.my_appointments'),
+            ];
+        }
+
+        return array_slice($cards, 0, 6);
     }
 
     private function cacheKey(string $conversationId): string

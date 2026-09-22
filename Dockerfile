@@ -4,12 +4,20 @@ FROM node:22-bookworm-slim AS assets
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm ci --ignore-scripts
+RUN node -v \
+    && npm -v \
+    && if [ -f package-lock.json ]; then \
+        npm ci --no-fund --no-audit; \
+    else \
+        npm install --no-fund --no-audit; \
+    fi
 
 COPY vite.config.js ./
 COPY resources ./resources
 COPY public ./public
-RUN npm run build
+RUN npm run build \
+    && test -f public/build/manifest.json \
+    && echo "Vite manifest ready"
 
 FROM php:8.4-fpm-bookworm AS app
 
@@ -48,6 +56,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+COPY --from=assets /usr/local/bin/node /usr/local/bin/node
+COPY --from=assets /usr/local/lib/node_modules /usr/local/lib/node_modules
+
+RUN ln -sfn /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
+    && ln -sfn /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx \
+    && node -v \
+    && npm -v
 
 WORKDIR /var/www/html
 
@@ -61,6 +76,7 @@ RUN composer install \
 
 COPY . .
 COPY --from=assets /app/public/build ./public/build
+COPY --from=assets /app/node_modules ./node_modules
 
 RUN rm -f public/hot \
     && composer dump-autoload --optimize --no-dev --no-interaction \
