@@ -13,6 +13,7 @@ use App\Models\Specialty;
 use App\Support\PublicImage;
 use App\Support\SearchQuery;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Route;
 
 class MarketplaceSearch
 {
@@ -130,7 +131,7 @@ class MarketplaceSearch
             'specialties' => $results['specialties']->map(fn (Specialty $specialty) => [
                 'name' => $specialty->name,
                 'slug' => $specialty->slug,
-                'url' => route('specialties.show', $specialty),
+                'url' => $this->namedUrl('specialties.show', '/specialties/'.$specialty->slug, $specialty),
             ])->values()->all(),
         ];
     }
@@ -142,10 +143,18 @@ class MarketplaceSearch
     private function doctors(array $filters, string $term, int $limit): Collection
     {
         return Doctor::query()
-            ->listable()
-            ->withRatings()
-            ->withCount(['bookings as completed_bookings_count' => fn ($bookings) => $bookings->where('status', BookingStatus::Completed)])
-            ->with(['specialty', 'clinics' => fn ($clinics) => $clinics->listable()->with('addresses.city')])
+            ->when(
+                method_exists(Doctor::class, 'scopeListable'),
+                fn ($query) => $query->listable(),
+                fn ($query) => $query->active(),
+            )
+            ->when(method_exists(Doctor::class, 'scopeWithRatings'), fn ($query) => $query->withRatings())
+            ->when(method_exists(Doctor::class, 'bookings'), fn ($query) => $query->withCount([
+                'bookings as completed_bookings_count' => fn ($bookings) => $bookings->where('status', BookingStatus::Completed),
+            ]))
+            ->with(['specialty', 'clinics' => fn ($clinics) => $clinics
+                ->when(method_exists(Clinic::class, 'scopeListable'), fn ($visible) => $visible->listable())
+                ->with('addresses.city')])
             ->when($term !== '', function ($query) use ($term) {
                 SearchQuery::constrain($query, $term, function ($inner, $token) {
                     $inner->whereLike('name_ar', "%{$token}%")
@@ -320,13 +329,13 @@ class MarketplaceSearch
      */
     private function doctorCard(Doctor $doctor): array
     {
-        $rating = $doctor->ratingSummary();
+        $rating = $this->ratings($doctor);
 
         return [
             'name' => $doctor->name,
             'slug' => $doctor->slug,
-            'url' => route('doctors.show', $doctor),
-            'book_url' => route('book.doctors.create', $doctor),
+            'url' => $this->namedUrl('doctors.show', '/doctors/'.$doctor->slug, $doctor),
+            'book_url' => $this->namedUrl('book.doctors.create', '/book/doctors/'.$doctor->slug, $doctor),
             'specialty' => $doctor->specialty?->name,
             'years' => $doctor->years_of_experience,
             'fee' => $doctor->consultation_fee !== null ? (float) $doctor->consultation_fee : null,
@@ -357,7 +366,7 @@ class MarketplaceSearch
      */
     private function clinicCard(Clinic $clinic): array
     {
-        $rating = $clinic->ratingSummary();
+        $rating = $this->ratings($clinic);
         $fromPrice = $clinic->services
             ->filter(fn ($service) => $service->is_active)
             ->map(fn ($service) => $service->effectivePrice())
@@ -367,7 +376,7 @@ class MarketplaceSearch
         return [
             'name' => $clinic->name,
             'slug' => $clinic->slug,
-            'url' => route('clinics.show', $clinic),
+            'url' => $this->namedUrl('clinics.show', '/clinics/'.$clinic->slug, $clinic),
             'city' => $clinic->primaryAddress?->city?->name,
             'doctors_count' => $clinic->doctors_count ?? $clinic->doctors->count(),
             'logo' => PublicImage::url($clinic->logo_path),
@@ -378,6 +387,8 @@ class MarketplaceSearch
             'rating_average' => $rating['average'],
             'rating_count' => $rating['count'],
             'verified' => $clinic->isVerified(),
+            'lat' => $clinic->primaryAddress?->latitude !== null ? (float) $clinic->primaryAddress->latitude : null,
+            'lng' => $clinic->primaryAddress?->longitude !== null ? (float) $clinic->primaryAddress->longitude : null,
         ];
     }
 
@@ -394,10 +405,10 @@ class MarketplaceSearch
         return [
             'name' => $type->name,
             'slug' => $type->slug,
-            'url' => route('services.show', $type),
+            'url' => $this->namedUrl('services.show', '/services/'.$type->slug, $type),
             'description' => $type->description,
             'image' => PublicImage::url($type->image_path),
-            'icon' => $type->uiIcon(),
+            'icon' => method_exists($type, 'uiIcon') ? $type->uiIcon() : 'stethoscope',
             'from_price' => $fromPrice ? (float) $fromPrice : null,
             'from_price_label' => $fromPrice
                 ? number_format((float) $fromPrice).' '.__('common.currency')
@@ -412,12 +423,12 @@ class MarketplaceSearch
      */
     private function offerCard(Promotion $offer): array
     {
-        $rating = $offer->clinic?->ratingSummary() ?? ['average' => null, 'count' => 0];
+        $rating = $this->ratings($offer->clinic);
 
         return [
             'title' => $offer->title,
             'slug' => $offer->slug,
-            'url' => route('offers.show', $offer),
+            'url' => $this->namedUrl('offers.show', '/offers/'.$offer->slug, $offer),
             'offer_price' => $offer->offer_price !== null ? (float) $offer->offer_price : null,
             'original_price' => $offer->original_price !== null ? (float) $offer->original_price : null,
             'price_label' => $offer->offer_price !== null
@@ -440,7 +451,7 @@ class MarketplaceSearch
         return [
             'name' => $test->name,
             'slug' => $test->slug,
-            'url' => route('labs.tests.show', $test),
+            'url' => $this->namedUrl('labs.tests.show', '/labs/tests/'.$test->slug, $test),
             'price' => $test->suggested_price !== null ? (float) $test->suggested_price : null,
             'price_label' => $test->suggested_price !== null
                 ? number_format((float) $test->suggested_price).' '.__('common.currency')
@@ -449,7 +460,7 @@ class MarketplaceSearch
             'fasting' => $test->fasting_hours
                 ? __('labs.fasting', ['hours' => $test->fasting_hours])
                 : __('labs.no_fasting'),
-            'image' => PublicImage::url($test->image_path),
+            'image' => $test->imageUrl(),
             'icon' => 'beaker',
             'rating_average' => null,
             'rating_count' => 0,
@@ -464,7 +475,7 @@ class MarketplaceSearch
         return [
             'name' => $package->name,
             'slug' => $package->slug,
-            'url' => route('labs.packages.show', $package),
+            'url' => $this->namedUrl('labs.packages.show', '/labs/packages/'.$package->slug, $package),
             'price' => $package->package_price !== null ? (float) $package->package_price : null,
             'original_price' => $package->original_price !== null ? (float) $package->original_price : null,
             'price_label' => $package->package_price !== null
@@ -475,5 +486,22 @@ class MarketplaceSearch
             'rating_average' => null,
             'rating_count' => 0,
         ];
+    }
+
+    /**
+     * @return array{average: ?float, count: int}
+     */
+    private function ratings(?object $rateable): array
+    {
+        if ($rateable && method_exists($rateable, 'ratingSummary')) {
+            return $rateable->ratingSummary();
+        }
+
+        return ['average' => null, 'count' => 0];
+    }
+
+    private function namedUrl(string $name, string $fallback, mixed $parameters = []): string
+    {
+        return Route::has($name) ? route($name, $parameters) : url($fallback);
     }
 }
