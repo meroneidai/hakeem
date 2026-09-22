@@ -16,7 +16,7 @@
     $support = app(\App\Support\SupportLinks::class);
 @endphp
 
-<x-layouts.base :seo="$seo">
+<x-layouts.base :seo="$seo" body-class="min-h-screen theme-v2">
     <div x-data @close-mega.window="$store.shell.mega = false" class="min-h-screen pb-24 lg:pb-0">
         <header class="relative sticky top-0 z-40 border-b border-ink-200/80 bg-white/90 backdrop-blur-md">
             <div class="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">

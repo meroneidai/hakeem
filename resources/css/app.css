@@ -1,6 +1,16 @@
 @import 'tailwindcss';
 @import './theme.css';
 
+@layer utilities {
+    .ring-white {
+        --tw-ring-color: #f1e9e9;
+    }
+
+    .to-accent-50 {
+        --tw-gradient-to: initial;
+    }
+}
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../views';

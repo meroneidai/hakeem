@@ -3,7 +3,7 @@
     $android = $appAndroidUrl ?? null;
 @endphp
 
-<section class="overflow-hidden rounded-3xl bg-gradient-to-l from-primary-800 via-primary-700 to-primary-600 p-6 text-white shadow-sm sm:p-8">
+<section class="overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-primary-500 to-primary-700 p-6 text-white shadow-[0_12px_40px_rgba(30,64,175,0.16)] sm:p-8">
     <div class="flex flex-col items-start gap-6 lg:flex-row lg:items-center lg:justify-between">
         <div class="max-w-xl">
             <span class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-medium">
