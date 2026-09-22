@@ -6,7 +6,7 @@ services:
     image: hakeem-testing:latest
     restart: unless-stopped
     ports:
-      - "${HAKEEM_HTTP_PORT:-8080}:80"
+      - "${HAKEEM_HTTP_BIND:-127.0.0.1}:${HAKEEM_HTTP_PORT:-8080}:80"
     env_file:
       - .env.docker
     environment:
