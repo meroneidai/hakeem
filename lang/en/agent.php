@@ -1,0 +1,25 @@
+<?php
+
+return [
+    'title' => 'Hermes',
+    'subtitle' => 'Your booking assistant',
+    'placeholder' => 'Try: pediatrician in New Cairo…',
+    'send' => 'Send',
+    'open' => 'Hakeem assistant',
+    'close' => 'Close assistant',
+    'empty' => 'Tell me what you need: a doctor, clinic, lab test, or your appointments.',
+    'help' => 'I can search doctors, clinics and services, list your appointments, and cancel an open booking. Try “dermatologist in Nasr City”.',
+    'doctors_found' => 'I found :count matching doctors. Pick one to book, or refine the search.',
+    'clinics_found' => 'Here are matching clinics.',
+    'offers_found' => 'Here are live offers.',
+    'services_found' => 'Here are matching services.',
+    'no_results' => 'No matches yet. Try a specialty, city, or doctor name.',
+    'login_required' => 'Sign in first to view appointments or cancel a booking.',
+    'appointments' => 'Your recent appointments:',
+    'no_appointments' => 'You have no bookings yet. I can help you find a doctor.',
+    'nothing_to_cancel' => 'There is no open booking to cancel.',
+    'confirm_cancel' => 'Cancel booking #:id with :doctor? Type “yes” to confirm.',
+    'cancel_aborted' => 'The booking was not cancelled.',
+    'cannot_cancel' => 'That booking cannot be cancelled from its current status.',
+    'cancelled' => 'Booking #:id was cancelled.',
+];

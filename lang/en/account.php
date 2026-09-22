@@ -1,0 +1,38 @@
+<?php
+
+return [
+    'profile' => 'Profile',
+    'subtitle' => 'Complete your details and notification preferences.',
+    'birth' => 'Date of birth',
+    'birth_day' => 'Day',
+    'birth_month' => 'Month',
+    'birth_year' => 'Year',
+    'birth_hint' => 'Choose day, month and year. The saved value appears under the field after you save.',
+    'saved_birth' => 'Saved: :date',
+    'gender' => 'Gender',
+    'male' => 'Male',
+    'female' => 'Female',
+    'notify_email' => 'Email notifications',
+    'notify_sms' => 'SMS notifications',
+    'notify_push' => 'Push notifications',
+    'save' => 'Save profile',
+    'saved' => 'Profile saved.',
+    'incomplete' => 'Complete your profile (city and phone verification) so alerts stay accurate.',
+    'complete' => 'Your profile is complete.',
+    'city' => 'City',
+    'all_appointments' => 'All appointments',
+    'loyalty' => [
+        'heading' => 'Wallet and referral link',
+        'share_hint' => 'Copy your link. Your friend gets a welcome credit on signup, and your reward is added after their first completed booking or lab order.',
+        'empty' => 'No wallet activity yet.',
+        'claim' => 'Sign up for the credit',
+        'signup_credit' => 'Welcome credit :amount EGP',
+        'referral_credit' => 'Referral reward after :name completed a service (:amount EGP)',
+        'friend_joined' => ':name signed up with your link. Your reward arrives after their first completed service.',
+        'types' => [
+            'signup_bonus' => 'Signup bonus',
+            'referral_reward' => 'Referral reward',
+            'admin_adjustment' => 'Admin adjustment',
+        ],
+    ],
+];
