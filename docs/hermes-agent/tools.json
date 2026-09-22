@@ -1,0 +1,186 @@
+{
+  "name": "Hakeem Hermes Agent API",
+  "version": "1",
+  "base_url": "{HAKEEM_BASE_URL}/api/agent/v1",
+  "auth": {
+    "hermes": {
+      "header": "X-Hermes-Key",
+      "value": "{HERMES_AGENT_KEY}",
+      "required": true
+    },
+    "customer": {
+      "header": "Authorization",
+      "value": "Bearer {customer_token}",
+      "required_when": ["customers.me", "customers.update", "customers.bookings"],
+      "skip_if_token_present": true,
+      "fallback": "POST the same path with phone or email + password"
+    },
+    "locale": {
+      "query": "locale",
+      "header": "X-Locale",
+      "values": ["ar", "en"]
+    }
+  },
+  "cannot": [
+    "admin",
+    "delete_records",
+    "add_or_edit_clinic_services",
+    "manage_clinics",
+    "read_profile_without_credentials"
+  ],
+  "tools": [
+    {
+      "name": "manifest",
+      "method": "GET",
+      "path": "/",
+      "when": "Start of a session or when you need the live tool list"
+    },
+    {
+      "name": "help",
+      "method": "GET",
+      "path": "/help",
+      "when": "Visitor asks how Hakeem works, payments, booking, or contact"
+    },
+    {
+      "name": "suggestions",
+      "method": "GET",
+      "path": "/suggestions",
+      "query": ["q"],
+      "when": "Incomplete search or you need next-step intents"
+    },
+    {
+      "name": "search",
+      "method": "GET",
+      "path": "/search",
+      "query": ["q", "type", "specialty", "governorate", "city", "gender", "min_experience", "category", "max_price", "limit"],
+      "when": "Find doctors, clinics, services, offers, or labs"
+    },
+    {
+      "name": "doctors.show",
+      "method": "GET",
+      "path": "/doctors/{slug}",
+      "when": "Visitor picked a doctor from search"
+    },
+    {
+      "name": "doctors.slots",
+      "method": "GET",
+      "path": "/doctors/{slug}/slots",
+      "query": ["clinic_address_id", "service_type_id", "date"],
+      "when": "Visitor asks for available times"
+    },
+    {
+      "name": "clinics.show",
+      "method": "GET",
+      "path": "/clinics/{slug}",
+      "when": "Visitor picked a clinic"
+    },
+    {
+      "name": "offers.index",
+      "method": "GET",
+      "path": "/offers",
+      "query": ["q", "category", "governorate", "city", "max_price", "limit"],
+      "when": "Visitor asks for offers or discounts"
+    },
+    {
+      "name": "offers.show",
+      "method": "GET",
+      "path": "/offers/{slug}",
+      "when": "Offer details"
+    },
+    {
+      "name": "campaigns",
+      "method": "GET",
+      "path": "/campaigns",
+      "when": "Signup bonus or featured campaigns"
+    },
+    {
+      "name": "reference.geography",
+      "method": "GET",
+      "path": "/reference/geography",
+      "when": "Need governorate/city slugs for filters"
+    },
+    {
+      "name": "reference.specialties",
+      "method": "GET",
+      "path": "/reference/specialties",
+      "when": "Need specialty slugs"
+    },
+    {
+      "name": "reference.service-types",
+      "method": "GET",
+      "path": "/reference/service-types",
+      "when": "Need service type ids for slots"
+    },
+    {
+      "name": "customers.register",
+      "method": "POST",
+      "path": "/customers",
+      "body": ["name", "phone|email|identifier", "password", "ref?"],
+      "when": "Create a patient account. Store token."
+    },
+    {
+      "name": "customers.login",
+      "method": "POST",
+      "path": "/customers/session",
+      "body": ["phone|email|identifier", "password"],
+      "when": "Sign in. Store token. Do not ask again in this conversation."
+    },
+    {
+      "name": "customers.password.forgot",
+      "method": "POST",
+      "path": "/customers/password/forgot",
+      "body": ["phone|email|identifier"],
+      "when": "Visitor forgot the password"
+    },
+    {
+      "name": "customers.password.reset",
+      "method": "POST",
+      "path": "/customers/password/reset",
+      "body": ["identifier", "token", "password"],
+      "when": "Visitor has the SMS code or email token"
+    },
+    {
+      "name": "customers.me",
+      "method": "GET",
+      "path": "/customers/me",
+      "customer": true,
+      "when": "Profile for a visitor who already has customer_token"
+    },
+    {
+      "name": "customers.me.lookup",
+      "method": "POST",
+      "path": "/customers/me",
+      "body": ["phone|email|identifier", "password"],
+      "when": "Profile when there is no token yet. Ask for credentials first."
+    },
+    {
+      "name": "customers.update",
+      "method": "PUT",
+      "path": "/customers/me",
+      "customer": true,
+      "body": ["name", "preferred_language", "email?", "phone?", "password?"],
+      "when": "Update profile after auth"
+    },
+    {
+      "name": "customers.bookings",
+      "method": "GET",
+      "path": "/customers/bookings",
+      "customer": true,
+      "when": "Appointments for a signed-in visitor. Read only."
+    },
+    {
+      "name": "customers.bookings.lookup",
+      "method": "POST",
+      "path": "/customers/bookings",
+      "body": ["phone|email|identifier", "password"],
+      "when": "Appointments when there is no token"
+    },
+    {
+      "name": "support.tickets.store",
+      "method": "POST",
+      "path": "/support/tickets",
+      "body": ["name", "phone", "subject", "body", "category?", "channel?"],
+      "when": "Complaint or support. Password not required."
+    }
+  ]
+}

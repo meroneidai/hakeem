@@ -22,4 +22,15 @@ return [
     'cancel_aborted' => 'The booking was not cancelled.',
     'cannot_cancel' => 'That booking cannot be cancelled from its current status.',
     'cancelled' => 'Booking #:id was cancelled.',
+    'api' => [
+        'unauthorized' => 'Hermes agent authentication failed.',
+        'credentials_required' => 'Ask the visitor for their phone or email and password before reading or updating a profile.',
+        'suggest_doctors' => 'Search for doctors',
+        'suggest_clinics' => 'Search for clinics',
+        'suggest_offers' => 'Browse live offers',
+        'suggest_campaigns' => 'Current campaigns',
+        'suggest_register' => 'Create a patient account',
+        'suggest_reset' => 'Reset a password',
+        'suggest_support' => 'Open a support ticket',
+    ],
 ];

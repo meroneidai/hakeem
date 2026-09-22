@@ -22,4 +22,15 @@ return [
     'cancel_aborted' => 'لم يُلغَ الحجز.',
     'cannot_cancel' => 'لا يمكن إلغاء هذا الحجز من حالته الحالية.',
     'cancelled' => 'تم إلغاء الحجز رقم :id.',
+    'api' => [
+        'unauthorized' => 'فشل التحقق من وكيل هرمس.',
+        'credentials_required' => 'اطلب من الزائر رقم الهاتف أو البريد وكلمة المرور قبل عرض الملف أو تعديله.',
+        'suggest_doctors' => 'البحث عن أطباء',
+        'suggest_clinics' => 'البحث عن عيادات',
+        'suggest_offers' => 'تصفح العروض الحالية',
+        'suggest_campaigns' => 'الحملات الحالية',
+        'suggest_register' => 'إنشاء حساب مريض',
+        'suggest_reset' => 'إعادة تعيين كلمة المرور',
+        'suggest_support' => 'فتح تذكرة دعم',
+    ],
 ];

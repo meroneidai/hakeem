@@ -7,6 +7,8 @@ use App\Enums\RoleName;
 use App\Enums\ServiceTypeCode;
 use App\Models\City;
 use App\Models\Clinic;
+use App\Models\ClinicAddress;
+use App\Models\Doctor;
 use App\Models\Governorate;
 use App\Models\ServiceType;
 use App\Models\Specialty;
@@ -90,6 +92,42 @@ abstract class TestCase extends BaseTestCase
         }
 
         return compact('governorate', 'city', 'specialty', 'serviceType', 'plan');
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     * @return array{governorate: Governorate, city: City, specialty: Specialty, serviceType: ServiceType, plan: SubscriptionPlan, clinic: Clinic, address: ClinicAddress, doctor: Doctor}
+     */
+    protected function seedListableProvider(array $overrides = []): array
+    {
+        $catalog = $this->seedClinicCatalog();
+
+        $clinic = Clinic::factory()->verified()->create([
+            'subscription_plan_id' => $catalog['plan']->id,
+            'name_ar' => $overrides['clinic_name_ar'] ?? 'عيادة النور',
+            'name_en' => $overrides['clinic_name_en'] ?? 'Al Noor Clinic',
+        ]);
+
+        $address = ClinicAddress::factory()->create([
+            'clinic_id' => $clinic->id,
+            'city_id' => $catalog['city']->id,
+            'latitude' => 30.0444,
+            'longitude' => 31.2357,
+        ]);
+
+        $doctor = Doctor::factory()->create([
+            'specialty_id' => $catalog['specialty']->id,
+            'name_ar' => $overrides['doctor_name_ar'] ?? 'د. سارة أحمد',
+            'name_en' => $overrides['doctor_name_en'] ?? 'Dr. Sara Ahmed',
+            'is_active' => $overrides['doctor_active'] ?? true,
+            'years_of_experience' => $overrides['years'] ?? 12,
+            'consultation_fee' => $overrides['fee'] ?? 350,
+            'gender' => $overrides['gender'] ?? 'female',
+        ]);
+
+        $clinic->doctors()->attach($doctor);
+
+        return ['clinic' => $clinic, 'address' => $address, 'doctor' => $doctor] + $catalog;
     }
 
     /**

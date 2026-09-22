@@ -1,0 +1,486 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Hakeem Hermes Agent API",
+    "version": "1.0.0",
+    "description": "Customer-service API for the Hermes agent. Every request requires X-Hermes-Key. Profile and bookings also need a customer bearer token or phone/email + password. No admin, delete, or clinic-management operations."
+  },
+  "servers": [
+    {
+      "url": "{HAKEEM_BASE_URL}/api/agent/v1",
+      "description": "Hakeem agent surface",
+      "variables": {
+        "HAKEEM_BASE_URL": {
+          "default": "http://localhost:8000"
+        }
+      }
+    }
+  ],
+  "tags": [
+    { "name": "Catalog", "description": "Public search and visitor help" },
+    { "name": "Customer", "description": "Account, profile, bookings" },
+    { "name": "Support", "description": "Support tickets" }
+  ],
+  "security": [
+    { "hermesKey": [] }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "operationId": "manifest",
+        "tags": ["Catalog"],
+        "summary": "List tools, auth rules, and capabilities",
+        "parameters": [{ "$ref": "#/components/parameters/Locale" }],
+        "responses": { "200": { "description": "Manifest" }, "401": { "$ref": "#/components/responses/HermesUnauthorized" } }
+      }
+    },
+    "/help": {
+      "get": {
+        "operationId": "help",
+        "tags": ["Catalog"],
+        "summary": "Visitor FAQ, how booking works, contact details",
+        "parameters": [{ "$ref": "#/components/parameters/Locale" }],
+        "responses": { "200": { "description": "Help payload" }, "401": { "$ref": "#/components/responses/HermesUnauthorized" } }
+      }
+    },
+    "/suggestions": {
+      "get": {
+        "operationId": "suggestions",
+        "tags": ["Catalog"],
+        "summary": "Search and intent suggestions",
+        "parameters": [
+          { "$ref": "#/components/parameters/Locale" },
+          { "name": "q", "in": "query", "schema": { "type": "string", "maxLength": 80 } }
+        ],
+        "responses": { "200": { "description": "Suggestions" }, "401": { "$ref": "#/components/responses/HermesUnauthorized" } }
+      }
+    },
+    "/search": {
+      "get": {
+        "operationId": "search",
+        "tags": ["Catalog"],
+        "summary": "Search doctors, clinics, services, offers, labs",
+        "parameters": [
+          { "$ref": "#/components/parameters/Locale" },
+          { "name": "q", "in": "query", "schema": { "type": "string", "maxLength": 120 } },
+          { "name": "type", "in": "query", "schema": { "type": "string", "enum": ["all", "doctors", "clinics", "services", "offers", "labs"] } },
+          { "name": "specialty", "in": "query", "schema": { "type": "string" }, "description": "Specialty slug" },
+          { "name": "governorate", "in": "query", "schema": { "type": "string" }, "description": "Governorate slug" },
+          { "name": "city", "in": "query", "schema": { "type": "string" }, "description": "City slug" },
+          { "name": "gender", "in": "query", "schema": { "type": "string", "enum": ["male", "female"] } },
+          { "name": "min_experience", "in": "query", "schema": { "type": "integer", "minimum": 0, "maximum": 70 } },
+          { "name": "category", "in": "query", "schema": { "type": "string" } },
+          { "name": "max_price", "in": "query", "schema": { "type": "integer", "minimum": 0 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 24 } }
+        ],
+        "responses": { "200": { "description": "Search results" }, "401": { "$ref": "#/components/responses/HermesUnauthorized" } }
+      }
+    },
+    "/doctors/{slug}": {
+      "get": {
+        "operationId": "doctorsShow",
+        "tags": ["Catalog"],
+        "summary": "Public doctor profile and booking links",
+        "parameters": [
+          { "$ref": "#/components/parameters/Locale" },
+          { "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Doctor" }, "404": { "description": "Not listable" }, "401": { "$ref": "#/components/responses/HermesUnauthorized" } }
+      }
+    },
+    "/doctors/{slug}/slots": {
+      "get": {
+        "operationId": "doctorsSlots",
+        "tags": ["Catalog"],
+        "summary": "Available appointment slots",
+        "parameters": [
+          { "$ref": "#/components/parameters/Locale" },
+          { "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "clinic_address_id", "in": "query", "required": true, "schema": { "type": "integer" } },
+          { "name": "service_type_id", "in": "query", "required": true, "schema": { "type": "integer" } },
+          { "name": "date", "in": "query", "required": true, "schema": { "type": "string", "format": "date" } }
+        ],
+        "responses": { "200": { "description": "Slots" }, "404": { "description": "Not found" }, "401": { "$ref": "#/components/responses/HermesUnauthorized" } }
+      }
+    },
+    "/clinics/{slug}": {
+      "get": {
+        "operationId": "clinicsShow",
+        "tags": ["Catalog"],
+        "summary": "Public clinic profile",
+        "parameters": [
+          { "$ref": "#/components/parameters/Locale" },
+          { "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Clinic" }, "404": { "description": "Not listable" }, "401": { "$ref": "#/components/responses/HermesUnauthorized" } }
+      }
+    },
+    "/offers": {
+      "get": {
+        "operationId": "offersIndex",
+        "tags": ["Catalog"],
+        "summary": "Running offers",
+        "parameters": [
+          { "$ref": "#/components/parameters/Locale" },
+          { "name": "q", "in": "query", "schema": { "type": "string" } },
+          { "name": "category", "in": "query", "schema": { "type": "string", "enum": ["lab", "checkup", "dental", "skin", "laser", "beauty", "physical_therapy", "other"] } },
+          { "name": "governorate", "in": "query", "schema": { "type": "string" } },
+          { "name": "city", "in": "query", "schema": { "type": "string" } },
+          { "name": "max_price", "in": "query", "schema": { "type": "integer" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 24 } }
+        ],
+        "responses": { "200": { "description": "Offers" }, "401": { "$ref": "#/components/responses/HermesUnauthorized" } }
+      }
+    },
+    "/offers/{slug}": {
+      "get": {
+        "operationId": "offersShow",
+        "tags": ["Catalog"],
+        "summary": "Offer details and booking URL",
+        "parameters": [
+          { "$ref": "#/components/parameters/Locale" },
+          { "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Offer" }, "404": { "description": "Not running" }, "401": { "$ref": "#/components/responses/HermesUnauthorized" } }
+      }
+    },
+    "/campaigns": {
+      "get": {
+        "operationId": "campaigns",
+        "tags": ["Catalog"],
+        "summary": "Signup campaign and featured live offers",
+        "parameters": [{ "$ref": "#/components/parameters/Locale" }],
+        "responses": { "200": { "description": "Campaigns" }, "401": { "$ref": "#/components/responses/HermesUnauthorized" } }
+      }
+    },
+    "/reference/geography": {
+      "get": {
+        "operationId": "referenceGeography",
+        "tags": ["Catalog"],
+        "summary": "Governorates and cities",
+        "responses": { "200": { "description": "Geography" }, "401": { "$ref": "#/components/responses/HermesUnauthorized" } }
+      }
+    },
+    "/reference/specialties": {
+      "get": {
+        "operationId": "referenceSpecialties",
+        "tags": ["Catalog"],
+        "summary": "Active specialties",
+        "responses": { "200": { "description": "Specialties" }, "401": { "$ref": "#/components/responses/HermesUnauthorized" } }
+      }
+    },
+    "/reference/service-types": {
+      "get": {
+        "operationId": "referenceServiceTypes",
+        "tags": ["Catalog"],
+        "summary": "Bookable service types",
+        "responses": { "200": { "description": "Service types" }, "401": { "$ref": "#/components/responses/HermesUnauthorized" } }
+      }
+    },
+    "/customers": {
+      "post": {
+        "operationId": "customersRegister",
+        "tags": ["Customer"],
+        "summary": "Create a patient account",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RegisterRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Created; returns token + user" },
+          "422": { "description": "Validation error" },
+          "401": { "$ref": "#/components/responses/HermesUnauthorized" }
+        }
+      }
+    },
+    "/customers/session": {
+      "post": {
+        "operationId": "customersLogin",
+        "tags": ["Customer"],
+        "summary": "Exchange phone/email + password for a customer token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CredentialsRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "token + user" },
+          "422": { "description": "Invalid credentials" },
+          "401": { "$ref": "#/components/responses/HermesUnauthorized" }
+        }
+      }
+    },
+    "/customers/password/forgot": {
+      "post": {
+        "operationId": "customersPasswordForgot",
+        "tags": ["Customer"],
+        "summary": "Send a reset code or email. Does not reveal whether the account exists.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/IdentifierRequest" }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Always ok + channel" }, "401": { "$ref": "#/components/responses/HermesUnauthorized" } }
+      }
+    },
+    "/customers/password/reset": {
+      "post": {
+        "operationId": "customersPasswordReset",
+        "tags": ["Customer"],
+        "summary": "Set a new password with the reset token or SMS code",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PasswordResetRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "token + user" },
+          "422": { "description": "Invalid code" },
+          "401": { "$ref": "#/components/responses/HermesUnauthorized" }
+        }
+      }
+    },
+    "/customers/me": {
+      "get": {
+        "operationId": "customersMe",
+        "tags": ["Customer"],
+        "summary": "Read profile when the visitor already has a bearer token. Do not ask for a password.",
+        "security": [{ "hermesKey": [], "customerToken": [] }],
+        "responses": {
+          "200": { "description": "user" },
+          "401": { "$ref": "#/components/responses/CustomerCredentialsRequired" }
+        }
+      },
+      "post": {
+        "operationId": "customersMeLookup",
+        "tags": ["Customer"],
+        "summary": "Read profile with phone/email + password when there is no token. Returns a token for later calls.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CredentialsRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "token + user" },
+          "401": { "$ref": "#/components/responses/CustomerCredentialsRequired" },
+          "422": { "description": "Invalid credentials" }
+        }
+      },
+      "put": {
+        "operationId": "customersUpdate",
+        "tags": ["Customer"],
+        "summary": "Update profile. Bearer token or phone/email + password in the same body.",
+        "security": [{ "hermesKey": [], "customerToken": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ProfileUpdateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "user" },
+          "401": { "$ref": "#/components/responses/CustomerCredentialsRequired" },
+          "422": { "description": "Validation error" }
+        }
+      }
+    },
+    "/customers/bookings": {
+      "get": {
+        "operationId": "customersBookings",
+        "tags": ["Customer"],
+        "summary": "List appointments for a signed-in customer. Read only.",
+        "security": [{ "hermesKey": [], "customerToken": [] }],
+        "responses": {
+          "200": { "description": "data[]" },
+          "401": { "$ref": "#/components/responses/CustomerCredentialsRequired" }
+        }
+      },
+      "post": {
+        "operationId": "customersBookingsLookup",
+        "tags": ["Customer"],
+        "summary": "List appointments with phone/email + password when there is no token.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CredentialsRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "data[]" },
+          "401": { "$ref": "#/components/responses/CustomerCredentialsRequired" }
+        }
+      }
+    },
+    "/support/tickets": {
+      "post": {
+        "operationId": "supportTicketsStore",
+        "tags": ["Support"],
+        "summary": "Open a support ticket. Password not required.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TicketRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "reference + status" },
+          "422": { "description": "Validation error" },
+          "401": { "$ref": "#/components/responses/HermesUnauthorized" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "hermesKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Hermes-Key",
+        "description": "Platform Hermes service key. Required on every request."
+      },
+      "customerToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Patient Sanctum token. Use when this conversation already authenticated the visitor. Do not ask for a password again."
+      }
+    },
+    "parameters": {
+      "Locale": {
+        "name": "locale",
+        "in": "query",
+        "schema": { "type": "string", "enum": ["ar", "en"] },
+        "description": "Response language. You may send X-Locale instead."
+      }
+    },
+    "responses": {
+      "HermesUnauthorized": {
+        "description": "Missing or wrong X-Hermes-Key",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": { "type": "string" },
+                "code": { "type": "string", "example": "hermes_key_required" }
+              }
+            }
+          }
+        }
+      },
+      "CustomerCredentialsRequired": {
+        "description": "Ask the visitor for phone/email + password, or send the existing bearer token",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": { "type": "string" },
+                "code": { "type": "string", "example": "customer_credentials_required" },
+                "ask_for": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "IdentifierRequest": {
+        "type": "object",
+        "description": "Send identifier, or phone, or email.",
+        "properties": {
+          "identifier": { "type": "string" },
+          "phone": { "type": "string", "example": "01055512345" },
+          "email": { "type": "string", "format": "email" }
+        }
+      },
+      "CredentialsRequest": {
+        "allOf": [
+          { "$ref": "#/components/schemas/IdentifierRequest" },
+          {
+            "type": "object",
+            "required": ["password"],
+            "properties": {
+              "password": { "type": "string" },
+              "device_name": { "type": "string", "default": "hermes" }
+            }
+          }
+        ]
+      },
+      "RegisterRequest": {
+        "allOf": [
+          { "$ref": "#/components/schemas/CredentialsRequest" },
+          {
+            "type": "object",
+            "required": ["name", "password"],
+            "properties": {
+              "name": { "type": "string", "maxLength": 120 },
+              "ref": { "type": "string", "maxLength": 16, "description": "Referral code" },
+              "insurance_provider_id": { "type": "integer" }
+            }
+          }
+        ]
+      },
+      "PasswordResetRequest": {
+        "type": "object",
+        "required": ["identifier", "token", "password"],
+        "properties": {
+          "identifier": { "type": "string" },
+          "token": { "type": "string", "description": "Email token or 6-digit SMS code" },
+          "password": { "type": "string", "minLength": 8 }
+        }
+      },
+      "ProfileUpdateRequest": {
+        "type": "object",
+        "required": ["name", "preferred_language"],
+        "properties": {
+          "identifier": { "type": "string" },
+          "phone": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string", "description": "Required only when there is no bearer token" },
+          "name": { "type": "string" },
+          "date_of_birth": { "type": "string", "format": "date" },
+          "gender": { "type": "string", "enum": ["male", "female"] },
+          "city_id": { "type": "integer" },
+          "insurance_provider_id": { "type": "integer" },
+          "notify_email": { "type": "boolean" },
+          "notify_sms": { "type": "boolean" },
+          "notify_push": { "type": "boolean" },
+          "preferred_language": { "type": "string", "enum": ["ar", "en"] }
+        }
+      },
+      "TicketRequest": {
+        "type": "object",
+        "required": ["name", "phone", "subject", "body"],
+        "properties": {
+          "name": { "type": "string" },
+          "phone": { "type": "string" },
+          "subject": { "type": "string", "maxLength": 180 },
+          "body": { "type": "string", "maxLength": 4000 },
+          "category": { "type": "string", "enum": ["booking", "payment", "record_access", "technical", "complaint", "other"] },
+          "channel": { "type": "string", "enum": ["chat", "whatsapp", "email", "phone"], "default": "chat" }
+        }
+      }
+    }
+  }
+}

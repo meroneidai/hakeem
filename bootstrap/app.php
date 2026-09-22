@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureClinicStaff;
+use App\Http\Middleware\EnsureHermesAgent;
 use App\Http\Middleware\EnsureInternalStaff;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
@@ -23,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'internal-staff' => EnsureInternalStaff::class,
             'clinic-staff' => EnsureClinicStaff::class,
+            'hermes' => EnsureHermesAgent::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

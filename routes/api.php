@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Controllers\Api\V1\SearchController;
+use App\Models\Governorate;
+use App\Models\ServiceType;
+use App\Models\Specialty;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -13,8 +17,12 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::prefix('v1')->name('api.v1.')->group(function () {
+    Route::get('search', SearchController::class)
+        ->middleware('throttle:60,1')
+        ->name('search');
+
     Route::get('reference/geography', function () {
-        return App\Models\Governorate::active()->ordered()->with('cities', fn ($q) => $q->active())->get()
+        return Governorate::active()->ordered()->with('cities', fn ($q) => $q->active())->get()
             ->map(fn ($governorate) => [
                 'id' => $governorate->id,
                 'slug' => $governorate->slug,
@@ -28,7 +36,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     })->name('reference.geography');
 
     Route::get('reference/specialties', function () {
-        return App\Models\Specialty::active()->ordered()->get()
+        return Specialty::active()->ordered()->get()
             ->map(fn ($specialty) => [
                 'id' => $specialty->id,
                 'slug' => $specialty->slug,
@@ -38,7 +46,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     })->name('reference.specialties');
 
     Route::get('reference/service-types', function () {
-        return App\Models\ServiceType::active()->ordered()->get()
+        return ServiceType::active()->ordered()->get()
             ->map(fn ($type) => [
                 'id' => $type->id,
                 'code' => $type->code,
@@ -63,3 +71,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         ];
     })->name('me');
 });
+
+Route::prefix('agent/v1')
+    ->name('api.agent.v1.')
+    ->middleware(['hermes'])
+    ->group(base_path('routes/agent.php'));
