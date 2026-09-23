@@ -21,7 +21,7 @@ class SupportTicket extends Model
 
     public const CHANNELS = ['chat', 'whatsapp', 'email', 'phone', 'admin'];
 
-    public const CATEGORIES = ['booking', 'payment', 'record_access', 'technical', 'other'];
+    public const CATEGORIES = ['booking', 'payment', 'record_access', 'technical', 'complaint', 'other'];
 
     protected function casts(): array
     {

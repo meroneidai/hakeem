@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Clinic;
 
+use App\Enums\ClinicModule;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\PublicImage;
 use App\Support\UniqueSlug;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class ProfileController extends Controller
@@ -20,6 +22,7 @@ class ProfileController extends Controller
 
         return view('clinic.profile.edit', [
             'clinic' => $this->clinic($request),
+            'modules' => ClinicModule::selectable(),
         ]);
     }
 
@@ -36,21 +39,16 @@ class ProfileController extends Controller
             'description_en' => ['nullable', 'string', 'max:4000'],
             'email' => ['required', 'email', 'max:255'],
             'phone' => ['required', 'string', 'max:32'],
-            'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'logo' => PublicImage::rules(),
+            'modules' => ['nullable', 'array'],
+            'modules.*' => [Rule::enum(ClinicModule::class)],
         ]);
 
         $validated['phone'] = User::normalizePhone($validated['phone']);
         $validated['slug'] = UniqueSlug::for($validated['name_en'], 'clinics', 'slug', $clinic->id);
-
-        if ($request->hasFile('logo')) {
-            if ($clinic->logo_path) {
-                Storage::disk('public')->delete($clinic->logo_path);
-            }
-
-            $validated['logo_path'] = $request->file('logo')->store('clinics/'.$clinic->id, 'public');
-        }
-
         unset($validated['logo']);
+        $validated['logo_path'] = PublicImage::store($request, 'logo', 'clinics/'.$clinic->id, $clinic->logo_path);
+        $validated['modules'] = ClinicModule::normalize($request->input('modules', []));
 
         $clinic->update($validated);
 

@@ -6,7 +6,7 @@
     $access = $clinicAccess;
 @endphp
 
-<x-layouts.base :title="$title ? $title.' — '.__('clinic.title') : __('clinic.title')">
+<x-layouts.base :title="$title ? $title.' — '.__('clinic.title') : __('clinic.title')" body-class="min-h-screen theme-v2" theme-color="#3B82F6">
     <div x-data="{ sidebar: false }" class="flex min-h-screen">
         <aside
             class="fixed inset-y-0 z-40 w-64 shrink-0 overflow-y-auto border-e border-ink-200 bg-white p-4 transition-transform lg:static lg:translate-x-0"
@@ -15,7 +15,7 @@
             <a href="{{ route('clinic.dashboard') }}" class="flex items-center gap-2.5 px-2 py-1">
                 <span class="grid size-9 place-items-center overflow-hidden rounded-xl bg-primary-600 text-lg font-bold text-white">
                     @if ($clinic->logo_path)
-                        <img src="{{ Storage::url($clinic->logo_path) }}" alt="" class="size-9 object-cover">
+                        <img src="{{ \App\Support\PublicImage::url($clinic->logo_path) }}" alt="" class="size-9 object-cover">
                     @else
                         ح
                     @endif
@@ -29,6 +29,9 @@
             <nav class="mt-4 space-y-0.5">
                 <x-admin.nav-item :href="route('clinic.dashboard')" icon="grid" pattern="clinic.dashboard">
                     {{ __('clinic.nav.overview') }}
+                </x-admin.nav-item>
+                <x-admin.nav-item :href="route('account.edit')" icon="user" pattern="account.*">
+                    {{ __('clinic.nav.account') }}
                 </x-admin.nav-item>
 
                 @if ($access->canManage())
@@ -49,11 +52,27 @@
                     <x-admin.nav-item :href="route('clinic.services.edit')" icon="layers" pattern="clinic.services.*">
                         {{ __('clinic.nav.services') }}
                     </x-admin.nav-item>
+                    @if ($clinic->hasModule(\App\Enums\ClinicModule::Labs))
+                        <x-admin.nav-item :href="route('clinic.labs.edit')" icon="beaker" pattern="clinic.labs.*">
+                            {{ __('clinic.nav.labs') }}
+                        </x-admin.nav-item>
+                    @endif
+                    @if ($clinic->hasModule(\App\Enums\ClinicModule::Promotions))
+                        <x-admin.nav-item :href="route('clinic.offers.index')" icon="megaphone" pattern="clinic.offers.*">
+                            {{ __('clinic.nav.offers') }}
+                        </x-admin.nav-item>
+                    @endif
                 @endif
 
                 @if ($access->canManageBilling())
                     <x-admin.nav-item :href="route('clinic.subscription.edit')" icon="credit-card" pattern="clinic.subscription.*">
                         {{ __('clinic.nav.subscription') }}
+                    </x-admin.nav-item>
+                @endif
+
+                @if ($access->canManage())
+                    <x-admin.nav-item :href="route('clinic.payments.edit')" icon="credit-card" pattern="clinic.payments.*">
+                        {{ __('clinic.nav.payments') }}
                     </x-admin.nav-item>
                 @endif
 
@@ -63,10 +82,20 @@
                     </x-admin.nav-item>
                 @endif
 
-                <div class="px-3 pb-1 pt-4 text-[11px] font-semibold uppercase tracking-wide text-ink-400">
+                <x-admin.nav-item :href="route('clinic.queue.index')" icon="clock" pattern="clinic.queue.*">
                     {{ __('clinic.nav.queue') }}
-                </div>
-                <p class="px-3 text-xs leading-5 text-ink-400">{{ __('clinic.queue_soon') }}</p>
+                </x-admin.nav-item>
+                <x-admin.nav-item :href="route('clinic.bookings.index')" icon="calendar" pattern="clinic.bookings.*">
+                    {{ __('clinic.nav.bookings') }}
+                </x-admin.nav-item>
+                @if ($clinic->hasModule(\App\Enums\ClinicModule::Labs))
+                    <x-admin.nav-item :href="route('clinic.lab-orders.index')" icon="beaker" pattern="clinic.lab-orders.*">
+                        {{ __('clinic.nav.lab_orders') }}
+                    </x-admin.nav-item>
+                @endif
+                <x-admin.nav-item :href="route('clinic.attendance.index')" icon="clock" pattern="clinic.attendance.*">
+                    {{ __('clinic.nav.attendance') }}
+                </x-admin.nav-item>
             </nav>
         </aside>
 
@@ -89,6 +118,13 @@
                     {{ $clinic->verification_status->label() }}
                 </x-badge>
 
+                <x-inbox-bell/>
+
+                <a href="{{ route('account.edit') }}" class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-ink-600 hover:bg-ink-100">
+                    <x-icon name="user" class="size-4"/>
+                    <span class="hidden sm:inline">{{ __('account.profile') }}</span>
+                </a>
+
                 <x-locale-switcher/>
 
                 <form method="POST" action="{{ route('logout') }}">
@@ -100,7 +136,9 @@
                 </form>
             </header>
 
-            <main class="flex-1 px-4 py-6 lg:px-8">
+            <main class="relative flex-1 px-4 py-6 lg:px-8">
+                <div class="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-primary-100/80 to-transparent"></div>
+                <div class="relative">
                 @if (session('status'))
                     <x-alert tone="success" class="mb-5">{{ session('status') }}</x-alert>
                 @endif
@@ -109,7 +147,20 @@
                     <x-alert tone="danger" class="mb-5">{{ session('error') }}</x-alert>
                 @endif
 
+                @if (session('profile_complete'))
+                    <x-alert tone="success" class="mb-5">{{ __('account.complete') }}</x-alert>
+                @elseif (! ($branding ?? app(\App\Support\Branding::class))->profileComplete($user))
+                    <x-alert tone="warning" class="mb-5">
+                        <a href="{{ route('account.edit') }}" class="font-medium underline-offset-2 hover:underline">{{ __('account.incomplete') }}</a>
+                    </x-alert>
+                @endif
+
+                @if ($errors->any())
+                    <x-alert tone="danger" class="mb-5">{{ $errors->first() }}</x-alert>
+                @endif
+
                 {{ $slot }}
+                </div>
             </main>
         </div>
     </div>

@@ -19,6 +19,7 @@ class AdminUserSeeder extends Seeder
                 'preferred_language' => 'ar',
                 'is_active' => true,
                 'email_verified_at' => now(),
+                'phone_verified_at' => now(),
             ],
         );
 
@@ -33,6 +34,7 @@ class AdminUserSeeder extends Seeder
                 'preferred_language' => 'ar',
                 'is_active' => true,
                 'email_verified_at' => now(),
+                'phone_verified_at' => now(),
             ],
         );
 

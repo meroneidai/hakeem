@@ -3,8 +3,11 @@
 namespace Tests\Feature;
 
 use App\Enums\DayOfWeek;
+use App\Enums\LabTestCategory;
+use App\Enums\SampleType;
 use App\Models\ClinicAddress;
 use App\Models\Doctor;
+use App\Models\LabTest;
 use App\Models\SubscriptionPlan;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -132,5 +135,63 @@ class ClinicOnboardingTest extends TestCase
         $this->assertTrue($service->is_active);
         $this->assertSame('250.00', $service->price);
         $this->assertSame(20, $service->duration_minutes);
+    }
+
+    public function test_owner_saves_a_map_pin_on_the_branch(): void
+    {
+        $context = $this->actingAsClinicOwner();
+        $address = ClinicAddress::factory()->create([
+            'clinic_id' => $context['clinic']->id,
+            'city_id' => $context['city']->id,
+        ]);
+
+        $this->put('/clinic/addresses/'.$address->id, [
+            'governorate_id' => $context['governorate']->id,
+            'city_id' => $context['city']->id,
+            'address_line' => 'شارع الهرم',
+            'latitude' => '30.0131000',
+            'longitude' => '31.2089000',
+            'is_active' => '1',
+        ])->assertRedirect();
+
+        $address->refresh();
+
+        $this->assertTrue($address->hasMapPin());
+        $this->assertEqualsWithDelta(30.0131, (float) $address->latitude, 0.0001);
+        $this->assertEqualsWithDelta(31.2089, (float) $address->longitude, 0.0001);
+    }
+
+    public function test_owner_enables_a_lab_test_offering(): void
+    {
+        $context = $this->actingAsClinicOwner();
+
+        $test = LabTest::query()->create([
+            'slug' => 'cbc-clinic',
+            'name_ar' => 'صورة دم',
+            'name_en' => 'CBC',
+            'category' => LabTestCategory::Blood,
+            'sample_type' => SampleType::Blood,
+            'suggested_price' => 180,
+            'is_active' => true,
+        ]);
+
+        $this->put('/clinic/labs', [
+            'tests' => [
+                $test->id => [
+                    'enabled' => '1',
+                    'price' => '200',
+                    'home_price' => '320',
+                    'home' => '1',
+                ],
+            ],
+        ])->assertRedirect();
+
+        $offering = $context['clinic']->labOfferings()->first();
+
+        $this->assertSame('test', $offering->item_type);
+        $this->assertSame($test->id, $offering->lab_test_id);
+        $this->assertSame('200.00', $offering->price);
+        $this->assertSame('320.00', $offering->home_price);
+        $this->assertTrue($offering->allows_home_collection);
     }
 }

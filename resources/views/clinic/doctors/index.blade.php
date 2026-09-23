@@ -21,8 +21,17 @@
         @forelse ($doctors as $doctor)
             <tr>
                 <x-td>
-                    <span class="font-medium text-ink-900">{{ $doctor->name }}</span>
-                    <span class="mt-0.5 block text-xs text-ink-400" dir="ltr">{{ $doctor->name_en }}</span>
+                    <span class="flex items-center gap-2">
+                        <x-media
+                            :src="\App\Support\PublicImage::url($doctor->profile_photo_path)"
+                            :alt="$doctor->name"
+                            class="size-9 rounded-xl"
+                        />
+                        <span>
+                            <span class="font-medium text-ink-900">{{ $doctor->name }}</span>
+                            <span class="mt-0.5 block text-xs text-ink-400" dir="ltr">{{ $doctor->name_en }}</span>
+                        </span>
+                    </span>
                 </x-td>
                 <x-td>{{ $doctor->specialty?->name ?? '—' }}</x-td>
                 <x-td>

@@ -1,0 +1,33 @@
+<?php
+
+return [
+    'heading' => 'السجلات الطبية',
+    'subtitle' => 'الاستشارات، نتائج التحاليل، الروشتات، والإجازات المرضية في مكان واحد.',
+    'empty' => 'لا توجد سجلات بعد. تظهر هنا بعد اكتمال الزيارة أو ظهور نتائج التحاليل.',
+    'download_pdf' => 'تنزيل PDF موثّق',
+    'verification' => 'رمز التوثيق',
+    'verify_heading' => 'التحقق من مستند طبي',
+    'verified' => 'مستند موثّق على حكيم',
+    'verified_footer' => 'يمكن لأي صيدلية أو جهة طبية التحقق من هذا المستند عبر الرمز والرابط أدناه.',
+    'verify_hint' => 'تحقق من صحة المستند:',
+    'view_results' => 'عرض النتائج في السجلات',
+    'patient' => 'المريض',
+    'medications' => 'الأدوية',
+    'results' => 'نتائج التحاليل',
+    'lab_title' => 'نتائج التحاليل :reference',
+    'valid_range' => 'صالحة من :from حتى :until',
+    'med_name' => 'الدواء',
+    'med_dose' => 'الجرعة',
+    'med_frequency' => 'التكرار',
+    'med_duration' => 'المدة',
+    'result_name' => 'الفحص',
+    'result_value' => 'النتيجة',
+    'result_flag' => 'المؤشر',
+    'types' => [
+        'consultation' => 'استشارة',
+        'prescription' => 'روشتة طبية',
+        'lab_result' => 'نتائج تحاليل',
+        'sick_leave' => 'إجازة مرضية',
+        'treatment_plan' => 'خطة علاجية',
+    ],
+];

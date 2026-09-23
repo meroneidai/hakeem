@@ -33,10 +33,19 @@
         @forelse ($specialties as $specialty)
             <tr>
                 <x-td class="font-medium text-ink-900">
-                    {{ $specialty->name_ar }}
-                    @if ($specialty->is_featured)
-                        <x-badge tone="accent" class="ms-1">{{ __('common.featured') }}</x-badge>
-                    @endif
+                    <span class="flex items-center gap-2">
+                        <x-media
+                            :src="\App\Support\PublicImage::url($specialty->image_path)"
+                            :alt="$specialty->name_ar"
+                            class="size-8 rounded-lg"
+                        />
+                        <span>
+                            {{ $specialty->name_ar }}
+                            @if ($specialty->is_featured)
+                                <x-badge tone="accent" class="ms-1">{{ __('common.featured') }}</x-badge>
+                            @endif
+                        </span>
+                    </span>
                 </x-td>
                 <x-td>{{ $specialty->name_en }}</x-td>
                 <x-td>

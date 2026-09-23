@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Enums\ClinicModule;
 use App\Http\Controllers\Controller;
 use App\Models\DiscountCode;
 use App\Models\Governorate;
@@ -32,6 +33,7 @@ class ClinicRegisterController extends Controller
             ]),
             'specialties' => Specialty::query()->active()->ordered()->get(),
             'plans' => SubscriptionPlan::query()->active()->ordered()->with('featureFlags')->get(),
+            'modules' => ClinicModule::selectable(),
         ]);
     }
 
@@ -57,6 +59,8 @@ class ClinicRegisterController extends Controller
             'discount_code' => ['nullable', 'string', 'max:64'],
             'doctor_name_ar' => ['nullable', 'string', 'max:160'],
             'doctor_name_en' => ['nullable', 'string', 'max:160'],
+            'modules' => ['nullable', 'array'],
+            'modules.*' => [Rule::enum(ClinicModule::class)],
         ]);
 
         $phone = User::normalizePhone($validated['phone']);

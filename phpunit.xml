@@ -34,5 +34,8 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <env name="HERMES_AGENT_KEY" value="testing-hermes-key"/>
+        <env name="HERMES_CHAT_URL" value=""/>
+        <env name="HERMES_CHAT_KEY" value=""/>
     </php>
 </phpunit>

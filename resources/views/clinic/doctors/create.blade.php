@@ -1,7 +1,7 @@
 <x-layouts.clinic :title="__('clinic.doctors.add')">
     <x-page-header :title="__('clinic.doctors.add')"/>
 
-    <form method="POST" action="{{ route('clinic.doctors.store') }}">
+    <form method="POST" action="{{ route('clinic.doctors.store') }}" enctype="multipart/form-data">
         @csrf
         <x-card class="max-w-3xl">
             @include('clinic.doctors._form')

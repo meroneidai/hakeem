@@ -7,8 +7,9 @@ use App\Models\ServiceType;
 use Illuminate\Database\Seeder;
 
 /**
- * The six bookable service types (md_files/02 §1). All share one booking engine;
- * these flags are what the engine branches on.
+ * The bookable service types (md_files/02 §1). All share one booking engine;
+ * these flags are what the engine branches on. Rehab types add session packs
+ * and a clinic-scoped evaluation gate.
  */
 class ServiceTypeSeeder extends Seeder
 {
@@ -27,6 +28,7 @@ class ServiceTypeSeeder extends Seeder
                 'requires_time_slot' => true,
                 'is_online' => false,
                 'is_sensitive' => false,
+                'default_duration_minutes' => 30,
             ],
             [
                 'code' => ServiceTypeCode::HomeVisit,
@@ -40,6 +42,7 @@ class ServiceTypeSeeder extends Seeder
                 'requires_time_slot' => true,
                 'is_online' => false,
                 'is_sensitive' => false,
+                'default_duration_minutes' => 45,
             ],
             [
                 'code' => ServiceTypeCode::VideoConsultation,
@@ -53,6 +56,8 @@ class ServiceTypeSeeder extends Seeder
                 'requires_time_slot' => true,
                 'is_online' => true,
                 'is_sensitive' => false,
+                'allowed_payment_modes' => ['online'],
+                'default_duration_minutes' => 15,
             ],
             [
                 'code' => ServiceTypeCode::LabTest,
@@ -66,6 +71,7 @@ class ServiceTypeSeeder extends Seeder
                 'requires_time_slot' => true,
                 'is_online' => false,
                 'is_sensitive' => false,
+                'default_duration_minutes' => 15,
             ],
             [
                 'code' => ServiceTypeCode::HomeLabTest,
@@ -79,6 +85,7 @@ class ServiceTypeSeeder extends Seeder
                 'requires_time_slot' => true,
                 'is_online' => false,
                 'is_sensitive' => false,
+                'default_duration_minutes' => 15,
             ],
             [
                 'code' => ServiceTypeCode::PsychiatricConsultation,
@@ -92,6 +99,36 @@ class ServiceTypeSeeder extends Seeder
                 'requires_time_slot' => true,
                 'is_online' => true,
                 'is_sensitive' => true,
+                'allowed_payment_modes' => ['online'],
+                'default_duration_minutes' => 45,
+            ],
+            [
+                'code' => ServiceTypeCode::PhysicalTherapy,
+                'name_ar' => 'علاج طبيعي وتأهيل',
+                'name_en' => 'Physiotherapy & Rehab',
+                'slug' => 'physical-therapy',
+                'description_ar' => 'جلسات علاج طبيعي. أول زيارة تقييم في نفس العيادة، ثم يمكن شراء جلسة أو أكثر.',
+                'description_en' => 'Physiotherapy sessions. The first visit at this clinic is an evaluation; then patients may buy one or more sessions.',
+                'requires_clinic_address' => true,
+                'requires_patient_address' => false,
+                'requires_time_slot' => true,
+                'is_online' => false,
+                'is_sensitive' => false,
+                'default_duration_minutes' => 45,
+            ],
+            [
+                'code' => ServiceTypeCode::OccupationalTherapy,
+                'name_ar' => 'علاج وظيفي',
+                'name_en' => 'Occupational Therapy',
+                'slug' => 'occupational-therapy',
+                'description_ar' => 'جلسات علاج وظيفي لإعادة التأهيل اليومي. التقييم الأول إلزامي في نفس العيادة.',
+                'description_en' => 'Occupational-therapy sessions for daily-function rehab. The first evaluation must be at the same clinic.',
+                'requires_clinic_address' => true,
+                'requires_patient_address' => false,
+                'requires_time_slot' => true,
+                'is_online' => false,
+                'is_sensitive' => false,
+                'default_duration_minutes' => 45,
             ],
         ];
 

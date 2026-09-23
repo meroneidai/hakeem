@@ -1,15 +1,15 @@
 <x-layouts.auth :title="__('auth.register')" :heading="__('auth.register_title')" :subheading="__('auth.register_subtitle')">
     <form method="POST" action="{{ route('register') }}" class="space-y-4">
         @csrf
+        <input type="hidden" name="ref" value="{{ session('referral_code', request('ref')) }}">
 
         <x-field :label="__('auth.name')" name="name" required>
             <x-input name="name" autocomplete="name" autofocus/>
         </x-field>
 
-        <x-field :label="__('auth.phone')" name="phone" required :hint="__('auth.phone_hint')">
-            <x-input name="phone" type="tel" dir="ltr" inputmode="tel" autocomplete="username"
-                     :placeholder="__('auth.phone_placeholder')"/>
-        </x-field>
+        <x-identifier-field :value="old('identifier', old('phone', old('email')))"/>
+
+        <x-insurance-select :providers="$insuranceProviders" :selected="old('insurance_provider_id')"/>
 
         <x-field :label="__('auth.password_label')" name="password" required>
             <x-input name="password" type="password" autocomplete="new-password"/>

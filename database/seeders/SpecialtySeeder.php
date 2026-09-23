@@ -11,7 +11,7 @@ class SpecialtySeeder extends Seeder
     {
         $featured = [
             'general-practice', 'dentistry', 'pediatrics', 'dermatology',
-            'physical-therapy', 'psychiatry', 'medical-laboratory', 'obstetrics-gynecology',
+            'physical-therapy', 'occupational-therapy', 'psychiatry', 'medical-laboratory', 'obstetrics-gynecology',
         ];
 
         foreach ($this->data() as $order => [$nameAr, $nameEn, $slug, $category]) {
@@ -72,6 +72,7 @@ class SpecialtySeeder extends Seeder
 
             ['علاج طبيعي', 'Physical Therapy', 'physical-therapy', 'physical_therapy'],
             ['تأهيل رياضي', 'Sports Rehabilitation', 'sports-rehabilitation', 'physical_therapy'],
+            ['علاج وظيفي', 'Occupational Therapy', 'occupational-therapy', 'physical_therapy'],
 
             ['طب نفسي', 'Psychiatry', 'psychiatry', 'psychiatry'],
             ['علاج نفسي وإرشاد', 'Psychotherapy & Counselling', 'psychotherapy', 'psychiatry'],

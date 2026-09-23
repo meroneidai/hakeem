@@ -37,11 +37,23 @@
         <x-alert tone="warning" class="mb-3">{{ __('admin.staff.cannot_edit_self_roles') }}</x-alert>
     @endif
 
-    <div class="space-y-2.5">
+    <div class="space-y-3">
         @foreach ($roles as $role)
-            <x-checkbox name="roles[]" :value="$role->name" :label="$role->label"
-                        :checked="in_array($role->name, old('roles', $assigned), true)"
-                        :disabled="$isSelf"/>
+            @php
+                $roleEnum = \App\Enums\RoleName::tryFrom($role->name);
+                $permissionKeys = $roleEnum?->permissions() ?? [];
+                $permissionLabels = in_array('*', $permissionKeys, true)
+                    ? [__('admin.staff.full_access')]
+                    : collect($permissionKeys)
+                        ->map(fn (string $key) => \App\Enums\Permission::tryFrom($key)?->labelAr() ?? $key)
+                        ->all();
+            @endphp
+            <div>
+                <x-checkbox name="roles[]" :value="$role->name" :label="$role->label"
+                            :checked="in_array($role->name, old('roles', $assigned), true)"
+                            :disabled="$isSelf"/>
+                <p class="ms-6 mt-0.5 text-xs text-ink-400">{{ implode(' · ', $permissionLabels) }}</p>
+            </div>
         @endforeach
     </div>
 

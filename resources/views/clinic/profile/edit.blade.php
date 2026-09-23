@@ -1,7 +1,7 @@
 <x-layouts.clinic :title="__('clinic.profile.heading')">
     <x-page-header :title="__('clinic.profile.heading')" :subtitle="__('clinic.profile.subtitle')"/>
 
-    <form method="POST" action="{{ route('clinic.profile.update') }}" enctype="multipart/form-data">
+    <form method="POST" action="{{ route('clinic.profile.update') }}" enctype="multipart/form-data" class="space-y-5">
         @csrf
         @method('PUT')
 
@@ -27,12 +27,26 @@
                 </x-field>
                 <x-field :label="__('clinic.profile.logo')" name="logo" :hint="__('clinic.profile.logo_hint')" class="sm:col-span-2">
                     @if ($clinic->logo_path)
-                        <img src="{{ Storage::url($clinic->logo_path) }}" alt="" class="mb-3 size-16 rounded-xl object-cover">
+                        <img src="{{ \App\Support\PublicImage::url($clinic->logo_path) }}" alt="" class="mb-3 size-16 rounded-xl object-cover">
                     @endif
-                    <x-input name="logo" type="file" accept="image/*"/>
+                    <x-input name="logo" type="file" accept="image/jpeg,image/png,image/webp"/>
                 </x-field>
             </div>
+        </x-card>
 
+        <x-card class="max-w-3xl" :title="__('clinic.profile.modules')" :subtitle="__('clinic.profile.modules_hint')">
+            <div class="space-y-3">
+                @foreach ($modules as $module)
+                    <x-checkbox
+                        name="modules[]"
+                        :value="$module->value"
+                        :label="$module->label()"
+                        :hint="$module->hint()"
+                        :checked="in_array($module->value, old('modules', $clinic->enabledModuleValues()), true)"
+                        :withHidden="false"
+                    />
+                @endforeach
+            </div>
             <x-slot:footer>
                 <x-button variant="accent">{{ __('common.save_changes') }}</x-button>
             </x-slot:footer>

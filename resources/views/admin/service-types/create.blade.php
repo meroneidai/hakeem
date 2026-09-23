@@ -1,7 +1,7 @@
 <x-layouts.admin :title="__('admin.service_types.create')">
     <x-page-header :title="__('admin.service_types.create')"/>
 
-    <form method="POST" action="{{ route('admin.service-types.store') }}">
+    <form method="POST" action="{{ route('admin.service-types.store') }}" enctype="multipart/form-data">
         @csrf
         <x-card class="max-w-3xl">
             @include('admin.service-types._form')

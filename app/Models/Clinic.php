@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Enums\ClinicModule;
 use App\Enums\PlanFeature;
 use App\Enums\VerificationStatus;
+use App\Models\Concerns\HasRatings;
 use App\Models\Concerns\HasTranslatedAttributes;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -18,10 +20,11 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'owner_user_id', 'name_ar', 'name_en', 'slug', 'description_ar', 'description_en',
     'logo_path', 'email', 'phone', 'is_single_doctor', 'subscription_plan_id',
     'verification_status', 'rejection_reason', 'verified_at', 'is_active',
+    'payment_modes', 'default_payment_mode', 'modules',
 ])]
 class Clinic extends Model
 {
-    use HasFactory, HasTranslatedAttributes;
+    use HasFactory, HasRatings, HasTranslatedAttributes;
 
     protected function casts(): array
     {
@@ -30,6 +33,8 @@ class Clinic extends Model
             'is_active' => 'boolean',
             'verified_at' => 'datetime',
             'verification_status' => VerificationStatus::class,
+            'payment_modes' => 'array',
+            'modules' => 'array',
         ];
     }
 
@@ -56,6 +61,62 @@ class Clinic extends Model
     public function services(): HasMany
     {
         return $this->hasMany(ClinicService::class);
+    }
+
+    public function labOfferings(): HasMany
+    {
+        return $this->hasMany(ClinicLabOffering::class);
+    }
+
+    public function promotions(): HasMany
+    {
+        return $this->hasMany(Promotion::class);
+    }
+
+    public function bookings(): HasMany
+    {
+        return $this->hasMany(Booking::class);
+    }
+
+    public function labOrders(): HasMany
+    {
+        return $this->hasMany(LabOrder::class);
+    }
+
+    public function careDocuments(): HasMany
+    {
+        return $this->hasMany(CareDocument::class);
+    }
+
+    /**
+     * Modules stored at registration. Null/empty keeps every module visible so
+     * existing clinics are not stripped of dashboard sections.
+     *
+     * @return list<string>
+     */
+    public function enabledModuleValues(): array
+    {
+        if (! is_array($this->modules) || $this->modules === []) {
+            return array_map(fn (ClinicModule $module) => $module->value, ClinicModule::cases());
+        }
+
+        return ClinicModule::normalize($this->modules);
+    }
+
+    public function hasModule(ClinicModule|string $module): bool
+    {
+        $value = $module instanceof ClinicModule ? $module->value : $module;
+
+        if ($value === ClinicModule::Appointments->value) {
+            return true;
+        }
+
+        return in_array($value, $this->enabledModuleValues(), true);
+    }
+
+    public function moduleAllowsServiceType(string $code): bool
+    {
+        return $this->hasModule(ClinicModule::forServiceType($code));
     }
 
     public function subscriptions(): HasMany
@@ -190,5 +251,13 @@ class Clinic extends Model
     public function scopeListable(Builder $query): Builder
     {
         return $query->verified()->active();
+    }
+
+    public function scopeOffering(Builder $query, ServiceType $serviceType): Builder
+    {
+        return $query->whereHas(
+            'services',
+            fn (Builder $services) => $services->active()->where('service_type_id', $serviceType->id)
+        );
     }
 }

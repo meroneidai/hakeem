@@ -7,6 +7,7 @@
 <x-layouts.admin :title="__('admin.seo.heading')">
     <x-page-header :title="__('admin.seo.heading')" :subtitle="__('admin.seo.subheading')">
         <x-slot:actions>
+            <x-button :href="route('admin.seo.site.edit')" variant="secondary" size="sm">{{ __('admin.seo.site') }}</x-button>
             <form method="GET" class="flex items-center gap-2">
                 <x-select name="page_type" :placeholder="__('common.all')" :options="$typeOptions"
                           :selected="request('page_type')" class="w-44"/>

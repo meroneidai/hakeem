@@ -36,6 +36,38 @@
         <x-input name="discount_details" :value="$promotion->discount_details"/>
     </x-field>
 
+    <x-field :label="__('admin.promotions.category')" name="category" required>
+        <x-select name="category"
+                  :options="collect(App\Enums\OfferCategory::cases())->mapWithKeys(fn ($category) => [$category->value => $category->label()])->all()"
+                  :selected="old('category', $promotion->category?->value)"/>
+    </x-field>
+
+    <x-field :label="__('admin.promotions.clinic')" name="clinic_id">
+        <x-select name="clinic_id" :placeholder="__('admin.promotions.platform_wide')"
+                  :options="$clinics->pluck('name', 'id')->all()" :selected="$promotion->clinic_id"/>
+    </x-field>
+
+    <x-field :label="__('admin.promotions.original_price')" name="original_price">
+        <x-input name="original_price" type="number" step="0.01" min="0" :value="$promotion->original_price" dir="ltr"/>
+    </x-field>
+
+    <x-field :label="__('admin.promotions.offer_price')" name="offer_price">
+        <x-input name="offer_price" type="number" step="0.01" min="0" :value="$promotion->offer_price" dir="ltr"/>
+    </x-field>
+
+    <x-field :label="__('admin.promotions.includes').' (AR)'" name="includes_ar" class="sm:col-span-2">
+        <x-textarea name="includes_ar" :value="$promotion->includes_ar" rows="2"/>
+    </x-field>
+    <x-field :label="__('admin.promotions.includes').' (EN)'" name="includes_en" class="sm:col-span-2">
+        <x-textarea name="includes_en" :value="$promotion->includes_en" rows="2" dir="ltr"/>
+    </x-field>
+    <x-field :label="__('admin.promotions.conditions').' (AR)'" name="conditions_ar" class="sm:col-span-2">
+        <x-textarea name="conditions_ar" :value="$promotion->conditions_ar" rows="2"/>
+    </x-field>
+    <x-field :label="__('admin.promotions.conditions').' (EN)'" name="conditions_en" class="sm:col-span-2">
+        <x-textarea name="conditions_en" :value="$promotion->conditions_en" rows="2" dir="ltr"/>
+    </x-field>
+
     <x-field :label="__('admin.promotions.specialty')" name="specialty_id">
         <x-select name="specialty_id" :placeholder="__('common.none')"
                   :options="$specialties->pluck('name', 'id')->all()" :selected="$promotion->specialty_id"/>
@@ -57,6 +89,8 @@
     <x-field :label="__('common.slug')" name="slug" :hint="__('common.slug_hint')" class="sm:col-span-2">
         <x-input name="slug" :value="$promotion->slug" dir="ltr"/>
     </x-field>
+
+    <x-image-field name="banner" :path="$promotion->banner_image_path" :label="__('common.banner')"/>
 </div>
 
 <div class="mt-4 space-y-2.5">

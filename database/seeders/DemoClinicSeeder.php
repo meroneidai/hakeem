@@ -2,7 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Enums\ClinicModule;
 use App\Enums\RoleName;
+use App\Enums\VerificationStatus;
 use App\Models\City;
 use App\Models\Clinic;
 use App\Models\Specialty;
@@ -14,7 +16,22 @@ class DemoClinicSeeder extends Seeder
 {
     public function run(): void
     {
-        if (Clinic::query()->where('email', 'clinic@hakeem.test')->exists()) {
+        $existing = Clinic::query()->where('email', 'clinic@hakeem.test')->first();
+
+        if ($existing) {
+            $existing->update([
+                'verification_status' => VerificationStatus::Verified,
+                'verified_at' => $existing->verified_at ?? now(),
+                'modules' => ClinicModule::normalize([
+                    ClinicModule::Labs,
+                    ClinicModule::Promotions,
+                    ClinicModule::PhysicalTherapy,
+                    ClinicModule::Dental,
+                    ClinicModule::Cosmetic,
+                    ClinicModule::Massage,
+                ]),
+            ]);
+
             return;
         }
 
@@ -45,6 +62,18 @@ class DemoClinicSeeder extends Seeder
         ]);
 
         $clinic = $owner->ownedClinics()->first();
+        $clinic->update([
+            'verification_status' => VerificationStatus::Verified,
+            'verified_at' => now(),
+            'modules' => ClinicModule::normalize([
+                ClinicModule::Labs,
+                ClinicModule::Promotions,
+                ClinicModule::PhysicalTherapy,
+                ClinicModule::Dental,
+                ClinicModule::Cosmetic,
+                ClinicModule::Massage,
+            ]),
+        ]);
 
         $reception = User::updateOrCreate(
             ['phone' => User::normalizePhone('01222222222')],

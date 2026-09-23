@@ -1,7 +1,7 @@
 <x-layouts.admin :title="__('admin.specialties.create')">
     <x-page-header :title="__('admin.specialties.create')"/>
 
-    <form method="POST" action="{{ route('admin.specialties.store') }}">
+    <form method="POST" action="{{ route('admin.specialties.store') }}" enctype="multipart/form-data">
         @csrf
         <x-card class="max-w-3xl">
             @include('admin.specialties._form')

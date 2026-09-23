@@ -20,6 +20,7 @@ Doctors and Clinics register through **the same registration panel/flow**. The v
 
 - A **Clinic** has one or more **Doctors** (many-to-many: a doctor could in theory work across more than one clinic, though v1 can start with one-clinic-per-doctor and extend later).
 - A **Clinic** has one or more **Clinic Addresses**.
+- Each address stores a **map pin** (`latitude` / `longitude`) in addition to the street line. Egyptian street names are often not enough; the clinic owner drags a Leaflet/OSM pin so the patient can open the exact point on maps.
 - Each **Clinic Address** has its **own independent working-hours schedule** (days open, time ranges, break times, slot duration) — Address A of a clinic can be open Sat–Thu 9–5 while Address B is open Sun–Fri 12–8.
 - Each Doctor can be linked to specific Addresses (a doctor might only see patients at one of the clinic's two branches) with their own per-address availability layered on top of the address's hours.
 
@@ -62,6 +63,10 @@ Every clinic has a **Reception** capability — a scoped dashboard role (see `04
 - Trigger payment status updates for "pay at clinic" bookings
 
 Reception does **not** have access to: subscription/billing settings, other clinics' data, or platform-wide analytics.
+
+## 5.1 Clinic labs & offers
+- Clinic owners enable catalog tests/packages they actually perform (`/clinic/labs`) with price, promo price, and home collection.
+- Clinic owners publish Vezeeta-style offers (`/clinic/offers`): category, what is included, conditions, original vs offer price, start/end. These appear on `/offers` while running.
 
 ## 6. Notifications on Registration & Status Changes
 

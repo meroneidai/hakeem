@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\AccountIdentifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -20,38 +22,56 @@ class LoginController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'phone' => ['required', 'string', 'max:32'],
+        $request->validate([
+            'identifier' => ['nullable', 'string', 'max:190'],
+            'phone' => ['nullable', 'string', 'max:32'],
+            'email' => ['nullable', 'string', 'max:190'],
             'password' => ['required', 'string'],
         ]);
 
-        $phone = User::normalizePhone($validated['phone']);
-        $throttleKey = 'login:'.$phone.'|'.$request->ip();
+        $identifier = AccountIdentifier::fromRequest(
+            $request->input('identifier'),
+            $request->input('phone'),
+            $request->input('email'),
+        );
+
+        $throttleKey = $identifier->throttleKey('login', $request->ip());
 
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             throw ValidationException::withMessages([
-                'phone' => __('auth.throttle', ['seconds' => RateLimiter::availableIn($throttleKey)]),
+                'identifier' => __('auth.throttle', ['seconds' => RateLimiter::availableIn($throttleKey)]),
             ]);
         }
 
-        if (! Auth::attempt(['phone' => $phone, 'password' => $validated['password']], $request->boolean('remember'))) {
+        $user = $identifier->findUser();
+
+        if (! $user || ! Hash::check($request->input('password'), $user->password)) {
             RateLimiter::hit($throttleKey, 60);
 
-            throw ValidationException::withMessages(['phone' => __('auth.failed')]);
+            throw ValidationException::withMessages(['identifier' => __('auth.failed')]);
         }
 
-        if (! $request->user()->is_active) {
-            Auth::logout();
+        if ($user->isInternalStaff()) {
+            $shown = $user->email ?: $user->phone;
+            RateLimiter::clear($throttleKey);
 
-            throw ValidationException::withMessages(['phone' => __('auth.inactive')]);
+            return redirect()
+                ->route('admin.login')
+                ->with('status', __('auth.use_admin_login'))
+                ->withInput(['identifier' => $shown, 'email' => $shown]);
         }
 
+        if (! $user->is_active) {
+            throw ValidationException::withMessages(['identifier' => __('auth.inactive')]);
+        }
+
+        Auth::login($user, $request->boolean('remember'));
         RateLimiter::clear($throttleKey);
         $request->session()->regenerate();
-        $request->session()->put('locale', $request->user()->preferred_language);
-        $request->user()->forceFill(['last_login_at' => now()])->save();
+        $request->session()->put('locale', $user->preferred_language);
+        $user->forceFill(['last_login_at' => now()])->save();
 
-        return redirect()->intended($this->homeFor($request->user()));
+        return redirect()->intended($this->homeFor($user));
     }
 
     public function destroy(Request $request): RedirectResponse

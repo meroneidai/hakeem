@@ -1,7 +1,7 @@
 <x-layouts.clinic :title="__('clinic.doctors.edit')">
     <x-page-header :title="__('clinic.doctors.edit')" :subtitle="$doctor->name"/>
 
-    <form method="POST" action="{{ route('clinic.doctors.update', $doctor) }}">
+    <form method="POST" action="{{ route('clinic.doctors.update', $doctor) }}" enctype="multipart/form-data">
         @csrf
         @method('PUT')
         <x-card class="max-w-3xl">

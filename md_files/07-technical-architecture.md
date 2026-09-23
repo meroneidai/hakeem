@@ -7,7 +7,7 @@
 | Backend framework | Laravel |
 | Server-rendered frontend | Blade + Alpine.js + Tailwind CSS (custom design, not a stock template) |
 | Database | PostgreSQL |
-| Auth | Laravel Sanctum (token-based, shared by web, mobile, and the Hermes agent) |
+| Auth | Dual entry: platform staff at `/admin/login` (email + password); patients and clinics at `/login` (Egypt +20 phone + password). Sanctum tokens for API/mobile. Firebase + SMS + social (Google/Facebook/Apple) configured via env; Socialite/native Firebase Auth complete when keys are present. |
 | Background jobs | Laravel Queues (notification dispatch, result-processing, report generation) |
 | Scheduled tasks | Laravel Scheduler (reminders, subscription renewals, promotion expiry) |
 | Domain events | Laravel Events (booking status changes trigger notification + audit-log listeners) |

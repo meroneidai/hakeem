@@ -6,6 +6,7 @@ use App\Enums\RoleName;
 use App\Models\AuditLog;
 use App\Models\City;
 use App\Models\Governorate;
+use App\Models\ServiceType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -94,6 +95,8 @@ class ReferenceDataTest extends TestCase
             'requires_patient_address' => '1',
             'requires_time_slot' => '1',
             'is_active' => '1',
+            'default_duration_minutes' => 45,
+            'allowed_payment_modes' => ['at_clinic', 'after_service'],
         ])->assertRedirect('/admin/service-types');
 
         $this->assertDatabaseHas('service_types', [
@@ -101,6 +104,12 @@ class ReferenceDataTest extends TestCase
             'requires_patient_address' => true,
             'requires_clinic_address' => false,
             'is_online' => false,
+            'default_duration_minutes' => 45,
         ]);
+
+        $this->assertSame(
+            ['at_clinic', 'after_service'],
+            ServiceType::query()->firstWhere('code', 'home_visit')?->allowed_payment_modes,
+        );
     }
 }

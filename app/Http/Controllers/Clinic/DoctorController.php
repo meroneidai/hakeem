@@ -6,6 +6,7 @@ use App\Enums\DayOfWeek;
 use App\Http\Controllers\Controller;
 use App\Models\Doctor;
 use App\Models\Specialty;
+use App\Support\PublicImage;
 use App\Support\UniqueSlug;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -98,6 +99,7 @@ class DoctorController extends Controller
 
         if ($doctor->clinics()->count() === 0) {
             $doctor->availability()->delete();
+            PublicImage::delete($doctor->profile_photo_path);
             $doctor->delete();
         }
 
@@ -136,10 +138,20 @@ class DoctorController extends Controller
             'bio_en' => ['nullable', 'string', 'max:4000'],
             'credentials' => ['nullable', 'string', 'max:255'],
             'years_of_experience' => ['nullable', 'integer', 'min:0', 'max:70'],
+            'gender' => ['nullable', 'in:male,female'],
+            'consultation_fee' => ['nullable', 'numeric', 'min:0', 'max:99999'],
+            'photo' => PublicImage::rules(),
             'is_active' => ['sometimes', 'boolean'],
         ]);
 
         $data['is_active'] = $request->boolean('is_active', true);
+        unset($data['photo']);
+        $data['profile_photo_path'] = PublicImage::store(
+            $request,
+            'photo',
+            'doctors',
+            $request->route('doctor')?->profile_photo_path
+        );
 
         return $data;
     }

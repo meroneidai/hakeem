@@ -115,6 +115,28 @@
         </div>
 
         <div>
+            <h2 class="mb-1 text-sm font-semibold text-ink-800">{{ __('clinic.register.modules') }}</h2>
+            <p class="mb-3 text-xs text-ink-500">{{ __('clinic.register.modules_hint') }}</p>
+            <div class="space-y-3">
+                @foreach ($modules as $module)
+                    <label class="card flex cursor-pointer items-start gap-3 p-4">
+                        <input
+                            type="checkbox"
+                            name="modules[]"
+                            value="{{ $module->value }}"
+                            class="mt-1 size-4 rounded border-ink-300 text-primary-600"
+                            @checked(in_array($module->value, old('modules', []), true))
+                        >
+                        <span>
+                            <span class="block font-semibold text-ink-900">{{ $module->label() }}</span>
+                            <span class="mt-1 block text-xs text-ink-500">{{ $module->hint() }}</span>
+                        </span>
+                    </label>
+                @endforeach
+            </div>
+        </div>
+
+        <div>
             <h2 class="mb-1 text-sm font-semibold text-ink-800">{{ __('clinic.register.plan') }}</h2>
             <p class="mb-3 text-xs text-ink-500">{{ __('clinic.register.plan_hint') }}</p>
             <input type="hidden" name="subscription_plan_id" :value="planId">

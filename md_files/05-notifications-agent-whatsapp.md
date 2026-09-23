@@ -33,11 +33,15 @@ Many patients in Egypt will find it faster/more natural to book "by typing" on W
 ## 4. Delivery Channels per Notification
 
 Each notification type can be configured (per `04-admin-dashboard-support.md` §6) to fire on any combination of:
-- **Push notification** (mobile app, via Firebase Cloud Messaging)
-- **SMS** (fallback for users without the app installed, or for critical alerts like booking confirmation)
+- **Push notification** (mobile app, via Firebase Cloud Messaging — credentials in `FIREBASE_*`)
+- **SMS** (Egypt-local provider via `SMS_*`; fallback when the app is not installed)
 - **WhatsApp message** (via the same Business API integration used by Hermes)
-- **Email** (mainly for clinics/doctors — receipts, weekly summaries, account/billing notices)
+- **Email** (mainly for clinics/doctors — receipts, weekly summaries, account/billing notices; also used for platform-staff login)
 - **In-app notification center** (always on, regardless of the above)
+
+`App\Services\NotificationDispatcher` logs when a channel is not configured so local/dev never crashes on missing Firebase/SMS keys.
+
+Social login (Google / Facebook / Apple) and Firebase phone OTP are wired as env-driven providers. The web buttons exist; full OAuth/Socialite and native mobile Firebase Auth complete when client IDs are set.
 
 ## 5. Reliability Requirements
 

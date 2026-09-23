@@ -30,7 +30,41 @@
     <x-field :label="__('common.display_order')" name="display_order">
         <x-input name="display_order" type="number" min="0" :value="$serviceType->display_order ?? 0"/>
     </x-field>
+
+    <x-image-field name="image" :path="$serviceType->image_path"/>
+
+    <x-field :label="__('admin.service_types.duration')" name="default_duration_minutes" required :hint="__('admin.service_types.duration_hint')">
+        <x-select
+            name="default_duration_minutes"
+            :options="\App\Support\ServiceDuration::options($serviceType->default_duration_minutes)"
+            :selected="old('default_duration_minutes', $serviceType->default_duration_minutes ?? 30)"
+        />
+    </x-field>
 </div>
+
+<fieldset class="mt-5 rounded-lg border border-ink-200 p-4">
+    <legend class="px-1 text-sm font-medium text-ink-700">{{ __('admin.service_types.payment_modes') }}</legend>
+    <p class="mb-3 text-xs text-ink-500">{{ __('admin.service_types.payment_modes_hint') }}</p>
+    <div class="grid gap-2.5 sm:grid-cols-3">
+        @php
+            $selectedModes = old('allowed_payment_modes', $serviceType->allowed_payment_modes ?? (
+                $serviceType->is_online ? [\App\Enums\PaymentMode::Online->value] : array_map(
+                    fn (\App\Enums\PaymentMode $mode) => $mode->value,
+                    \App\Enums\PaymentMode::cases()
+                )
+            ));
+        @endphp
+        @foreach (\App\Enums\PaymentMode::cases() as $mode)
+            <x-checkbox
+                name="allowed_payment_modes[]"
+                :value="$mode->value"
+                :label="$mode->label()"
+                :hint="$mode->hint()"
+                :checked="in_array($mode->value, $selectedModes, true)"
+            />
+        @endforeach
+    </div>
+</fieldset>
 
 <fieldset class="mt-5 rounded-lg border border-ink-200 p-4">
     <legend class="px-1 text-sm font-medium text-ink-700">{{ __('admin.service_types.rules') }}</legend>

@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\OfferCategory;
 use App\Enums\Permission;
 use App\Http\Controllers\Controller;
+use App\Models\Clinic;
 use App\Models\Promotion;
 use App\Models\ServiceType;
 use App\Models\Specialty;
 use App\Support\Audit;
+use App\Support\PublicImage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -24,7 +27,7 @@ class PromotionController extends Controller implements HasMiddleware
 
     public function index(Request $request): View
     {
-        $promotions = Promotion::with(['specialty', 'serviceType'])
+        $promotions = Promotion::with(['specialty', 'serviceType', 'clinic'])
             ->when($request->string('state')->value() === 'running', fn ($query) => $query->running())
             ->latest('starts_at')
             ->paginate(20)
@@ -39,6 +42,7 @@ class PromotionController extends Controller implements HasMiddleware
             'promotion' => new Promotion([
                 'is_active' => true,
                 'discount_type' => 'percentage',
+                'category' => OfferCategory::Lab,
                 'starts_at' => now(),
                 'ends_at' => now()->addMonth(),
             ]),
@@ -81,6 +85,7 @@ class PromotionController extends Controller implements HasMiddleware
     public function destroy(Promotion $promotion): RedirectResponse
     {
         Audit::deleted($promotion);
+        PublicImage::delete($promotion->banner_image_path);
         $promotion->delete();
 
         return redirect()->route('admin.promotions.index')
@@ -92,6 +97,7 @@ class PromotionController extends Controller implements HasMiddleware
         return [
             'specialties' => Specialty::active()->ordered()->get(),
             'serviceTypes' => ServiceType::active()->ordered()->get(),
+            'clinics' => Clinic::query()->orderBy('name_ar')->get(),
         ];
     }
 
@@ -103,15 +109,24 @@ class PromotionController extends Controller implements HasMiddleware
             'slug' => ['nullable', 'string', 'max:180', 'alpha_dash', Rule::unique('promotions', 'slug')->ignore($promotion)],
             'description_ar' => ['nullable', 'string', 'max:2000'],
             'description_en' => ['nullable', 'string', 'max:2000'],
+            'category' => ['required', Rule::enum(OfferCategory::class)],
+            'includes_ar' => ['nullable', 'string', 'max:2000'],
+            'includes_en' => ['nullable', 'string', 'max:2000'],
+            'conditions_ar' => ['nullable', 'string', 'max:2000'],
+            'conditions_en' => ['nullable', 'string', 'max:2000'],
             'discount_type' => ['required', Rule::in(['percentage', 'fixed', 'custom'])],
             'discount_value' => ['nullable', 'numeric', 'min:0', 'max:999999', 'required_unless:discount_type,custom'],
             'discount_details' => ['nullable', 'string', 'max:255', 'required_if:discount_type,custom'],
+            'original_price' => ['nullable', 'numeric', 'min:0'],
+            'offer_price' => ['nullable', 'numeric', 'min:0'],
+            'clinic_id' => ['nullable', 'exists:clinics,id'],
             'specialty_id' => ['nullable', 'exists:specialties,id'],
             'service_type_id' => ['nullable', 'exists:service_types,id'],
             'starts_at' => ['required', 'date'],
             'ends_at' => ['required', 'date', 'after:starts_at'],
             'is_featured' => ['boolean'],
             'is_active' => ['boolean'],
+            'banner' => PublicImage::rules(),
         ]);
 
         if ($data['discount_type'] === 'percentage' && ($data['discount_value'] ?? 0) > 100) {
@@ -125,6 +140,8 @@ class PromotionController extends Controller implements HasMiddleware
         $data['slug'] = ($data['slug'] ?? null) ?: Str::slug($data['title_en']).'-'.Str::lower(Str::random(4));
         $data['is_featured'] = $request->boolean('is_featured');
         $data['is_active'] = $request->boolean('is_active');
+        unset($data['banner']);
+        $data['banner_image_path'] = PublicImage::store($request, 'banner', 'offers', $promotion?->banner_image_path);
 
         return $data;
     }

@@ -2,24 +2,36 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\BookingStatus;
+use App\Enums\LabOrderStatus;
 use App\Enums\RoleName;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
+use App\Models\Booking;
 use App\Models\City;
+use App\Models\Clinic;
+use App\Models\ExceptionReport;
 use App\Models\Governorate;
+use App\Models\LabOrder;
 use App\Models\Promotion;
 use App\Models\ServiceType;
 use App\Models\Specialty;
 use App\Models\SubscriptionPlan;
 use App\Models\SupportTicket;
 use App\Models\User;
+use App\Services\MarketplaceInsights;
 use App\Support\Settings;
+use App\Support\StatusTally;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    public function __invoke(Settings $settings): View
+    public function __invoke(Settings $settings, MarketplaceInsights $insights): View
     {
+        $today = now()->toDateString();
+        $todayBookings = Booking::query()->onDate($today);
+        $todayLabs = LabOrder::query()->onDate($today);
+
         $counts = [
             'governorates' => Governorate::count(),
             'cities' => City::count(),
@@ -32,9 +44,18 @@ class DashboardController extends Controller
                 fn (RoleName $role) => $role->value,
                 RoleName::internalStaff(),
             )))->count(),
+            'patients' => User::whereHas('roles', fn ($q) => $q->where('name', RoleName::Patient->value))->count(),
+            'clinics' => Clinic::count(),
+            'bookings' => Booking::count(),
+            'bookings_today' => (clone $todayBookings)->count(),
+            'labs_today' => (clone $todayLabs)->count(),
+            'unpaid_today' => (clone $todayBookings)
+                ->where('payment_status', 'unpaid')
+                ->whereNotIn('status', [BookingStatus::Cancelled, BookingStatus::NoShow])
+                ->count(),
+            'open_errors' => ExceptionReport::query()->whereNull('resolved_at')->count(),
         ];
 
-        // Exit criteria for Phase 1: reference data configured before clinics can register.
         $checklist = [
             'geography' => $counts['governorates'] > 0 && $counts['cities'] > 0,
             'specialties' => $counts['specialties'] > 0,
@@ -45,7 +66,23 @@ class DashboardController extends Controller
         ];
 
         $recentActivity = AuditLog::with('user')->latest('created_at')->limit(8)->get();
+        $insightsSnapshot = $insights->snapshot();
 
-        return view('admin.dashboard', compact('counts', 'checklist', 'recentActivity'));
+        $recentBookings = Booking::query()
+            ->with(['patient', 'clinic', 'doctor'])
+            ->latest('scheduled_at')
+            ->limit(8)
+            ->get();
+
+        return view('admin.dashboard', [
+            'counts' => $counts,
+            'checklist' => $checklist,
+            'recentActivity' => $recentActivity,
+            'insightsSnapshot' => $insightsSnapshot,
+            'todayStatuses' => StatusTally::of($todayBookings, BookingStatus::cases()),
+            'todayLabStatuses' => StatusTally::of($todayLabs, LabOrderStatus::cases()),
+            'recentBookings' => $recentBookings,
+            'greetingDate' => now('Africa/Cairo'),
+        ]);
     }
 }
