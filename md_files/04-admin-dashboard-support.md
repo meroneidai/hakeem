@@ -9,7 +9,8 @@ The Platform Admin Dashboard is the foundation everything else depends on. It mu
 3. **Subscription Plans** — the 3-plan system, pricing, booking caps, feature flags per plan, discount/campaign codes
 4. **Clinic/Doctor moderation** — approve/reject/suspend clinic and doctor accounts if moderation is enabled; verification badges
 5. **Payment configuration** — global default payment modes, gateway credentials, per-clinic overrides allowed or not
-6. **Promotions & Offers** — create platform-wide or clinic-specific promotional pricing/banners, schedule start/end dates, feature them on the homepage
+6. **Promotions & Offers** — create platform-wide or clinic-specific promotional pricing/banners, schedule start/end dates, feature them on the homepage. Each offer stores category, inclusions, conditions, original price and offer price (same shape as Vezeeta offer cards).
+6b. **Lab catalog** — master list of medical tests (what it measures, preparation, sample, fasting, turnaround, guide price) and multi-test packages. Permission: `manage_lab_catalog`.
 7. **Ratings & Reviews moderation** — hide/flag abusive reviews, respond on behalf of platform if needed
 8. **Content/SEO management** — manage the auto-generated landing pages (by Governorate × Specialty, City × Specialty), meta titles/descriptions, blog/health-content section
 9. **Support tickets** — inbox for chat/WhatsApp support requests raised by patients or clinics (see §6)

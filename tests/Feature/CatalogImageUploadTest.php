@@ -23,7 +23,7 @@ class CatalogImageUploadTest extends TestCase
             'name_en' => 'Cardiology',
             'category' => 'general',
             'image' => UploadedFile::fake()->image('heart.jpg'),
-        ])->assertRedirect('/login');
+        ])->assertRedirect('/admin/login');
     }
 
     public function test_patient_cannot_upload_specialty_image(): void

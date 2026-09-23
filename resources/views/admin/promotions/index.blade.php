@@ -30,15 +30,24 @@
         @forelse ($promotions as $promotion)
             <tr>
                 <x-td class="font-medium text-ink-900">
-                    {{ $promotion->title_ar }}
-                    @if ($promotion->is_featured)
-                        <x-badge tone="accent" class="ms-1">{{ __('common.featured') }}</x-badge>
-                    @endif
-                    @if ($promotion->specialty || $promotion->serviceType)
-                        <span class="mt-0.5 block text-xs text-ink-500">
-                            {{ collect([$promotion->specialty?->name, $promotion->serviceType?->name])->filter()->join(' · ') }}
+                    <span class="flex items-start gap-2">
+                        <x-media
+                            :src="\App\Support\PublicImage::url($promotion->banner_image_path)"
+                            :alt="$promotion->title_ar"
+                            class="size-10 rounded-lg"
+                        />
+                        <span>
+                            {{ $promotion->title_ar }}
+                            @if ($promotion->is_featured)
+                                <x-badge tone="accent" class="ms-1">{{ __('common.featured') }}</x-badge>
+                            @endif
+                            @if ($promotion->specialty || $promotion->serviceType)
+                                <span class="mt-0.5 block text-xs text-ink-500">
+                                    {{ collect([$promotion->specialty?->name, $promotion->serviceType?->name])->filter()->join(' · ') }}
+                                </span>
+                            @endif
                         </span>
-                    @endif
+                    </span>
                 </x-td>
                 <x-td class="text-sm">
                     {{ $promotion->isPlatformWide() ? __('admin.promotions.platform_wide') : __('admin.promotions.clinic_scoped') }}

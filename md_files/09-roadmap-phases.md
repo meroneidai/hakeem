@@ -2,6 +2,8 @@
 
 Sequencing follows the agreed principle: **build the Admin Dashboard completely first**, since Clinics/Doctors depend on admin-defined reference data (geography, specialties, plans) to even complete registration. Clinics come next, then patient-facing discovery/booking, then the conversational agent and advanced features.
 
+**Current status (2026-09-18):** Phases 0–4 website/backend paths are live (clinic booking with slots, home visit address, video join page, labs checkout, medical library, specialty×city and service×city). Ratings stay visit-verified only. `/ar`/`/en` prefixes stay out. The payment gateway is not charged yet — online stays unpaid until Paymob/Fawry is keyed in. Native app and Hermes admin LLM remain later. See `PLATFORM_STATUS.md`.
+
 ## Phase 0 — Foundations
 - Laravel project scaffold, PostgreSQL setup, Sanctum auth, base Tailwind/Blade design system, Arabic/English i18n scaffolding, RTL layout base.
 - Core tables: users, roles, governorates, cities.
@@ -32,11 +34,11 @@ Sequencing follows the agreed principle: **build the Admin Dashboard completely 
 **Exit criteria:** a clinic can fully self-register, add doctors/addresses/schedules, and choose a plan.
 
 ## Phase 3 — Core Booking Engine
-1. Booking data model + status machine (`08-database-schema.md`)
-2. Clinic Appointment flow end-to-end (the "most common path")
-3. Reception queue UI (confirm/reschedule/cancel/check-in, manual booking creation)
-4. Notifications on booking create/status change (push + SMS to start; WhatsApp/Hermes added in Phase 6)
-5. Payment mode selection per booking (online/at-clinic/after-service) — online gateway integration can start as a stub and go live once a provider is selected
+1. Booking data model + status machine (`08-database-schema.md`) — **tables live; public request creates `pending` + history**
+2. Clinic Appointment flow end-to-end (the "most common path") — **patient can submit a pending request from `/book/doctors/{slug}` and review it at `/appointments`**
+3. Reception queue UI (confirm/reschedule/cancel/check-in, manual booking creation) — **live at `/clinic/queue`**
+4. Notifications on booking create/status change (push + SMS to start; WhatsApp/Hermes added in Phase 6) — **named events log via `NotificationDispatcher`; channels stay env-gated**
+5. Payment mode selection per booking (online/at-clinic/after-service) — **patient and walk-in pick from admin-allowed modes; clinic override when unlocked; gateway collection still later**
 
 **Exit criteria:** a patient can register, find a clinic, and complete a clinic-appointment booking end-to-end; clinic can manage it from Reception.
 
@@ -68,11 +70,11 @@ Sequencing follows the agreed principle: **build the Admin Dashboard completely 
 **Exit criteria:** a patient can complete an entire booking purely through WhatsApp.
 
 ## Phase 7 — Discovery, SEO & Growth
-1. Homepage: search/filter, Most Booked, Top Rated, Offers, specialty tiles
-2. Programmatic SEO pages (city, governorate, specialty, city×specialty, service pages) with schema.org structured data
+1. Homepage: search/filter, Most Booked, Top Rated, Offers, specialty tiles — **partially live now**: homepage, `/search`, `/doctors`, `/clinics`, `/specialties`, `/services`, `/cities`, `/labs` catalog + cart, `/offers`. Ratings/Most Booked wait for completed bookings.
+2. Programmatic SEO pages (city, governorate, specialty, city×specialty, service pages) with schema.org structured data — **generator paths now match the UI spec** (`/specialties/{slug}`, `/services/{slug}`, `/cities/{slug}`); combo landings and schema are still Phase 7.
 3. Ratings & Reviews (post-visit prompts, verified-visit badges, moderation)
-4. Promotions engine live end-to-end (clinic-level + platform-level), homepage integration
-5. Sitemap automation, hreflang, meta management from Admin
+4. Promotions engine live end-to-end (clinic-level + platform-level), homepage integration — **admin + clinic CRUD and public directory are live**; booking attribution follows Phase 3
+5. Sitemap automation, hreflang, meta management from Admin — **admin meta overrides are live**; `/ar`/`/en` prefixes and hreflang wait until locale-prefixed URLs ship.
 
 **Exit criteria:** the platform is fully self-serve discoverable and SEO-indexable, with live ratings and offers.
 

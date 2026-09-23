@@ -30,11 +30,16 @@
                             </p>
                             <p class="mt-1 flex items-center gap-1.5 text-sm text-ink-600">
                                 <x-icon name="calendar" class="size-4 text-primary-600"/>
-                                {{ $booking->scheduled_at->format('Y-m-d H:i') }}
+                                {{ $booking->localScheduledAt()?->format('Y-m-d H:i') }}
+                                <span class="text-xs text-ink-400">{{ __('booking.egypt_time') }}</span>
                                 @if ($booking->serviceType)
                                     · {{ $booking->serviceType->name }}
+                                    · {{ __('booking.duration_minutes', ['minutes' => $booking->durationMinutes()]) }}
                                 @endif
                             </p>
+                            @if ($booking->patient_home_address)
+                                <p class="mt-1 text-sm text-ink-500">{{ $booking->patient_home_address }}</p>
+                            @endif
                             @if ($booking->is_evaluation)
                                 <x-badge tone="accent" class="mt-2">{{ __('booking.evaluation') }}</x-badge>
                             @endif
@@ -51,6 +56,12 @@
                                 {{ __('booking.payment_status.'.$booking->payment_status) }}
                             </x-badge>
                             <span class="text-xs text-ink-400">{{ $booking->payment_mode->label() }}</span>
+                            @if ($booking->isVideoVisit() && $booking->canAccessVideo(auth()->user()))
+                                <x-button :href="route('appointments.video', $booking)" variant="accent" size="sm">{{ __('booking.video.join') }}</x-button>
+                            @endif
+                            @if ($booking->status === \App\Enums\BookingStatus::Completed)
+                                <x-button :href="route('records.index')" variant="ghost" size="sm">{{ __('records.heading') }}</x-button>
+                            @endif
                             @if ($booking->status->canTransitionTo(\App\Enums\BookingStatus::Cancelled))
                                 <form method="POST" action="{{ route('appointments.destroy', $booking) }}" onsubmit="return confirm(@js(__('booking.confirm_cancel')))">
                                     @csrf
@@ -108,6 +119,7 @@
                                 <p class="mt-1 text-sm text-ink-600">
                                     {{ $order->items->map(fn ($item) => $item->catalogItem()?->name)->filter()->join('، ') }}
                                 </p>
+                                <a href="{{ route('labs.orders.show', $order) }}" class="mt-2 inline-block text-sm font-medium text-primary-700">{{ __('labs.order.details') }}</a>
                             </div>
                             <div class="flex flex-col items-end gap-1.5">
                                 <x-badge :tone="$order->status->tone()">{{ $order->status->label() }}</x-badge>

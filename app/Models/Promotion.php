@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\OfferCategory;
 use App\Models\Concerns\HasTranslatedAttributes;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -9,10 +10,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
-    'clinic_id', 'title_ar', 'title_en', 'slug', 'description_ar', 'description_en',
+    'clinic_id', 'title_ar', 'title_en', 'slug', 'category', 'description_ar', 'description_en',
+    'includes_ar', 'includes_en', 'conditions_ar', 'conditions_en',
     'discount_type', 'discount_value', 'discount_details', 'banner_image_path',
-    'specialty_id', 'service_type_id', 'starts_at', 'ends_at',
-    'is_featured', 'is_active', 'created_by_user_id',
+    'original_price', 'offer_price', 'session_count', 'specialty_id', 'service_type_id', 'starts_at', 'ends_at',
+    'is_featured', 'is_active', 'views_count', 'created_by_user_id',
 ])]
 class Promotion extends Model
 {
@@ -21,12 +23,20 @@ class Promotion extends Model
     protected function casts(): array
     {
         return [
+            'category' => OfferCategory::class,
             'discount_value' => 'decimal:2',
+            'original_price' => 'decimal:2',
+            'offer_price' => 'decimal:2',
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
             'is_featured' => 'boolean',
             'is_active' => 'boolean',
         ];
+    }
+
+    public function clinic(): BelongsTo
+    {
+        return $this->belongsTo(Clinic::class);
     }
 
     public function specialty(): BelongsTo
@@ -42,6 +52,34 @@ class Promotion extends Model
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by_user_id');
+    }
+
+    public function getIncludesAttribute(): ?string
+    {
+        return $this->translated('includes');
+    }
+
+    public function getConditionsAttribute(): ?string
+    {
+        return $this->translated('conditions');
+    }
+
+    public function savings(): float
+    {
+        if ($this->original_price === null || $this->offer_price === null) {
+            return 0;
+        }
+
+        return max(0, (float) $this->original_price - (float) $this->offer_price);
+    }
+
+    public function discountPercent(): int
+    {
+        if (! $this->original_price || (float) $this->original_price <= 0) {
+            return (int) ($this->discount_type === 'percentage' ? $this->discount_value : 0);
+        }
+
+        return (int) round(($this->savings() / (float) $this->original_price) * 100);
     }
 
     public function isPlatformWide(): bool

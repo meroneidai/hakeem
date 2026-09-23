@@ -10,13 +10,11 @@
     <div class="mx-auto max-w-3xl px-4 py-8">
 
         <x-card class="space-y-4">
-            @if ($test->image_path)
-                <x-media
-                    :src="\App\Support\PublicImage::url($test->image_path)"
-                    :alt="$test->name"
-                    class="h-48 w-full rounded-xl"
-                />
-            @endif
+            <x-media
+                :src="$test->imageUrl()"
+                :alt="$test->name"
+                class="h-48 w-full rounded-xl"
+            />
             <p class="text-sm text-ink-600">{{ $test->description }}</p>
 
             @if ($test->measures)

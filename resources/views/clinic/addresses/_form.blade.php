@@ -52,7 +52,66 @@
     <x-field :label="__('clinic.addresses.phone')" name="phone">
         <x-input name="phone" type="tel" :value="$address->phone" dir="ltr"/>
     </x-field>
+    <x-field :label="__('clinic.addresses.lat')" name="latitude">
+        <x-input name="latitude" id="latitude" type="number" step="0.0000001" min="-90" max="90"
+                 :value="old('latitude', $address->latitude)" dir="ltr"/>
+    </x-field>
+    <x-field :label="__('clinic.addresses.lng')" name="longitude">
+        <x-input name="longitude" id="longitude" type="number" step="0.0000001" min="-180" max="180"
+                 :value="old('longitude', $address->longitude)" dir="ltr"/>
+    </x-field>
+    <div class="sm:col-span-2">
+        <p class="mb-2 text-sm font-medium text-ink-700">{{ __('clinic.addresses.map') }}</p>
+        <p class="mb-2 text-xs text-ink-500">{{ __('clinic.addresses.map_hint') }}</p>
+        <div id="clinic-map" class="h-64 overflow-hidden rounded-xl border border-ink-200"></div>
+    </div>
 </div>
+
+@push('head')
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+@endpush
+@push('scripts')
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const latInput = document.getElementById('latitude');
+            const lngInput = document.getElementById('longitude');
+            const mapEl = document.getElementById('clinic-map');
+            if (!latInput || !lngInput || !mapEl || typeof L === 'undefined') {
+                return;
+            }
+
+            const fallback = [30.0444, 31.2357];
+            const start = [
+                parseFloat(latInput.value) || fallback[0],
+                parseFloat(lngInput.value) || fallback[1],
+            ];
+
+            const map = L.map(mapEl).setView(start, latInput.value ? 16 : 12);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap',
+            }).addTo(map);
+
+            const marker = L.marker(start, { draggable: true }).addTo(map);
+
+            const sync = (latlng) => {
+                latInput.value = latlng.lat.toFixed(7);
+                lngInput.value = latlng.lng.toFixed(7);
+            };
+
+            if (!latInput.value || !lngInput.value) {
+                sync(marker.getLatLng());
+            }
+
+            marker.on('dragend', () => sync(marker.getLatLng()));
+            map.on('click', (event) => {
+                marker.setLatLng(event.latlng);
+                sync(event.latlng);
+            });
+        });
+    </script>
+@endpush
 
 <div class="mt-4 flex flex-wrap gap-4">
     <x-checkbox name="is_primary" :label="__('clinic.addresses.primary')" :checked="$address->is_primary"/>

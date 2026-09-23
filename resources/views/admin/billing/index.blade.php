@@ -10,22 +10,30 @@
 
     <x-table>
         <x-slot:head>
+            <x-th>{{ __('admin.billing.invoice_number') }}</x-th>
             <x-th>{{ __('admin.nav.clinics') }}</x-th>
-            <x-th>{{ __('admin.nav.plans') }}</x-th>
-            <x-th>{{ __('common.status') }}</x-th>
+            <x-th>{{ __('admin.billing.plan') }}</x-th>
+            <x-th>{{ __('admin.billing.subscription_status') }}</x-th>
+            <x-th>{{ __('admin.billing.payment_status') }}</x-th>
             <x-th>{{ __('admin.billing.amount') }}</x-th>
             <x-th>{{ __('admin.billing.period') }}</x-th>
+            <x-th class="text-end">{{ __('common.actions') }}</x-th>
         </x-slot:head>
         @forelse ($subscriptions as $subscription)
             <tr>
+                <x-td class="font-mono text-xs" dir="ltr">{{ $subscription->invoice_number }}</x-td>
                 <x-td>{{ $subscription->clinic?->name }}</x-td>
-                <x-td>{{ $subscription->plan?->name }}</x-td>
-                <x-td>{{ $subscription->status->value }}</x-td>
+                <x-td>{{ $subscription->plan?->name }} · {{ $subscription->billing_cycle->label() }}</x-td>
+                <x-td><x-badge :tone="$subscription->status->tone()">{{ $subscription->status->label() }}</x-badge></x-td>
+                <x-td><x-badge :tone="$subscription->payment_status->tone()">{{ $subscription->payment_status->label() }}</x-badge></x-td>
                 <x-td>{{ number_format((float) $subscription->amount) }} {{ __('common.currency') }}</x-td>
                 <x-td class="text-xs text-ink-500">{{ $subscription->current_period_start?->toDateString() }} → {{ $subscription->current_period_end?->toDateString() ?? '—' }}</x-td>
+                <x-td class="text-end">
+                    <a href="{{ route('admin.billing.show', $subscription) }}" class="text-sm font-medium text-primary-700">{{ __('common.view') }}</a>
+                </x-td>
             </tr>
         @empty
-            <x-empty-state colspan="5"/>
+            <x-empty-state colspan="8"/>
         @endforelse
         @if ($subscriptions->hasPages())
             <x-slot:footer>{{ $subscriptions->links() }}</x-slot:footer>

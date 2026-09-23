@@ -150,6 +150,8 @@ class AddressController extends Controller
             'address_line' => ['required', 'string', 'max:255'],
             'landmark' => ['nullable', 'string', 'max:160'],
             'phone' => ['nullable', 'string', 'max:32'],
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
             'is_primary' => ['sometimes', 'boolean'],
             'is_active' => ['sometimes', 'boolean'],
         ]);

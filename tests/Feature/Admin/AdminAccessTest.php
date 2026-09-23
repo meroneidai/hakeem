@@ -13,7 +13,7 @@ class AdminAccessTest extends TestCase
 
     public function test_guests_are_redirected_to_login(): void
     {
-        $this->get('/admin')->assertRedirect('/login');
+        $this->get('/admin')->assertRedirect('/admin/login');
     }
 
     public function test_patients_cannot_reach_the_admin_area(): void
@@ -39,6 +39,8 @@ class AdminAccessTest extends TestCase
 
         $this->get('/admin')->assertOk();
         $this->get('/admin/support')->assertOk();
+        $this->get('/admin/bookings')->assertOk();
+        $this->get('/admin/lab-orders')->assertOk();
 
         $this->get('/admin/governorates')->assertForbidden();
         $this->get('/admin/plans')->assertForbidden();

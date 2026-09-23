@@ -4,10 +4,12 @@ namespace App\Models;
 
 use App\Enums\RoleName;
 use App\Models\Concerns\HasRoles;
+use App\Services\LoyaltyProgram;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -15,7 +17,13 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['phone', 'name', 'email', 'password', 'preferred_language', 'is_active'])]
+#[Fillable([
+    'phone', 'country_code', 'name', 'email', 'password', 'preferred_language',
+    'date_of_birth', 'gender', 'city_id', 'insurance_provider_id', 'is_active', 'auth_provider',
+    'provider_id', 'firebase_uid', 'notify_email', 'notify_sms', 'notify_push',
+    'app_installed_at', 'last_app_seen_at', 'phone_verified_at', 'email_verified_at',
+    'referred_by_user_id',
+])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -28,9 +36,36 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'phone_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
+            'date_of_birth' => 'date',
+            'app_installed_at' => 'datetime',
+            'last_app_seen_at' => 'datetime',
             'is_active' => 'boolean',
+            'notify_email' => 'boolean',
+            'notify_sms' => 'boolean',
+            'notify_push' => 'boolean',
             'password' => 'hashed',
+            'wallet_balance' => 'decimal:2',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (User $user): void {
+            if (blank($user->referral_code)) {
+                $user->referral_code = LoyaltyProgram::uniqueReferralCode();
+            }
+        });
+    }
+
+    public function ensureReferralCode(): string
+    {
+        if (filled($this->referral_code)) {
+            return $this->referral_code;
+        }
+
+        $this->forceFill(['referral_code' => LoyaltyProgram::uniqueReferralCode()])->save();
+
+        return $this->referral_code;
     }
 
     public function supportTickets()
@@ -57,6 +92,81 @@ class User extends Authenticatable
     public function doctor(): HasOne
     {
         return $this->hasOne(Doctor::class);
+    }
+
+    public function bookings(): HasMany
+    {
+        return $this->hasMany(Booking::class, 'patient_id');
+    }
+
+    public function addresses(): HasMany
+    {
+        return $this->hasMany(PatientAddress::class);
+    }
+
+    public function careDocuments(): HasMany
+    {
+        return $this->hasMany(CareDocument::class, 'patient_id');
+    }
+
+    public function city(): BelongsTo
+    {
+        return $this->belongsTo(City::class);
+    }
+
+    public function insuranceProvider(): BelongsTo
+    {
+        return $this->belongsTo(InsuranceProvider::class);
+    }
+
+    public function devices(): HasMany
+    {
+        return $this->hasMany(Device::class);
+    }
+
+    public function inAppNotifications(): HasMany
+    {
+        return $this->hasMany(InAppNotification::class);
+    }
+
+    public function walletLedgers(): HasMany
+    {
+        return $this->hasMany(WalletLedger::class);
+    }
+
+    public function referredBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'referred_by_user_id');
+    }
+
+    public function referrals(): HasMany
+    {
+        return $this->hasMany(User::class, 'referred_by_user_id');
+    }
+
+    public function attendances(): HasMany
+    {
+        return $this->hasMany(StaffAttendance::class);
+    }
+
+    public function openAttendance(): ?StaffAttendance
+    {
+        return $this->attendances()->open()->latest('clocked_in_at')->first();
+    }
+
+    public function hasInstalledApp(): bool
+    {
+        return $this->app_installed_at !== null;
+    }
+
+    public function isPhoneVerified(): bool
+    {
+        return filled($this->phone) && $this->phone_verified_at !== null;
+    }
+
+    public function isEmailVerified(): bool
+    {
+        return filled($this->email) && $this->email_verified_at !== null;
     }
 
     /** @var Collection<int, Clinic>|null */
@@ -131,5 +241,23 @@ class User extends Authenticatable
         }
 
         return $digits;
+    }
+
+    public function dialUrl(): ?string
+    {
+        if (! filled($this->phone)) {
+            return null;
+        }
+
+        return 'tel:+'.ltrim(static::normalizePhone((string) $this->phone), '+');
+    }
+
+    public function whatsappChatUrl(): ?string
+    {
+        if (! filled($this->phone)) {
+            return null;
+        }
+
+        return 'https://wa.me/'.static::normalizePhone((string) $this->phone);
     }
 }

@@ -35,7 +35,7 @@
                             x-show="qty > 0">
                             <div class="flex gap-3">
                                 <x-media
-                                    :src="$line['item']->image_path ? \App\Support\PublicImage::url($line['item']->image_path) : null"
+                                    :src="$line['type'] === 'test' ? $line['item']->imageUrl() : \App\Support\PublicImage::url($line['item']->image_path)"
                                     :alt="$line['item']->name"
                                     class="size-16 shrink-0 rounded-2xl"
                                 />

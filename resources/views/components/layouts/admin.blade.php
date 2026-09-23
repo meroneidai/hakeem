@@ -7,7 +7,7 @@
     $openTickets = \App\Models\SupportTicket::unresolved()->count();
 @endphp
 
-<x-layouts.base :title="$title ? $title.' — '.__('admin.title') : __('admin.title')">
+<x-layouts.base :title="$title ? $title.' — '.__('admin.title') : __('admin.title')" body-class="min-h-screen theme-v2" theme-color="#3B82F6">
     <div x-data="{ sidebar: false }" class="flex min-h-screen">
         {{-- Sidebar --}}
         <aside
@@ -15,7 +15,11 @@
             :class="sidebar ? 'translate-x-0' : (document.documentElement.dir === 'rtl' ? 'translate-x-full lg:translate-x-0' : '-translate-x-full lg:translate-x-0')"
         >
             <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5 px-2 py-1">
-                <span class="grid size-9 place-items-center rounded-xl bg-primary-600 text-lg font-bold text-white">ح</span>
+                @if (($branding ?? null)?->logoUrl())
+                    <img src="{{ $branding->logoUrl() }}" alt="" class="size-9 rounded-xl object-cover">
+                @else
+                    <span class="grid size-9 place-items-center rounded-xl bg-primary-600 text-lg font-bold text-white">ح</span>
+                @endif
                 <span>
                     <span class="block text-sm font-bold text-ink-900">{{ __('common.app_name') }}</span>
                     <span class="block text-[11px] text-ink-500">{{ __('admin.title') }}</span>
@@ -40,6 +44,11 @@
                     <x-admin.nav-item :href="route('admin.service-types.index')" icon="layers" pattern="admin.service-types.*">
                         {{ __('admin.nav.service_types') }}
                     </x-admin.nav-item>
+                    @can(Permission::ManageInsuranceProviders->value)
+                        <x-admin.nav-item :href="route('admin.insurance-providers.index')" icon="shield" pattern="admin.insurance-providers.*">
+                            {{ __('admin.nav.insurance_providers') }}
+                        </x-admin.nav-item>
+                    @endcan
                 </x-admin.nav-group>
 
                 @can(Permission::ManageSubscriptionPlans->value)
@@ -56,18 +65,71 @@
                     </x-admin.nav-group>
                 @endcan
 
+                @can(Permission::ManageLabCatalog->value)
+                    <x-admin.nav-group :label="__('admin.nav.labs')">
+                        <x-admin.nav-item :href="route('admin.lab-tests.index')" icon="layers" pattern="admin.lab-tests.*">
+                            {{ __('admin.nav.lab_tests') }}
+                        </x-admin.nav-item>
+                        <x-admin.nav-item :href="route('admin.lab-packages.index')" icon="ticket" pattern="admin.lab-packages.*">
+                            {{ __('admin.nav.lab_packages') }}
+                        </x-admin.nav-item>
+                    </x-admin.nav-group>
+                @endcan
+
                 @can(Permission::ManagePromotions->value)
                     <x-admin.nav-group :label="__('admin.nav.growth')">
                         <x-admin.nav-item :href="route('admin.promotions.index')" icon="megaphone" pattern="admin.promotions.*">
                             {{ __('admin.nav.promotions') }}
                         </x-admin.nav-item>
-                        <x-admin.nav-item :href="route('admin.seo-pages.index')" icon="search" pattern="admin.seo-pages.*">
+                        <x-admin.nav-item :href="route('admin.seo-pages.index')" icon="search" pattern="admin.seo*">
                             {{ __('admin.nav.seo') }}
+                        </x-admin.nav-item>
+                        <x-admin.nav-item :href="route('admin.articles.index')" icon="layers" pattern="admin.articles.*">
+                            {{ __('admin.nav.articles') }}
+                        </x-admin.nav-item>
+                        <x-admin.nav-item :href="route('admin.site-pages.index')" icon="layers" pattern="admin.site-pages.*">
+                            {{ __('admin.nav.site_pages') }}
                         </x-admin.nav-item>
                     </x-admin.nav-group>
                 @endcan
 
+                <x-admin.nav-group :label="__('admin.nav.people')">
+                    @can(Permission::ManageUsers->value)
+                        <x-admin.nav-item :href="route('admin.users.index')" icon="users" pattern="admin.users.*">
+                            {{ __('admin.nav.users') }}
+                        </x-admin.nav-item>
+                    @endcan
+                    @can(Permission::ModerateClinics->value)
+                        <x-admin.nav-item :href="route('admin.clinics.index')" icon="building" pattern="admin.clinics.*">
+                            {{ __('admin.nav.clinics') }}
+                        </x-admin.nav-item>
+                        <x-admin.nav-item :href="route('admin.doctors.index')" icon="stethoscope" pattern="admin.doctors.*">
+                            {{ __('admin.nav.doctors') }}
+                        </x-admin.nav-item>
+                        <x-admin.nav-item :href="route('admin.map')" icon="map" pattern="admin.map">
+                            {{ __('admin.nav.map') }}
+                        </x-admin.nav-item>
+                    @endcan
+                    @can(Permission::ManageSubscriptionPlans->value)
+                        <x-admin.nav-item :href="route('admin.billing')" icon="credit-card" pattern="admin.billing*">
+                            {{ __('admin.nav.billing') }}
+                        </x-admin.nav-item>
+                    @endcan
+                    <x-admin.nav-item :href="route('admin.attendance.index')" icon="clock" pattern="admin.attendance.*">
+                        {{ __('admin.nav.attendance') }}
+                    </x-admin.nav-item>
+                </x-admin.nav-group>
+
                 <x-admin.nav-group :label="__('admin.nav.operations')">
+                    @can(Permission::OverseeBookings->value)
+                        <x-admin.nav-item :href="route('admin.bookings.index')" icon="calendar" pattern="admin.bookings.*">
+                            {{ __('admin.nav.bookings') }}
+                        </x-admin.nav-item>
+                        <x-admin.nav-item :href="route('admin.lab-orders.index')" icon="beaker" pattern="admin.lab-orders.*">
+                            {{ __('admin.nav.lab_orders') }}
+                        </x-admin.nav-item>
+                    @endcan
+
                     <x-admin.nav-item :href="route('admin.support.index')" icon="ticket" pattern="admin.support.*"
                                       :badge="$openTickets ?: null">
                         {{ __('admin.nav.support') }}
@@ -82,6 +144,30 @@
                     @can(Permission::ManagePaymentSettings->value)
                         <x-admin.nav-item :href="route('admin.notifications.edit')" icon="bell" pattern="admin.notifications.*">
                             {{ __('admin.nav.notifications') }}
+                        </x-admin.nav-item>
+                        <x-admin.nav-item :href="route('admin.system.edit')" icon="key" pattern="admin.system.*">
+                            {{ __('admin.nav.system') }}
+                        </x-admin.nav-item>
+                        <x-admin.nav-item :href="route('admin.loyalty.edit')" icon="sparkles" pattern="admin.loyalty.*">
+                            {{ __('admin.nav.loyalty') }}
+                        </x-admin.nav-item>
+                    @endcan
+
+                    @can(Permission::ViewAnalytics->value)
+                        <x-admin.nav-item :href="route('admin.analytics')" icon="chart" pattern="admin.analytics*">
+                            {{ __('admin.nav.analytics') }}
+                        </x-admin.nav-item>
+                    @endcan
+
+                    @can(Permission::ModerateReviews->value)
+                        <x-admin.nav-item :href="route('admin.reviews.index')" icon="star" pattern="admin.reviews.*">
+                            {{ __('admin.nav.reviews') }}
+                        </x-admin.nav-item>
+                    @endcan
+
+                    @can(Permission::ViewErrorReports->value)
+                        <x-admin.nav-item :href="route('admin.errors.index')" icon="shield" pattern="admin.errors.*">
+                            {{ __('admin.nav.errors') }}
                         </x-admin.nav-item>
                     @endcan
 
@@ -112,6 +198,13 @@
                     </p>
                 </div>
 
+                <x-inbox-bell/>
+
+                <a href="{{ route('account.edit') }}" class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-ink-600 hover:bg-ink-100">
+                    <x-icon name="user" class="size-4"/>
+                    <span class="hidden sm:inline">{{ __('account.profile') }}</span>
+                </a>
+
                 <x-locale-switcher/>
 
                 <form method="POST" action="{{ route('logout') }}">
@@ -123,7 +216,9 @@
                 </form>
             </header>
 
-            <main class="flex-1 px-4 py-6 lg:px-8">
+            <main class="relative flex-1 px-4 py-6 lg:px-8">
+                <div class="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-primary-100/80 to-transparent"></div>
+                <div class="relative">
                 @if (session('status'))
                     <x-alert tone="success" class="mb-5">{{ session('status') }}</x-alert>
                 @endif
@@ -132,7 +227,12 @@
                     <x-alert tone="danger" class="mb-5">{{ session('error') }}</x-alert>
                 @endif
 
+                @if ($errors->any())
+                    <x-alert tone="danger" class="mb-5">{{ $errors->first() }}</x-alert>
+                @endif
+
                 {{ $slot }}
+                </div>
             </main>
         </div>
     </div>

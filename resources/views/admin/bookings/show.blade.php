@@ -33,7 +33,7 @@
             <dl class="space-y-2 text-sm">
                 <div class="flex justify-between gap-3"><dt class="text-ink-500">{{ __('admin.nav.clinics') }}</dt><dd class="font-medium">{{ $booking->clinic?->name }}</dd></div>
                 <div class="flex justify-between gap-3"><dt class="text-ink-500">{{ __('clinic.queue.doctor') }}</dt><dd>{{ $booking->doctor?->name }}</dd></div>
-                <div class="flex justify-between gap-3"><dt class="text-ink-500">{{ __('clinic.queue.service') }}</dt><dd>{{ $booking->serviceType?->name }}</dd></div>
+                <div class="flex justify-between gap-3"><dt class="text-ink-500">{{ __('clinic.queue.service') }}</dt><dd>{{ $booking->serviceType?->name }} · {{ __('booking.duration_minutes', ['minutes' => $booking->durationMinutes()]) }}</dd></div>
                 <div class="flex justify-between gap-3"><dt class="text-ink-500">{{ __('clinic.queue.branch') }}</dt><dd>{{ $booking->address?->displayName() }}</dd></div>
                 @if ($booking->notes)
                     <div><dt class="text-ink-500">{{ __('clinic.queue.notes') }}</dt><dd class="mt-1">{{ $booking->notes }}</dd></div>

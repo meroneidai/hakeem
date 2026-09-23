@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\City;
+use App\Models\InsuranceProvider;
 use App\Services\LoyaltyProgram;
 use App\Services\VerificationService;
 use App\Support\AccountIdentifier;
@@ -17,11 +18,12 @@ class ProfileController extends Controller
 {
     public function edit(Request $request, LoyaltyProgram $loyalty): View
     {
-        $user = $request->user()->load('city');
+        $user = $request->user()->load(['city', 'insuranceProvider']);
 
         return view('account.profile', [
             'user' => $user,
             'cities' => City::query()->active()->ordered()->with('governorate')->get(),
+            'insuranceProviders' => InsuranceProvider::selectable($user->insurance_provider_id),
             'referralUrl' => $loyalty->referralUrl($user),
             'ledgers' => $user->walletLedgers()->latest('id')->limit(20)->get(),
             'campaign' => $loyalty->activeSignupCampaign(),
@@ -46,6 +48,7 @@ class ProfileController extends Controller
             'date_of_birth' => ['nullable', 'date_format:Y-m-d', 'before:today'],
             'gender' => ['nullable', Rule::in(['male', 'female'])],
             'city_id' => ['nullable', 'integer', 'exists:cities,id'],
+            'insurance_provider_id' => ['nullable', 'integer', InsuranceProvider::activeIdRule($user->insurance_provider_id)],
             'notify_email' => ['boolean'],
             'notify_sms' => ['boolean'],
             'notify_push' => ['boolean'],
@@ -87,6 +90,7 @@ class ProfileController extends Controller
             'date_of_birth' => $data['date_of_birth'] ?? null,
             'gender' => $data['gender'] ?? null,
             'city_id' => filled($data['city_id'] ?? null) ? (int) $data['city_id'] : null,
+            'insurance_provider_id' => filled($data['insurance_provider_id'] ?? null) ? (int) $data['insurance_provider_id'] : null,
             'preferred_language' => $data['preferred_language'],
             'notify_email' => $request->boolean('notify_email'),
             'notify_sms' => $request->boolean('notify_sms'),

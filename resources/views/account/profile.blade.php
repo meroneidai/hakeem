@@ -1,17 +1,63 @@
-<x-layouts.public :title="__('account.profile')" robots="noindex,nofollow">
-    <x-catalog-hero :title="__('account.profile')" :subtitle="__('account.subtitle')">
-        <x-slot:actions>
-            <x-button :href="route('appointments.index')" variant="secondary" size="sm">{{ __('booking.my_appointments') }}</x-button>
-            @if (auth()->user()->isClinicStaff())
-                <x-button :href="route('clinic.dashboard')" size="sm">{{ __('clinic.title') }}</x-button>
-            @endif
-        </x-slot:actions>
+<x-layouts.public :title="__('discover.dock.account')" robots="noindex,nofollow">
+    <x-catalog-hero :title="__('discover.dock.account')" :subtitle="__('account.hub.subtitle')">
+        <x-slot:crumbs>
+            <a href="{{ route('home') }}" class="hover:text-primary-700">{{ __('discover.nav.home') }}</a>
+            <span aria-hidden="true">·</span>
+            <span class="text-ink-700">{{ __('discover.dock.account') }}</span>
+        </x-slot:crumbs>
+        @if (auth()->user()->isClinicStaff() || auth()->user()->isInternalStaff())
+            <x-slot:actions>
+                @if (auth()->user()->isInternalStaff())
+                    <x-button :href="route('admin.dashboard')" variant="accent" size="sm">{{ __('account.dashboard') }}</x-button>
+                @else
+                    <x-button :href="route('clinic.dashboard')" variant="accent" size="sm">{{ __('account.dashboard') }}</x-button>
+                @endif
+            </x-slot:actions>
+        @endif
     </x-catalog-hero>
 
     <div class="mx-auto max-w-3xl space-y-5 px-4 py-8">
-        @if ($complete)
+        <div class="grid gap-3 sm:grid-cols-2">
+            <a href="#profile-form" class="card flex items-start gap-3 p-4 hover:ring-2 hover:ring-primary-200">
+                <span class="grid size-10 shrink-0 place-items-center rounded-2xl bg-primary-50 text-primary-700">
+                    <x-icon name="user" class="size-5"/>
+                </span>
+                <span>
+                    <span class="block font-semibold text-ink-900">{{ __('account.profile') }}</span>
+                    <span class="mt-0.5 block text-sm text-ink-500">{{ __('account.hub.profile_hint') }}</span>
+                </span>
+            </a>
+            <a href="{{ route('appointments.index') }}" class="card flex items-start gap-3 p-4 hover:ring-2 hover:ring-primary-200">
+                <span class="grid size-10 shrink-0 place-items-center rounded-2xl bg-accent-50 text-accent-700">
+                    <x-icon name="calendar" class="size-5"/>
+                </span>
+                <span>
+                    <span class="block font-semibold text-ink-900">{{ __('booking.my_appointments') }}</span>
+                    <span class="mt-0.5 block text-sm text-ink-500">{{ __('account.hub.appointments_hint') }}</span>
+                </span>
+            </a>
+            <a href="{{ route('records.index') }}" class="card flex items-start gap-3 p-4 hover:ring-2 hover:ring-primary-200">
+                <span class="grid size-10 shrink-0 place-items-center rounded-2xl bg-success-50 text-success-800">
+                    <x-icon name="shield" class="size-5"/>
+                </span>
+                <span>
+                    <span class="block font-semibold text-ink-900">{{ __('records.heading') }}</span>
+                    <span class="mt-0.5 block text-sm text-ink-500">{{ __('account.hub.records_hint') }}</span>
+                </span>
+            </a>
+            <a href="{{ route('labs.index') }}" class="card flex items-start gap-3 p-4 hover:ring-2 hover:ring-primary-200">
+                <span class="grid size-10 shrink-0 place-items-center rounded-2xl bg-ink-50 text-ink-700">
+                    <x-icon name="beaker" class="size-5"/>
+                </span>
+                <span>
+                    <span class="block font-semibold text-ink-900">{{ __('labs.checkout.my_orders') }}</span>
+                    <span class="mt-0.5 block text-sm text-ink-500">{{ __('account.hub.labs_hint') }}</span>
+                </span>
+            </a>
+        </div>
+        @if (session('profile_complete'))
             <x-alert tone="success">{{ __('account.complete') }}</x-alert>
-        @else
+        @elseif (! $complete && ! $user->isInternalStaff())
             <x-alert tone="warning">
                 <a href="#profile-form" class="font-medium underline-offset-2 hover:underline">{{ __('account.incomplete') }}</a>
             </x-alert>
@@ -105,6 +151,11 @@
             <a href="{{ route('appointments.index') }}" class="mt-3 inline-block text-sm font-medium text-primary-700 hover:underline">{{ __('account.all_appointments') }}</a>
         </x-card>
 
+        <x-card :title="__('records.heading')">
+            <p class="text-sm text-ink-500">{{ __('account.hub.records_hint') }}</p>
+            <a href="{{ route('records.index') }}" class="mt-3 inline-block text-sm font-medium text-primary-700 hover:underline">{{ __('account.hub.open_records') }}</a>
+        </x-card>
+
         <form id="profile-form" method="POST" action="{{ route('account.update') }}" class="card space-y-4 p-6">
             @csrf
             @method('PUT')
@@ -144,6 +195,7 @@
                 <x-select name="city_id" :placeholder="__('discover.doctors.any_city')" :selected="$user->city_id"
                           :options="$cities->mapWithKeys(fn ($city) => [$city->id => $city->name])->all()"/>
             </x-field>
+            <x-insurance-select :providers="$insuranceProviders" :selected="$user->insurance_provider_id"/>
             <x-field :label="__('common.language')" name="preferred_language" required>
                 <x-select name="preferred_language" :options="collect(config('hakeem.locales'))->map(fn ($locale) => $locale['native'])->all()" :selected="$user->preferred_language"/>
             </x-field>

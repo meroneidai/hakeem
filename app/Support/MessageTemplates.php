@@ -26,6 +26,10 @@ class MessageTemplates
             'messages.sms_lab_order_confirmed' => 'تم تأكيد طلب التحاليل {reference} في {clinic} يوم {date}.',
             'messages.sms_lab_order_completed' => 'نتائج طلب التحاليل {reference} جاهزة للمتابعة في حكيم.',
             'messages.sms_lab_order_cancelled' => 'تم إلغاء طلب التحاليل {reference}.',
+            'messages.sms_prescription_issued' => 'صدرت روشتة طبية موثّقة من {clinic}. رمز التحقق {code}.',
+            'messages.sms_lab_result_ready' => 'نتائج تحاليلك {reference} جاهزة في سجلاتك على حكيم.',
+            'messages.sms_invoice_issued' => 'فاتورة حكيم {invoice} بمبلغ {amount} للعيادة {clinic}. تاريخ الاستحقاق {date}.',
+            'messages.sms_invoice_reminder' => 'تذكير: فاتورة حكيم {invoice} بمبلغ {amount} للعيادة {clinic} مستحقة {date}.',
         ];
     }
 
@@ -54,7 +58,11 @@ class MessageTemplates
             'lab_order_confirmed' => 'messages.sms_lab_order_confirmed',
             'lab_order_completed' => 'messages.sms_lab_order_completed',
             'lab_order_cancelled' => 'messages.sms_lab_order_cancelled',
+            'prescription_issued' => 'messages.sms_prescription_issued',
+            'lab_result_ready' => 'messages.sms_lab_result_ready',
             'promotion_published' => 'messages.promo_sms',
+            'invoice_issued' => 'messages.sms_invoice_issued',
+            'invoice_reminder' => 'messages.sms_invoice_reminder',
         ];
     }
 

@@ -22,7 +22,9 @@ return [
     'after_or_equal' => 'حقل :attribute يجب أن يكون تاريخًا بعد أو يساوي :date.',
     'alpha_dash' => 'حقل :attribute يجب أن يحتوي على حروف وأرقام وشرطات فقط.',
     'regex' => 'صيغة حقل :attribute غير صحيحة.',
-    'array' => 'حقل :attribute يجب أن يكون قائمة.',
+    'image' => 'حقل :attribute يجب أن يكون صورة.',
+    'mimes' => 'حقل :attribute يجب أن يكون ملفًا من نوع: :values.',
+    'uploaded' => 'فشل رفع :attribute.',
 
     'min' => [
         'string' => 'حقل :attribute يجب ألا يقل عن :min حرفًا.',
@@ -32,7 +34,7 @@ return [
     'max' => [
         'string' => 'حقل :attribute يجب ألا يزيد عن :max حرفًا.',
         'numeric' => 'حقل :attribute يجب ألا يزيد عن :max.',
-        'array' => 'يجب ألا يزيد :attribute عن :max عنصر.',
+        'file' => 'حقل :attribute يجب ألا يزيد عن :max كيلوبايت.',
     ],
 
     'password' => [
@@ -76,6 +78,13 @@ return [
         'gateway' => 'بوابة الدفع',
         'sitemap_priority' => 'أولوية الخريطة',
         'preferred_language' => 'اللغة',
+        'subject' => 'الموضوع',
+        'message' => 'الرسالة',
+        'audience' => 'الصفة',
         'display_order' => 'ترتيب العرض',
+        'image' => 'الصورة',
+        'banner' => 'صورة العرض',
+        'photo' => 'صورة الطبيب',
+        'logo' => 'الشعار',
     ],
 ];

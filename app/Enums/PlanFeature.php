@@ -14,6 +14,8 @@ enum PlanFeature: string
     case ServiceLabTest = 'service.lab_test';
     case ServiceHomeLabTest = 'service.home_lab_test';
     case ServicePsychiatricConsultation = 'service.psychiatric_consultation';
+    case ServicePhysicalTherapy = 'service.physical_therapy';
+    case ServiceOccupationalTherapy = 'service.occupational_therapy';
     case ServiceCatalogItems = 'service.catalog_items';
 
     case MultipleAddresses = 'clinic.multiple_addresses';
@@ -35,6 +37,8 @@ enum PlanFeature: string
             self::ServiceLabTest => 'تحاليل بالمعمل',
             self::ServiceHomeLabTest => 'تحاليل منزلية',
             self::ServicePsychiatricConsultation => 'استشارة نفسية أونلاين',
+            self::ServicePhysicalTherapy => 'علاج طبيعي وتأهيل',
+            self::ServiceOccupationalTherapy => 'علاج وظيفي',
             self::ServiceCatalogItems => 'كتالوج الخدمات المفصّل',
             self::MultipleAddresses => 'فروع متعددة',
             self::MultipleDoctors => 'أطباء متعددون',
@@ -57,6 +61,8 @@ enum PlanFeature: string
             self::ServiceLabTest => 'In-clinic lab tests',
             self::ServiceHomeLabTest => 'Home lab tests',
             self::ServicePsychiatricConsultation => 'Online psychiatric consultations',
+            self::ServicePhysicalTherapy => 'Physiotherapy & rehab',
+            self::ServiceOccupationalTherapy => 'Occupational therapy',
             self::ServiceCatalogItems => 'Itemised service catalog',
             self::MultipleAddresses => 'Multiple branches',
             self::MultipleDoctors => 'Multiple doctors',

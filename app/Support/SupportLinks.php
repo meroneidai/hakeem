@@ -37,6 +37,13 @@ class SupportLinks
         return filled($digits) ? '+'.$digits : null;
     }
 
+    public function whatsappTelephone(): ?string
+    {
+        $digits = $this->internationalDigits($this->settings->get('general.support_whatsapp'));
+
+        return filled($digits) ? '+'.$digits : null;
+    }
+
     public function email(): ?string
     {
         $email = $this->settings->get('general.support_email');

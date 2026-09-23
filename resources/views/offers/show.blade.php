@@ -79,7 +79,22 @@
         @if ($offer->clinic && $offer->clinic->doctors->isNotEmpty() && $offer->clinic->addresses->isNotEmpty())
             <x-card class="mt-4" :title="__('offers.book')">
                 @auth
-                    <form method="POST" action="{{ route('book.offers.store', $offer) }}" class="space-y-4">
+                    <form
+                        method="POST"
+                        action="{{ route('book.offers.store', $offer) }}"
+                        class="space-y-4"
+                        @day-changed="
+                            const input = $refs.when;
+                            if (input) {
+                                const time = (input.value || '').slice(11, 16) || '09:00';
+                                input.value = date + 'T' + time;
+                            }
+                        "
+                        x-data="{
+                            date: @js(old('date', now()->timezone(config('hakeem.display_timezone'))->toDateString())),
+                            days: @js($dayOptions ?? []),
+                        }"
+                    >
                         @csrf
                         <x-field :label="__('clinic.queue.doctor')" name="doctor_id" required>
                             <x-select
@@ -97,12 +112,19 @@
                                 @endforeach
                             </x-select>
                         </x-field>
+                        @if ($durationMinutes ?? null)
+                            <p class="text-sm font-medium text-primary-700">{{ __('booking.duration_minutes', ['minutes' => $durationMinutes]) }}</p>
+                        @endif
+                        @include('bookings._day_picker')
                         <x-field :label="__('booking.when')" name="scheduled_at" required>
-                            <x-input
-                                name="scheduled_at"
+                            <input
                                 type="datetime-local"
-                                :value="old('scheduled_at')"
-                                :min="now()->addHour()->format('Y-m-d\TH:i')"
+                                name="scheduled_at"
+                                x-ref="when"
+                                value="{{ old('scheduled_at', now()->timezone(config('hakeem.display_timezone'))->addHour()->format('Y-m-d\TH:i')) }}"
+                                min="{{ now()->addHour()->format('Y-m-d\TH:i') }}"
+                                dir="ltr"
+                                class="field-input focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
                             />
                         </x-field>
                         @if (($offer->session_count ?? 1) > 1)

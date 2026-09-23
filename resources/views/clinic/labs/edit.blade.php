@@ -13,7 +13,7 @@
                     <div class="flex flex-wrap items-start justify-between gap-3">
                         <div class="flex min-w-0 items-start gap-3">
                             <x-media
-                                :src="\App\Support\PublicImage::url($test->image_path)"
+                                :src="$test->imageUrl()"
                                 :alt="$test->name"
                                 class="size-12 shrink-0 rounded-xl"
                             />
@@ -28,7 +28,7 @@
                             :checked="$offering?->is_active"
                         />
                     </div>
-                    <div class="mt-4 grid gap-3 sm:grid-cols-3">
+                    <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                         <x-field :label="__('clinic.services.price')" :name="'tests.'.$test->id.'.price'">
                             <x-input type="number" step="0.01" min="0" :name="'tests['.$test->id.'][price]'"
                                      :value="$offering?->price ?? $test->suggested_price" dir="ltr"/>
@@ -36,6 +36,10 @@
                         <x-field :label="__('clinic.services.promo_price')" :name="'tests.'.$test->id.'.promo_price'">
                             <x-input type="number" step="0.01" min="0" :name="'tests['.$test->id.'][promo_price]'"
                                      :value="$offering?->promo_price" dir="ltr"/>
+                        </x-field>
+                        <x-field :label="__('clinic.labs.home_price')" :name="'tests.'.$test->id.'.home_price'">
+                            <x-input type="number" step="0.01" min="0" :name="'tests['.$test->id.'][home_price]'"
+                                     :value="$offering?->home_price" dir="ltr"/>
                         </x-field>
                         <div class="flex items-end pb-1">
                             <x-checkbox
@@ -72,7 +76,7 @@
                             :checked="$offering?->is_active"
                         />
                     </div>
-                    <div class="mt-4 grid gap-3 sm:grid-cols-3">
+                    <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                         <x-field :label="__('clinic.services.price')" :name="'packages.'.$package->id.'.price'">
                             <x-input type="number" step="0.01" min="0" :name="'packages['.$package->id.'][price]'"
                                      :value="$offering?->price ?? $package->package_price" dir="ltr"/>
@@ -80,6 +84,10 @@
                         <x-field :label="__('clinic.services.promo_price')" :name="'packages.'.$package->id.'.promo_price'">
                             <x-input type="number" step="0.01" min="0" :name="'packages['.$package->id.'][promo_price]'"
                                      :value="$offering?->promo_price" dir="ltr"/>
+                        </x-field>
+                        <x-field :label="__('clinic.labs.home_price')" :name="'packages.'.$package->id.'.home_price'">
+                            <x-input type="number" step="0.01" min="0" :name="'packages['.$package->id.'][home_price]'"
+                                     :value="$offering?->home_price" dir="ltr"/>
                         </x-field>
                         <div class="flex items-end pb-1">
                             <x-checkbox

@@ -27,6 +27,11 @@
                 </div>
                 <div class="flex justify-between gap-3"><dt class="text-ink-500">{{ __('labs.checkout.collection') }}</dt><dd>{{ $order->collection_mode->label() }}</dd></div>
             </dl>
+            @if ($order->collection_mode->value === 'home')
+                <div class="mt-4 border-t border-ink-100 pt-4">
+                    @include('labs._visit-destination', ['order' => $order])
+                </div>
+            @endif
         </x-card>
 
         <x-card :title="__('labs.checkout.items')">

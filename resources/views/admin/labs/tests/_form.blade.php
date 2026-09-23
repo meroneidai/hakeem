@@ -60,7 +60,7 @@
         <x-input name="display_order" type="number" min="0" :value="$test->display_order ?? 0"/>
     </x-field>
 
-    <x-image-field name="image" :path="$test->image_path"/>
+    <x-image-field name="image" :path="$test->image_path" :required="! $test->exists || ! $test->image_path" :hint="__('admin.labs.test_image_hint')"/>
 </div>
 
 <div class="mt-4">

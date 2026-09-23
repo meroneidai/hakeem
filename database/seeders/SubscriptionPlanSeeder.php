@@ -21,6 +21,8 @@ class SubscriptionPlanSeeder extends Seeder
             PlanFeature::ServiceLabTest,
             PlanFeature::ServiceHomeLabTest,
             PlanFeature::ServicePsychiatricConsultation,
+            PlanFeature::ServicePhysicalTherapy,
+            PlanFeature::ServiceOccupationalTherapy,
             PlanFeature::ServiceCatalogItems,
         ];
 

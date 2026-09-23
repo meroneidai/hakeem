@@ -104,36 +104,34 @@
                 </div>
             @endif
 
-            <div @if ($packages->isNotEmpty()) x-show="tab === 'tests'" x-cloak @endif class="grid gap-3 md:grid-cols-2">
+            <div @if ($packages->isNotEmpty()) x-show="tab === 'tests'" x-cloak @endif class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 @forelse ($tests as $test)
-                    <article class="card p-4">
-                        <div class="flex items-start justify-between gap-3">
-                            <div class="flex min-w-0 items-start gap-3">
-                                <x-media
-                                    :src="\App\Support\PublicImage::url($test->image_path)"
-                                    :alt="$test->name"
-                                    class="size-12 shrink-0 rounded-xl"
-                                />
-                                <div>
-                                    <x-badge tone="primary">{{ $test->category->label() }}</x-badge>
-                                    <h3 class="mt-2 font-semibold text-ink-900">
-                                        <a href="{{ route('labs.tests.show', $test) }}" class="hover:text-primary-700">{{ $test->name }}</a>
-                                    </h3>
-                                    <p class="mt-1 text-sm text-ink-500">{{ $test->measures }}</p>
-                                </div>
+                    <article class="card flex flex-col overflow-hidden p-0">
+                        <x-media
+                            :src="$test->imageUrl()"
+                            :alt="$test->name"
+                            class="h-36 w-full rounded-none"
+                        />
+                        <div class="flex flex-1 flex-col p-4">
+                            <div class="flex items-start justify-between gap-3">
+                                <x-badge tone="primary">{{ $test->category->label() }}</x-badge>
+                                <p class="shrink-0 text-sm font-semibold text-primary-700">
+                                    {{ number_format((float) $test->suggested_price) }} {{ __('common.currency') }}
+                                </p>
                             </div>
-                            <p class="shrink-0 text-sm font-semibold text-primary-700">
-                                {{ number_format((float) $test->suggested_price) }} {{ __('common.currency') }}
+                            <h3 class="mt-2 font-semibold text-ink-900">
+                                <a href="{{ route('labs.tests.show', $test) }}" class="hover:text-primary-700">{{ $test->name }}</a>
+                            </h3>
+                            <p class="mt-1 text-sm text-ink-500">{{ $test->measures }}</p>
+                            <p class="mt-3 text-xs text-ink-400">
+                                {{ $test->sample_type->label() }}
+                                ·
+                                {{ $test->fasting_hours ? __('labs.fasting', ['hours' => $test->fasting_hours]) : __('labs.no_fasting') }}
                             </p>
-                        </div>
-                        <p class="mt-3 text-xs text-ink-400">
-                            {{ $test->sample_type->label() }}
-                            ·
-                            {{ $test->fasting_hours ? __('labs.fasting', ['hours' => $test->fasting_hours]) : __('labs.no_fasting') }}
-                        </p>
-                        <x-lab-availability :offerings="$test->clinicOfferings"/>
-                        <div class="mt-3">
-                            <x-lab-cart-button type="test" :id="$test->id" variant="secondary"/>
+                            <x-lab-availability :offerings="$test->clinicOfferings"/>
+                            <div class="mt-auto pt-4">
+                                <x-lab-cart-button type="test" :id="$test->id" variant="secondary"/>
+                            </div>
                         </div>
                     </article>
                 @empty

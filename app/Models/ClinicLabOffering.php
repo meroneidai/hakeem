@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\CollectionMode;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
     'clinic_id', 'item_type', 'lab_test_id', 'lab_package_id',
-    'price', 'promo_price', 'allows_home_collection', 'is_active',
+    'price', 'promo_price', 'home_price', 'allows_home_collection', 'is_active',
 ])]
 class ClinicLabOffering extends Model
 {
@@ -18,6 +19,7 @@ class ClinicLabOffering extends Model
         return [
             'price' => 'decimal:2',
             'promo_price' => 'decimal:2',
+            'home_price' => 'decimal:2',
             'allows_home_collection' => 'boolean',
             'is_active' => 'boolean',
         ];
@@ -41,6 +43,27 @@ class ClinicLabOffering extends Model
     public function effectivePrice(): float
     {
         return $this->promo_price !== null ? (float) $this->promo_price : (float) $this->price;
+    }
+
+    public function clinicPrice(): float
+    {
+        return $this->effectivePrice();
+    }
+
+    public function homeCollectionPrice(): float
+    {
+        if ($this->home_price !== null) {
+            return (float) $this->home_price;
+        }
+
+        return $this->clinicPrice();
+    }
+
+    public function priceFor(CollectionMode $mode): float
+    {
+        return $mode === CollectionMode::Home
+            ? $this->homeCollectionPrice()
+            : $this->clinicPrice();
     }
 
     public function scopeActive(Builder $query): Builder

@@ -2,7 +2,16 @@
 
 return [
     'profile' => 'Profile',
+    'dashboard' => 'Dashboard',
     'subtitle' => 'Complete your details and notification preferences.',
+    'hub' => [
+        'subtitle' => 'Records, bookings, profile, and everything about your care in one place.',
+        'profile_hint' => 'Your details, insurance, and alerts.',
+        'appointments_hint' => 'Visits and lab orders.',
+        'records_hint' => 'Lab results, prescriptions, and sick leave.',
+        'labs_hint' => 'Lab cart and lab orders.',
+        'open_records' => 'Open medical records',
+    ],
     'birth' => 'Date of birth',
     'birth_day' => 'Day',
     'birth_month' => 'Month',
@@ -20,6 +29,9 @@ return [
     'incomplete' => 'Complete your profile (city and phone verification) so alerts stay accurate.',
     'complete' => 'Your profile is complete.',
     'city' => 'City',
+    'insurance' => 'Insurance company',
+    'insurance_hint' => 'Optional. You can choose your insurer now or later in your account.',
+    'insurance_none' => 'No insurance / I pay myself',
     'all_appointments' => 'All appointments',
     'loyalty' => [
         'heading' => 'Wallet and referral link',

@@ -1,9 +1,9 @@
-<x-layouts.public :title="__('pages.how.heading')">
-    <x-catalog-hero :title="__('pages.how.heading')" :subtitle="__('pages.how.lead')">
+<x-layouts.public :title="$heading ?? __('pages.how.heading')">
+    <x-catalog-hero :title="$heading ?? __('pages.how.heading')" :subtitle="$lead ?? __('pages.how.lead')">
         <x-slot:crumbs>
             <a href="{{ route('home') }}" class="hover:text-primary-700">{{ __('discover.nav.home') }}</a>
             <span aria-hidden="true">·</span>
-            <span class="text-ink-700">{{ __('pages.how.heading') }}</span>
+            <span class="text-ink-700">{{ $heading ?? __('pages.how.heading') }}</span>
         </x-slot:crumbs>
         <x-slot:actions>
             <x-button :href="route('doctors.index')" variant="accent">{{ __('discover.nav.book') }}</x-button>

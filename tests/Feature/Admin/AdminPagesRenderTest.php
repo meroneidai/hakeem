@@ -4,11 +4,15 @@ namespace Tests\Feature\Admin;
 
 use App\Enums\RoleName;
 use App\Models\City;
+use App\Models\Clinic;
+use App\Models\ClinicSubscription;
 use App\Models\DiscountCode;
 use App\Models\Governorate;
+use App\Models\InsuranceProvider;
 use App\Models\Promotion;
 use App\Models\SeoPage;
 use App\Models\ServiceType;
+use App\Models\SitePage;
 use App\Models\Specialty;
 use App\Models\SubscriptionPlan;
 use App\Models\SupportTicket;
@@ -58,15 +62,34 @@ class AdminPagesRenderTest extends TestCase
             '/admin/cities',
             '/admin/specialties',
             '/admin/service-types',
+            '/admin/insurance-providers',
             '/admin/plans',
             '/admin/discount-codes',
             '/admin/payments',
+            '/admin/lab-tests',
+            '/admin/lab-packages',
             '/admin/promotions',
+            '/admin/articles',
+            '/admin/site-pages',
             '/admin/seo-pages',
+            '/admin/seo/site',
             '/admin/support',
             '/admin/staff',
             '/admin/notification-settings',
             '/admin/audit-logs',
+            '/admin/users',
+            '/admin/clinics',
+            '/admin/doctors',
+            '/admin/billing',
+            '/admin/map',
+            '/admin/attendance',
+            '/admin/errors',
+            '/admin/analytics',
+            '/admin/reviews',
+            '/admin/system',
+            '/admin/loyalty',
+            '/admin/bookings',
+            '/admin/lab-orders',
         ];
 
         foreach ($paths as $path) {
@@ -81,9 +104,14 @@ class AdminPagesRenderTest extends TestCase
             '/admin/cities/create',
             '/admin/specialties/create',
             '/admin/service-types/create',
+            '/admin/insurance-providers/create',
             '/admin/plans/create',
             '/admin/discount-codes/create',
             '/admin/promotions/create',
+            '/admin/lab-tests/create',
+            '/admin/lab-packages/create',
+            '/admin/articles/create',
+            '/admin/site-pages/create',
             '/admin/staff/create',
         ];
 
@@ -132,15 +160,27 @@ class AdminPagesRenderTest extends TestCase
             'specialty_id' => Specialty::first()->id,
         ]);
 
+        $provider = InsuranceProvider::factory()->create();
+        $plan = SubscriptionPlan::first();
+        $clinic = Clinic::factory()->create(['subscription_plan_id' => $plan->id]);
+        $subscription = ClinicSubscription::factory()->create([
+            'clinic_id' => $clinic->id,
+            'subscription_plan_id' => $plan->id,
+        ]);
+        $sitePage = SitePage::factory()->create();
+
         $paths = [
             '/admin/governorates/'.Governorate::first()->id.'/edit',
             '/admin/cities/'.City::first()->id.'/edit',
             '/admin/specialties/'.Specialty::first()->id.'/edit',
+            '/admin/insurance-providers/'.$provider->id.'/edit',
             '/admin/service-types/'.ServiceType::first()->id.'/edit',
             '/admin/plans/'.SubscriptionPlan::first()->id.'/edit',
             '/admin/discount-codes/'.$code->id.'/edit',
             '/admin/promotions/'.$promotion->id.'/edit',
             '/admin/seo-pages/'.$seoPage->id.'/edit',
+            '/admin/site-pages/'.$sitePage->id.'/edit',
+            '/admin/billing/'.$subscription->id,
             '/admin/staff/'.$this->admin->id.'/edit',
             '/admin/support/'.$ticket->id,
         ];

@@ -21,6 +21,9 @@ class DoctorFactory extends Factory
             'name_en' => $nameEn,
             'slug' => Str::slug($nameEn).'-'.fake()->unique()->numerify('###'),
             'specialty_id' => Specialty::query()->value('id'),
+            'years_of_experience' => 12,
+            'consultation_fee' => 350,
+            'gender' => 'female',
             'is_active' => true,
         ];
     }

@@ -12,6 +12,7 @@ use App\Models\ClinicService;
 use App\Models\Doctor;
 use App\Models\ServiceType;
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -22,6 +23,8 @@ class BookingManager
         private NotificationDispatcher $notifications,
         private EvaluationSessionResolver $evaluations,
         private LoyaltyProgram $loyalty,
+        private CareDocumentManager $documents,
+        private AvailabilityService $availability,
     ) {}
 
     /**
@@ -33,6 +36,7 @@ class BookingManager
      *     service_type_id: int,
      *     scheduled_at: mixed,
      *     notes?: ?string,
+     *     patient_home_address?: ?string,
      *     payment_mode?: PaymentMode|string,
      *     status?: BookingStatus
      * }  $attributes
@@ -42,7 +46,7 @@ class BookingManager
         return DB::transaction(function () use ($attributes, $actor) {
             $status = $attributes['status'] ?? BookingStatus::Pending;
             $patient = User::query()->findOrFail($attributes['patient_id']);
-            $doctor = Doctor::query()->with('specialty')->findOrFail($attributes['doctor_id']);
+            $doctor = Doctor::query()->with(['specialty', 'availability'])->findOrFail($attributes['doctor_id']);
             $serviceType = ServiceType::query()->findOrFail($attributes['service_type_id']);
             $offering = ClinicService::query()
                 ->where('clinic_id', $attributes['clinic_id'])
@@ -50,6 +54,15 @@ class BookingManager
                 ->first();
 
             $sessionCount = max(1, min(30, (int) ($attributes['session_count'] ?? $offering?->session_count ?? 1)));
+            $address = ClinicAddress::query()->with('schedules')->findOrFail($attributes['clinic_address_id']);
+            $scheduledAt = Carbon::parse($attributes['scheduled_at']);
+
+            $this->availability->assertBookable(
+                $doctor,
+                $address,
+                $serviceType,
+                $scheduledAt,
+            );
 
             $booking = new Booking([
                 'patient_id' => $attributes['patient_id'],
@@ -59,7 +72,7 @@ class BookingManager
                 'service_type_id' => $attributes['service_type_id'],
                 'clinic_service_id' => $attributes['clinic_service_id'] ?? $offering?->id,
                 'promotion_id' => $attributes['promotion_id'] ?? null,
-                'scheduled_at' => $attributes['scheduled_at'],
+                'scheduled_at' => $scheduledAt,
                 'status' => $status,
                 'is_evaluation' => $this->evaluations->shouldEvaluate(
                     $patient,
@@ -71,6 +84,8 @@ class BookingManager
                 'session_count' => $sessionCount,
                 'payment_mode' => $attributes['payment_mode'] ?? PaymentMode::AtClinic,
                 'payment_status' => 'unpaid',
+                'patient_home_address' => $attributes['patient_home_address'] ?? null,
+                'video_room_token' => $serviceType->is_online ? (string) Str::uuid() : null,
                 'notes' => $attributes['notes'] ?? null,
             ]);
 
@@ -114,6 +129,7 @@ class BookingManager
             'service_type_id' => $attributes['service_type_id'],
             'scheduled_at' => $attributes['scheduled_at'],
             'notes' => $attributes['notes'] ?? null,
+            'patient_home_address' => $attributes['patient_home_address'] ?? null,
             'status' => BookingStatus::Confirmed,
             'payment_mode' => $attributes['payment_mode'] ?? null,
             'session_count' => $attributes['session_count'] ?? null,
@@ -150,6 +166,7 @@ class BookingManager
 
             if ($status === BookingStatus::Completed) {
                 $this->loyalty->rewardCompletedService($booking->patient);
+                $this->documents->recordConsultation($booking->fresh(['patient', 'clinic', 'doctor', 'serviceType']), $actor);
             }
 
             return $booking->refresh();
@@ -165,6 +182,16 @@ class BookingManager
         }
 
         return DB::transaction(function () use ($booking, $scheduledAt, $actor) {
+            $booking->loadMissing(['doctor.availability', 'address.schedules', 'serviceType']);
+
+            $this->availability->assertBookable(
+                $booking->doctor,
+                $booking->address,
+                $booking->serviceType,
+                Carbon::parse($scheduledAt),
+                $booking->id,
+            );
+
             $booking->update(['scheduled_at' => $scheduledAt]);
             $this->recordHistory($booking, $booking->status, $actor);
             $this->notify('booking_rescheduled', $booking);

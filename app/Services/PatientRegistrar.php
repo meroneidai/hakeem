@@ -14,7 +14,7 @@ class PatientRegistrar
         private VerificationService $verification,
     ) {}
 
-    public function register(string $name, AccountIdentifier $identifier, string $password, ?string $referralCode = null): User
+    public function register(string $name, AccountIdentifier $identifier, string $password, ?string $referralCode = null, ?int $insuranceProviderId = null): User
     {
         $identifier->assertAvailable();
 
@@ -24,6 +24,7 @@ class PatientRegistrar
             'email' => $identifier->email,
             'password' => $password,
             'preferred_language' => app()->getLocale(),
+            'insurance_provider_id' => $insuranceProviderId,
         ]);
 
         $user->assignRole(RoleName::Patient);
@@ -39,9 +40,9 @@ class PatientRegistrar
         return $user->fresh();
     }
 
-    public function registerAndLogin(string $name, AccountIdentifier $identifier, string $password, ?string $referralCode = null): User
+    public function registerAndLogin(string $name, AccountIdentifier $identifier, string $password, ?string $referralCode = null, ?int $insuranceProviderId = null): User
     {
-        $user = $this->register($name, $identifier, $password, $referralCode);
+        $user = $this->register($name, $identifier, $password, $referralCode, $insuranceProviderId);
 
         Auth::login($user, true);
 

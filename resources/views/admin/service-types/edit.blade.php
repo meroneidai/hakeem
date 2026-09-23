@@ -1,7 +1,7 @@
 <x-layouts.admin :title="__('admin.service_types.edit')">
     <x-page-header :title="__('admin.service_types.edit')" :subtitle="$serviceType->name_ar"/>
 
-    <form method="POST" action="{{ route('admin.service-types.update', $serviceType) }}">
+    <form method="POST" action="{{ route('admin.service-types.update', $serviceType) }}" enctype="multipart/form-data">
         @csrf
         @method('PUT')
         <x-card class="max-w-3xl">

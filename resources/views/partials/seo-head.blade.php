@@ -4,6 +4,9 @@
 @if ($seo->description)
     <meta name="description" content="{{ $seo->description }}">
 @endif
+@if ($seo->keywords)
+    <meta name="keywords" content="{{ $seo->keywords }}">
+@endif
 @foreach ($seo->openGraph() as $property => $content)
     @if (str_starts_with($property, 'twitter:'))
         <meta name="{{ $property }}" content="{{ $content }}">

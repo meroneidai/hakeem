@@ -91,8 +91,10 @@ class SmartAuthTest extends TestCase
             ->get('/')
             ->assertOk()
             ->assertSee(route('account.edit'), false)
-            ->assertSee(__('account.profile'))
-            ->assertSee(__('account.incomplete'));
+            ->assertSee(__('discover.dock.account'))
+            ->assertSee(__('account.incomplete'))
+            ->assertDontSee(__('booking.my_appointments'))
+            ->assertDontSee('aria-label="'.__('common.search').'"', false);
 
         $this->actingAs($patient)
             ->put('/account', [
@@ -119,7 +121,6 @@ class SmartAuthTest extends TestCase
         $this->actingAs($patient->fresh())
             ->get('/account')
             ->assertOk()
-            ->assertSee(__('account.complete'))
             ->assertDontSee(__('account.incomplete'));
     }
 

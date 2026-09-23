@@ -51,7 +51,7 @@ class UserController extends Controller implements HasMiddleware
     {
         abort_unless($user->hasRole(RoleName::Patient), 404);
 
-        $user->load(['city', 'devices', 'ownedClinics', 'referredBy']);
+        $user->load(['city', 'insuranceProvider', 'devices', 'ownedClinics', 'referredBy']);
         $user->loadCount(['bookings', 'devices', 'referrals']);
 
         $bookings = $user->bookings()

@@ -1,5 +1,5 @@
-<x-layouts.public :title="__($copyKey.'.heading')">
-    <x-catalog-hero :title="__($copyKey.'.heading')" :subtitle="__($copyKey.'.lead')">
+<x-layouts.public :title="$heading ?? __($copyKey.'.heading')">
+    <x-catalog-hero :title="$heading ?? __($copyKey.'.heading')" :subtitle="$lead ?? __($copyKey.'.lead')">
         <x-slot:crumbs>
             <a href="{{ route('home') }}" class="hover:text-primary-700">{{ __('discover.nav.home') }}</a>
             <span aria-hidden="true">·</span>

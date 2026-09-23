@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\PaymentMode;
 use App\Enums\Permission;
 use App\Http\Controllers\Controller;
 use App\Models\ServiceType;
 use App\Support\Audit;
+use App\Support\PublicImage;
+use App\Support\ServiceDuration;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -34,6 +37,7 @@ class ServiceTypeController extends Controller implements HasMiddleware
                 'is_active' => true,
                 'requires_clinic_address' => true,
                 'requires_time_slot' => true,
+                'default_duration_minutes' => 30,
             ]),
         ]);
     }
@@ -74,11 +78,19 @@ class ServiceTypeController extends Controller implements HasMiddleware
             'description_ar' => ['nullable', 'string', 'max:2000'],
             'description_en' => ['nullable', 'string', 'max:2000'],
             'icon' => ['nullable', 'string', 'max:64'],
+            'image' => PublicImage::rules(),
             'display_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
+            'default_duration_minutes' => ['required', 'integer', Rule::in(ServiceDuration::presets())],
+            'allowed_payment_modes' => ['nullable', 'array'],
+            'allowed_payment_modes.*' => [Rule::enum(PaymentMode::class)],
         ]);
 
         $data['slug'] = ($data['slug'] ?? null) ?: Str::slug($data['name_en']);
         $data['display_order'] ??= 0;
+        $modes = array_values(array_filter($data['allowed_payment_modes'] ?? []));
+        $data['allowed_payment_modes'] = $modes === [] ? null : $modes;
+        unset($data['image']);
+        $data['image_path'] = PublicImage::store($request, 'image', 'service-types', $serviceType?->image_path);
 
         foreach ([
             'requires_clinic_address',
@@ -89,6 +101,10 @@ class ServiceTypeController extends Controller implements HasMiddleware
             'is_active',
         ] as $flag) {
             $data[$flag] = $request->boolean($flag);
+        }
+
+        if ($data['is_online'] && $data['allowed_payment_modes'] === null) {
+            $data['allowed_payment_modes'] = [PaymentMode::Online->value];
         }
 
         return $data;

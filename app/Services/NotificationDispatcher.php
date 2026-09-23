@@ -82,16 +82,20 @@ class NotificationDispatcher
         }
 
         $otpEvents = in_array($event, ['account_verify', 'password_reset', 'referral_joined'], true);
+        $billingEvents = in_array($event, ['invoice_issued', 'invoice_reminder'], true);
 
-        if (! $otpEvents && ! $this->branding->profileComplete($patient)) {
+        if (! $otpEvents && ! $billingEvents && ! $this->branding->profileComplete($patient)) {
             return;
         }
 
-        if (in_array('sms', $channels, true) && $this->sms->ready() && $patient->notify_sms && $patient->isPhoneVerified()) {
+        $allowSms = $billingEvents || ($patient->notify_sms && $patient->isPhoneVerified());
+        $allowEmail = $billingEvents || ($patient->notify_email && $patient->isEmailVerified());
+
+        if (in_array('sms', $channels, true) && $this->sms->ready() && $allowSms && filled($patient->phone)) {
             $this->sms->send($patient->phone, $body);
         }
 
-        if (in_array('email', $channels, true) && $this->channelReady('email') && $patient->notify_email && $patient->isEmailVerified()) {
+        if (in_array('email', $channels, true) && $this->channelReady('email') && $allowEmail && filled($patient->email)) {
             Mail::to($patient->email)->send(new PlatformNoticeMail(
                 $patient,
                 __('admin.notifications.events.'.$event),
@@ -161,11 +165,19 @@ class NotificationDispatcher
             return $payload['url'];
         }
 
+        if ($user->isInternalStaff() && ! empty($payload['subscription_id'])) {
+            return route('admin.billing.show', $payload['subscription_id']);
+        }
+
         if ($user->isInternalStaff() && ! empty($payload['clinic_id'])) {
             return route('admin.clinics.show', $payload['clinic_id']);
         }
 
         if ($user->isClinicStaff()) {
+            if (! empty($payload['subscription_id'])) {
+                return route('clinic.subscription.edit');
+            }
+
             if (! empty($payload['lab_order_id'])) {
                 return route('clinic.lab-orders.index');
             }

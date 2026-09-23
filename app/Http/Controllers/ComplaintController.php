@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\RoleName;
 use App\Models\SupportTicket;
 use App\Models\User;
+use App\Support\SiteCopy;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -13,9 +14,12 @@ use Illuminate\View\View;
 
 class ComplaintController extends Controller
 {
-    public function create(): View
+    public function create(SiteCopy $copy): View
     {
-        return view('pages.complaints');
+        return view('pages.complaints', [
+            'heading' => $copy->heading('complaints', 'pages.complaints.heading'),
+            'lead' => $copy->intro('complaints', 'pages.complaints.lead'),
+        ]);
     }
 
     public function store(Request $request): RedirectResponse

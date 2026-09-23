@@ -12,10 +12,17 @@
         @foreach ($serviceTypes as $type)
             <x-card>
                 <div class="flex items-start justify-between gap-3">
-                    <div class="min-w-0">
-                        <h3 class="font-semibold text-ink-900">{{ $type->name_ar }}</h3>
-                        <p class="text-sm text-ink-500" dir="ltr">{{ $type->name_en }}</p>
-                        <code class="mt-1 block text-xs text-primary-600" dir="ltr">{{ $type->code }}</code>
+                    <div class="flex min-w-0 items-start gap-3">
+                        <x-media
+                            :src="\App\Support\PublicImage::url($type->image_path)"
+                            :alt="$type->name_ar"
+                            class="size-12 shrink-0 rounded-xl"
+                        />
+                        <div class="min-w-0">
+                            <h3 class="font-semibold text-ink-900">{{ $type->name_ar }}</h3>
+                            <p class="text-sm text-ink-500" dir="ltr">{{ $type->name_en }}</p>
+                            <code class="mt-1 block text-xs text-primary-600" dir="ltr">{{ $type->code }}</code>
+                        </div>
                     </div>
                     <div class="flex shrink-0 flex-col items-end gap-2">
                         <x-status-dot :active="$type->is_active"/>

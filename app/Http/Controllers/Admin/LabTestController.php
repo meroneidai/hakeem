@@ -97,7 +97,7 @@ class LabTestController extends Controller implements HasMiddleware
             'fasting_hours' => ['nullable', 'integer', 'min:0', 'max:24'],
             'turnaround_hours' => ['nullable', 'integer', 'min:1', 'max:720'],
             'suggested_price' => ['required', 'numeric', 'min:0', 'max:999999'],
-            'image' => PublicImage::rules(),
+            'image' => PublicImage::rules(required: $test === null || ! filled($test->image_path)),
             'display_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
             'is_active' => ['boolean'],
         ]);

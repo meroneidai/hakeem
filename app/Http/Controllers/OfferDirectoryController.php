@@ -6,6 +6,7 @@ use App\Enums\OfferCategory;
 use App\Models\Governorate;
 use App\Models\Promotion;
 use App\Services\PaymentOptions;
+use App\Support\BookingDays;
 use App\Support\SearchQuery;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -65,21 +66,25 @@ class OfferDirectoryController extends Controller
         $offer->load([
             'clinic.addresses' => fn ($query) => $query->active()->with('city'),
             'clinic.doctors' => fn ($query) => $query->where('doctors.is_active', true),
+            'clinic.services',
             'specialty',
             'serviceType',
         ]);
 
+        $offering = $offer->clinic?->services->firstWhere('service_type_id', $offer->service_type_id);
         $paymentModes = $offer->clinic
-            ? $this->payments->allowedModes($offer->clinic)
+            ? $this->payments->allowedModes($offer->clinic, $offer->serviceType)
             : [];
 
         return view('offers.show', [
             'offer' => $offer,
             'paymentModes' => $paymentModes,
             'defaultPaymentMode' => $offer->clinic
-                ? $this->payments->defaultMode($offer->clinic)
+                ? $this->payments->defaultMode($offer->clinic, $offer->serviceType)
                 : null,
             'gatewayReady' => $this->payments->isGatewayConfigured(),
+            'dayOptions' => BookingDays::upcoming(),
+            'durationMinutes' => $offer->serviceType?->durationMinutes($offering?->duration_minutes),
         ]);
     }
 }

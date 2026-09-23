@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\LabTestCategory;
 use App\Enums\SampleType;
 use App\Models\Concerns\HasTranslatedAttributes;
+use App\Support\PublicImage;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -64,5 +65,21 @@ class LabTest extends Model
     public function scopeOrdered(Builder $query): Builder
     {
         return $query->orderBy('display_order')->orderBy('name_ar');
+    }
+
+    public function imageUrl(): string
+    {
+        return PublicImage::url($this->image_path) ?: $this->fallbackImageUrl();
+    }
+
+    public function fallbackImageUrl(): string
+    {
+        $file = 'images/labs/'.$this->category->value.'.svg';
+
+        if (is_file(public_path($file))) {
+            return asset($file);
+        }
+
+        return asset('images/labs/default.svg');
     }
 }

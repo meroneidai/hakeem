@@ -191,6 +191,8 @@ class SystemSettingsController extends Controller implements HasMiddleware
             'messages.sms_lab_order_confirmed' => ['nullable', 'string', 'max:480'],
             'messages.sms_lab_order_completed' => ['nullable', 'string', 'max:480'],
             'messages.sms_lab_order_cancelled' => ['nullable', 'string', 'max:480'],
+            'messages.sms_prescription_issued' => ['nullable', 'string', 'max:480'],
+            'messages.sms_lab_result_ready' => ['nullable', 'string', 'max:480'],
         ];
     }
 

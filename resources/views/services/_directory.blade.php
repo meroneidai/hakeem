@@ -1,5 +1,21 @@
+@php
+    $directoryAction = ($place ?? null) instanceof \App\Models\City
+        ? route('services.location', [$serviceType, $place->slug])
+        : (($place ?? null) instanceof \App\Models\Governorate
+            ? route('services.location', [$serviceType, $place->slug])
+            : route('services.show', $serviceType));
+@endphp
+
+@if (($cities ?? collect())->isNotEmpty())
+    <div class="mb-6 flex flex-wrap gap-2">
+        @foreach ($cities as $city)
+            <a href="{{ route('services.location', [$serviceType, $city->slug]) }}" class="rounded-full bg-white px-3 py-1.5 text-sm text-ink-700 ring-1 ring-ink-200 hover:ring-primary-300">{{ $city->name }}</a>
+        @endforeach
+    </div>
+@endif
+
 <x-provider-filters
-    :action="route('services.show', $serviceType)"
+    :action="$directoryAction"
     :filters="$filters"
     :specialties="$specialties"
     :governorates="$governorates"

@@ -4,8 +4,10 @@ namespace Tests\Feature;
 
 use App\Enums\BookingStatus;
 use App\Enums\PaymentMode;
+use App\Enums\ServiceTypeCode;
 use App\Models\Booking;
 use App\Models\ClinicAddress;
+use App\Models\ServiceType;
 use App\Models\User;
 use App\Support\Settings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -151,5 +153,44 @@ class BookingRequestTest extends TestCase
             ->post('/book/doctors/'.$provider['doctor']->slug, [])
             ->assertRedirect('/book/doctors/'.$provider['doctor']->slug)
             ->assertSessionHasErrors(['service_type_id', 'clinic_address_id', 'scheduled_at']);
+    }
+
+    public function test_home_visit_requires_a_patient_address(): void
+    {
+        $this->seedRoles();
+        $provider = $this->seedListableProvider();
+        $service = ServiceType::query()->create([
+            'code' => ServiceTypeCode::HomeVisit->value,
+            'name_ar' => 'زيارة منزلية',
+            'name_en' => 'Home Visit',
+            'slug' => 'home-visit-booking',
+            'is_active' => true,
+            'requires_patient_address' => true,
+        ]);
+        $patient = User::factory()->create();
+
+        $this->actingAs($patient)
+            ->from('/book/doctors/'.$provider['doctor']->slug)
+            ->post('/book/doctors/'.$provider['doctor']->slug, [
+                'service_type_id' => $service->id,
+                'clinic_address_id' => $provider['address']->id,
+                'scheduled_at' => now()->addDay()->format('Y-m-d H:i:s'),
+            ])
+            ->assertRedirect('/book/doctors/'.$provider['doctor']->slug)
+            ->assertSessionHasErrors('patient_home_address');
+
+        $this->actingAs($patient)
+            ->post('/book/doctors/'.$provider['doctor']->slug, [
+                'service_type_id' => $service->id,
+                'clinic_address_id' => $provider['address']->id,
+                'scheduled_at' => now()->addDay()->format('Y-m-d H:i:s'),
+                'patient_home_address' => 'مدينة نصر، شارع عباس العقاد',
+            ])
+            ->assertRedirect('/appointments');
+
+        $this->assertDatabaseHas('bookings', [
+            'patient_id' => $patient->id,
+            'patient_home_address' => 'مدينة نصر، شارع عباس العقاد',
+        ]);
     }
 }

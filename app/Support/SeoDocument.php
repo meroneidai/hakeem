@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\SeoPage;
+use App\Models\SitePage;
 use Illuminate\Http\Request;
 
 class SeoDocument
@@ -20,6 +21,7 @@ class SeoDocument
         public array $jsonLd,
         public ?string $h1 = null,
         public ?string $intro = null,
+        public ?string $keywords = null,
     ) {}
 
     /**
@@ -34,35 +36,30 @@ class SeoDocument
         string $ogType = 'website',
         array $jsonLd = [],
     ): self {
-        $settings = app(Settings::class);
-        $locale = app()->getLocale();
+        $branding = app(Branding::class);
         $path = '/'.ltrim($request->path(), '/');
         $path = $path === '/.' ? '/' : $path;
-        $page = SeoPage::query()->where('path', $path)->first();
+        $sitePage = SitePage::query()->published()->where('path', $path)->first();
+        $page = $sitePage ? null : SeoPage::query()->where('path', $path)->first();
 
-        $defaultDescription = $locale === 'en'
-            ? $settings->get('seo.default_description_en')
-            : $settings->get('seo.default_description_ar');
+        $resolvedTitle = filled($sitePage?->meta_title)
+            ? $branding->titled($sitePage->meta_title)
+            : (filled($page?->meta_title)
+                ? $branding->titled($page->meta_title)
+                : $branding->titled($sitePage?->heading ?: $title));
 
-        $brand = __('common.app_name');
-        if (filled($page?->meta_title)) {
-            $resolvedTitle = $page->meta_title;
-        } elseif (filled($title)) {
-            $resolvedTitle = str_contains($title, $brand) ? $title : $title.' — '.$brand;
-        } else {
-            $resolvedTitle = $brand;
-        }
+        $resolvedDescription = filled($sitePage?->meta_description)
+            ? $sitePage->meta_description
+            : (filled($page?->meta_description)
+                ? $page->meta_description
+                : ($sitePage?->intro ?: ($description ?: $branding->description())));
 
-        $resolvedDescription = filled($page?->meta_description)
-            ? $page->meta_description
-            : ($description ?: (is_string($defaultDescription) ? $defaultDescription : null));
-
-        if ($page && ! $page->is_indexable) {
+        if (($sitePage && ! $sitePage->is_indexable) || ($page && ! $page->is_indexable)) {
             $robots = 'noindex,follow';
         }
 
         $canonical = url($path === '/' ? '/' : $path);
-        $ogImage = $image ?: (is_string($settings->get('seo.og_image')) ? $settings->get('seo.og_image') : null);
+        $ogImage = $image ?: $branding->shareImageUrl();
 
         $jsonLd = self::enrichGraphs($jsonLd, $resolvedTitle, $resolvedDescription, $canonical, $path);
 
@@ -74,8 +71,9 @@ class SeoDocument
             image: filled($ogImage) ? $ogImage : null,
             ogType: $ogType,
             jsonLd: $jsonLd,
-            h1: $page?->translated('h1'),
-            intro: $page?->translated('intro_content'),
+            h1: $sitePage?->heading ?: $page?->translated('h1'),
+            intro: $sitePage?->intro ?: $page?->translated('intro_content'),
+            keywords: $branding->keywords(),
         );
     }
 
@@ -144,24 +142,25 @@ class SeoDocument
      */
     public static function websiteGraph(?string $title = null, ?string $description = null): array
     {
-        return [
+        $branding = app(Branding::class);
+
+        return array_filter([
             '@context' => 'https://schema.org',
             '@type' => 'WebSite',
-            'name' => __('common.app_name'),
+            'name' => $branding->name(),
+            'alternateName' => [__('common.app_name'), 'Hakeem'],
             'url' => url('/'),
             'inLanguage' => [app()->getLocale() === 'en' ? 'en-EG' : 'ar-EG'],
+            'description' => $description ?: $branding->description(),
+            'publisher' => [
+                '@id' => $branding->organizationId(),
+            ],
             'potentialAction' => [
                 '@type' => 'SearchAction',
                 'target' => url('/search').'?q={search_term_string}',
                 'query-input' => 'required name=search_term_string',
             ],
-            'publisher' => [
-                '@type' => 'Organization',
-                'name' => __('common.app_name'),
-                'url' => url('/'),
-            ],
-            'description' => $description,
-        ];
+        ]);
     }
 
     /**
@@ -169,31 +168,102 @@ class SeoDocument
      */
     public static function organizationGraph(): array
     {
-        $settings = app(Settings::class);
+        $branding = app(Branding::class);
         $support = app(SupportLinks::class);
-        $twitter = $settings->get('seo.twitter_site');
-        $sameAs = [];
+        $logo = $branding->shareImageUrl();
+        $sameAs = array_values($branding->social());
+        $twitter = app(Settings::class)->get('seo.twitter_site');
 
         if (is_string($twitter) && filled($twitter)) {
-            $sameAs[] = 'https://x.com/'.ltrim($twitter, '@');
+            $handle = ltrim($twitter, '@');
+            $sameAs[] = 'https://x.com/'.$handle;
+        }
+
+        $sameAs = array_values(array_unique(array_filter($sameAs)));
+        $contactPoints = [];
+
+        if ($support->telephone()) {
+            $contactPoints[] = [
+                '@type' => 'ContactPoint',
+                'contactType' => 'customer support',
+                'telephone' => $support->telephone(),
+                'areaServed' => 'EG',
+                'availableLanguage' => ['ar', 'en'],
+            ];
+        }
+
+        if ($support->email()) {
+            $contactPoints[] = [
+                '@type' => 'ContactPoint',
+                'contactType' => 'customer support',
+                'email' => $support->email(),
+                'areaServed' => 'EG',
+                'availableLanguage' => ['ar', 'en'],
+            ];
+        }
+
+        if ($support->hasWhatsapp()) {
+            $contactPoints[] = [
+                '@type' => 'ContactPoint',
+                'contactType' => 'customer support',
+                'telephone' => $support->whatsappTelephone(),
+                'url' => $support->whatsappUrl(),
+                'areaServed' => 'EG',
+                'availableLanguage' => ['ar', 'en'],
+            ];
         }
 
         return array_filter([
             '@context' => 'https://schema.org',
             '@type' => 'MedicalOrganization',
-            'name' => __('common.app_name'),
+            '@id' => $branding->organizationId(),
+            'name' => $branding->name(),
+            'legalName' => $branding->name(),
+            'alternateName' => __('common.app_name'),
             'url' => url('/'),
-            'logo' => is_string($settings->get('seo.og_image')) && filled($settings->get('seo.og_image'))
-                ? $settings->get('seo.og_image')
-                : url('/favicon.ico'),
+            'description' => $branding->description(),
+            'slogan' => $branding->tagline(),
+            'logo' => [
+                '@type' => 'ImageObject',
+                'url' => $logo,
+            ],
+            'image' => $logo,
+            'email' => $support->email(),
+            'telephone' => $support->telephone(),
             'areaServed' => [
                 '@type' => 'Country',
                 'name' => 'EG',
             ],
-            'telephone' => $support->telephone(),
-            'email' => $support->email(),
+            'address' => [
+                '@type' => 'PostalAddress',
+                'addressCountry' => 'EG',
+            ],
+            'contactPoint' => $contactPoints !== [] ? $contactPoints : null,
             'sameAs' => $sameAs !== [] ? $sameAs : null,
         ], fn ($value) => $value !== null && $value !== []);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function contactPageGraph(): array
+    {
+        $branding = app(Branding::class);
+
+        return [
+            '@context' => 'https://schema.org',
+            '@type' => 'ContactPage',
+            'name' => __('pages.contact.heading'),
+            'url' => url('/contact'),
+            'isPartOf' => [
+                '@type' => 'WebSite',
+                'name' => $branding->name(),
+                'url' => url('/'),
+            ],
+            'about' => [
+                '@id' => $branding->organizationId(),
+            ],
+        ];
     }
 
     /**
@@ -209,7 +279,7 @@ class SeoDocument
             'url' => $canonical,
             'isPartOf' => [
                 '@type' => 'WebSite',
-                'name' => __('common.app_name'),
+                'name' => app(Branding::class)->name(),
                 'url' => url('/'),
             ],
             'inLanguage' => app()->getLocale() === 'en' ? 'en-EG' : 'ar-EG',
@@ -249,7 +319,7 @@ class SeoDocument
             'og:type' => $this->ogType,
             'og:locale' => $locale,
             'og:locale:alternate' => $alternate,
-            'og:site_name' => __('common.app_name'),
+            'og:site_name' => app(Branding::class)->name(),
             'og:image' => $this->image,
             'twitter:card' => $this->image ? 'summary_large_image' : 'summary',
             'twitter:title' => $this->title,

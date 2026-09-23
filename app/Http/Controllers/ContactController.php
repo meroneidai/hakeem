@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\ContactInquiry;
 use App\Models\User;
+use App\Support\SeoDocument;
+use App\Support\SiteCopy;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -11,9 +13,13 @@ use Illuminate\View\View;
 
 class ContactController extends Controller
 {
-    public function create(): View
+    public function create(SiteCopy $copy): View
     {
-        return view('pages.contact');
+        return view('pages.contact', [
+            'jsonLd' => [SeoDocument::contactPageGraph()],
+            'heading' => $copy->heading('contact', 'pages.contact.heading'),
+            'lead' => $copy->intro('contact', 'pages.contact.lead'),
+        ]);
     }
 
     public function store(Request $request): RedirectResponse

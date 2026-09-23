@@ -9,7 +9,34 @@
             </div>
         </x-card>
     @else
-        <form method="POST" action="{{ route('clinic.queue.store') }}">
+        <form
+            method="POST"
+            action="{{ route('clinic.queue.store') }}"
+            @day-changed="
+                const input = $refs.when;
+                if (input) {
+                    const time = (input.value || '').slice(11, 16) || '09:00';
+                    input.value = date + 'T' + time;
+                }
+            "
+            x-data="{
+                service: @js((string) old('service_type_id', $serviceTypes->first()?->id)),
+                date: @js(old('date', now()->timezone(config('hakeem.display_timezone'))->toDateString())),
+                days: @js($dayOptions ?? []),
+                flags: @js($serviceFlags ?? []),
+                modeAllowed(value) {
+                    const service = this.flags[this.service]?.payment_modes || [];
+                    return service.length === 0 || service.includes(value);
+                },
+                visibleModeCount() {
+                    return @js(collect($paymentModes)->map(fn ($mode) => $mode->value)->values()).filter((value) => this.modeAllowed(value)).length;
+                },
+                get durationLabel() {
+                    const minutes = this.flags[this.service]?.duration_minutes;
+                    return minutes ? @js(__('booking.duration_minutes', ['minutes' => ':minutes'])).replace(':minutes', minutes) : '';
+                }
+            }"
+        >
             @csrf
             <x-card class="max-w-xl">
                 <div class="space-y-4">
@@ -40,20 +67,25 @@
                             name="service_type_id"
                             :placeholder="__('clinic.queue.service')"
                             :options="$serviceTypes->pluck('name', 'id')->all()"
+                            x-model="service"
                         />
                     </x-field>
+                    <p class="text-sm font-medium text-primary-700" x-show="durationLabel" x-text="durationLabel"></p>
+                    @include('bookings._day_picker')
                     <x-field :label="__('clinic.queue.when')" name="scheduled_at" required>
-                        <x-input
-                            name="scheduled_at"
+                        <input
                             type="datetime-local"
+                            name="scheduled_at"
+                            x-ref="when"
                             dir="ltr"
-                            :value="old('scheduled_at', now()->format('Y-m-d\TH:i'))"
+                            value="{{ old('scheduled_at', now()->timezone(config('hakeem.display_timezone'))->format('Y-m-d\TH:i')) }}"
+                            class="field-input focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
                         />
                     </x-field>
                     <x-field :label="__('booking.sessions')" name="session_count" :hint="__('booking.sessions_hint')">
                         <x-input type="number" name="session_count" min="1" max="30" :value="old('session_count', 1)" dir="ltr"/>
                     </x-field>
-                    @include('bookings._payment_modes')
+                    @include('bookings._payment_modes', ['filterPaymentsByService' => true])
                     <x-field :label="__('clinic.queue.notes')" name="notes">
                         <x-textarea name="notes" rows="3"/>
                     </x-field>

@@ -26,6 +26,7 @@
                 <div class="flex justify-between gap-3"><dt class="text-ink-500">{{ __('admin.users.app') }}</dt><dd>{{ $user->hasInstalledApp() ? __('admin.users.app_yes') : __('admin.users.app_no') }}</dd></div>
                 <div class="flex justify-between gap-3"><dt class="text-ink-500">{{ __('admin.users.last_login') }}</dt><dd>{{ $user->last_login_at?->diffForHumans() ?? '—' }}</dd></div>
                 <div class="flex justify-between gap-3"><dt class="text-ink-500">{{ __('admin.cities.heading') }}</dt><dd>{{ $user->city?->name ?? '—' }}</dd></div>
+                <div class="flex justify-between gap-3"><dt class="text-ink-500">{{ __('account.insurance') }}</dt><dd>{{ $user->insuranceProvider?->name ?? '—' }}</dd></div>
                 <div class="flex justify-between gap-3"><dt class="text-ink-500">{{ __('admin.loyalty.balance') }}</dt><dd class="tabular">{{ number_format((float) $user->wallet_balance, 2) }} {{ __('common.currency') }}</dd></div>
                 <div class="flex justify-between gap-3"><dt class="text-ink-500">{{ __('admin.loyalty.referrals') }}</dt><dd>{{ $user->referrals_count }}</dd></div>
                 <div class="flex justify-between gap-3"><dt class="text-ink-500">{{ __('admin.loyalty.referred_by') }}</dt><dd>{{ $user->referredBy?->name ?? '—' }}</dd></div>

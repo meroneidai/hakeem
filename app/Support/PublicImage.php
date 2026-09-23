@@ -11,9 +11,19 @@ class PublicImage
     /**
      * @return list<string>
      */
-    public static function rules(): array
+    public static function rules(bool $required = false): array
     {
-        return ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'];
+        return [
+            $required ? 'required' : 'nullable',
+            'image',
+            'mimes:jpg,jpeg,png,webp',
+            'max:2048',
+        ];
+    }
+
+    public static function faviconRules(): array
+    {
+        return ['nullable', 'file', 'mimes:ico,png,jpg,jpeg,webp,svg', 'max:1024'];
     }
 
     public static function store(Request $request, string $field, string $directory, ?string $current = null): ?string

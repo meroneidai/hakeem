@@ -23,8 +23,12 @@ class SiteSeoController extends Controller implements HasMiddleware
     {
         return view('admin.seo-pages.site', [
             'values' => [
+                'seo.site_title_ar' => $settings->get('seo.site_title_ar'),
+                'seo.site_title_en' => $settings->get('seo.site_title_en'),
                 'seo.default_description_ar' => $settings->get('seo.default_description_ar'),
                 'seo.default_description_en' => $settings->get('seo.default_description_en'),
+                'seo.keywords_ar' => $settings->get('seo.keywords_ar'),
+                'seo.keywords_en' => $settings->get('seo.keywords_en'),
                 'seo.og_image' => $settings->get('seo.og_image'),
                 'seo.twitter_site' => $settings->get('seo.twitter_site'),
                 'seo.app_ios_url' => $settings->get('seo.app_ios_url'),
@@ -49,8 +53,12 @@ class SiteSeoController extends Controller implements HasMiddleware
     public function update(Request $request, Settings $settings): RedirectResponse
     {
         $data = $request->validate([
+            'seo.site_title_ar' => ['nullable', 'string', 'max:70'],
+            'seo.site_title_en' => ['nullable', 'string', 'max:70'],
             'seo.default_description_ar' => ['nullable', 'string', 'max:320'],
             'seo.default_description_en' => ['nullable', 'string', 'max:320'],
+            'seo.keywords_ar' => ['nullable', 'string', 'max:320'],
+            'seo.keywords_en' => ['nullable', 'string', 'max:320'],
             'seo.og_image' => ['nullable', 'url', 'max:500'],
             'seo.twitter_site' => ['nullable', 'string', 'max:64'],
             'seo.app_ios_url' => ['nullable', 'url', 'max:500'],
@@ -61,7 +69,7 @@ class SiteSeoController extends Controller implements HasMiddleware
             'branding.tagline_ar' => ['nullable', 'string', 'max:190'],
             'branding.tagline_en' => ['nullable', 'string', 'max:190'],
             'logo' => PublicImage::rules(),
-            'favicon' => PublicImage::rules(),
+            'favicon' => PublicImage::faviconRules(),
             'social.facebook' => ['nullable', 'url', 'max:500'],
             'social.instagram' => ['nullable', 'url', 'max:500'],
             'social.twitter' => ['nullable', 'url', 'max:500'],
@@ -76,8 +84,12 @@ class SiteSeoController extends Controller implements HasMiddleware
         $social = $data['social'] ?? [];
 
         $settings->setMany([
+            'seo.site_title_ar' => $seo['site_title_ar'] ?? null,
+            'seo.site_title_en' => $seo['site_title_en'] ?? null,
             'seo.default_description_ar' => $seo['default_description_ar'] ?? null,
             'seo.default_description_en' => $seo['default_description_en'] ?? null,
+            'seo.keywords_ar' => $seo['keywords_ar'] ?? null,
+            'seo.keywords_en' => $seo['keywords_en'] ?? null,
             'seo.og_image' => $seo['og_image'] ?? null,
             'seo.twitter_site' => $seo['twitter_site'] ?? null,
             'seo.app_ios_url' => $seo['app_ios_url'] ?? null,

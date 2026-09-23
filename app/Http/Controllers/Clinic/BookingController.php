@@ -11,6 +11,7 @@ use App\Models\Doctor;
 use App\Models\ServiceType;
 use App\Services\BookingManager;
 use App\Services\PaymentOptions;
+use App\Support\BookingDays;
 use App\Support\StatusTally;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -51,7 +52,7 @@ class BookingController extends Controller
         );
 
         $bookings = (clone $dayQuery)
-            ->with(['patient', 'doctor', 'address', 'serviceType'])
+            ->with(['patient', 'doctor', 'address', 'serviceType', 'clinicService'])
             ->when($filters['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
             ->when($filters['address'] ?? null, fn ($query, $addressId) => $query->where('clinic_address_id', $addressId))
             ->orderBy('scheduled_at')
@@ -93,7 +94,7 @@ class BookingController extends Controller
             Booking::query()->where('clinic_id', $clinic->id),
             $request,
         )
-            ->with(['patient', 'doctor', 'address', 'serviceType'])
+            ->with(['patient', 'doctor', 'address', 'serviceType', 'clinicService'])
             ->when($filters['q'] ?? null, function ($builder, $term) {
                 $builder->where(function ($inner) use ($term) {
                     $inner->whereHas('patient', fn ($patient) => $patient
@@ -141,9 +142,22 @@ class BookingController extends Controller
         return view('clinic.queue.create', [
             'clinic' => $clinic,
             'serviceTypes' => $serviceTypes,
-            'paymentModes' => $this->payments->allowedModes($clinic),
-            'defaultPaymentMode' => $this->payments->defaultMode($clinic),
+            'paymentModes' => collect($this->payments->platformModes())
+                ->merge($serviceTypes->flatMap(fn (ServiceType $type) => $this->payments->allowedModes($clinic, $type)))
+                ->unique(fn (PaymentMode $mode) => $mode->value)
+                ->values()
+                ->all(),
+            'defaultPaymentMode' => $this->payments->defaultMode($clinic, $serviceTypes->first()),
             'gatewayReady' => $this->payments->isGatewayConfigured(),
+            'dayOptions' => BookingDays::upcoming(),
+            'serviceFlags' => $serviceTypes->mapWithKeys(function (ServiceType $type) use ($clinic) {
+                $offering = $clinic->services->firstWhere('service_type_id', $type->id);
+
+                return [(string) $type->id => [
+                    'duration_minutes' => $type->durationMinutes($offering?->duration_minutes),
+                    'payment_modes' => $type->allowed_payment_modes ?? [],
+                ]];
+            })->all(),
         ]);
     }
 
@@ -170,11 +184,12 @@ class BookingController extends Controller
         abort_unless($this->bookings->addressBelongsToClinic($address, $clinic), 404);
 
         $rawMode = $validated['payment_mode'] ?? null;
+        $serviceType = ServiceType::query()->findOrFail($validated['service_type_id']);
         $mode = $rawMode instanceof PaymentMode
             ? $rawMode
-            : ($rawMode ? PaymentMode::from($rawMode) : $this->payments->defaultMode($clinic));
+            : ($rawMode ? PaymentMode::from($rawMode) : $this->payments->defaultMode($clinic, $serviceType));
 
-        if (! $this->payments->allows($clinic, $mode)) {
+        if (! $this->payments->allows($clinic, $mode, $serviceType)) {
             throw ValidationException::withMessages([
                 'payment_mode' => __('booking.payment_not_offered'),
             ]);

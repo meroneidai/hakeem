@@ -55,7 +55,12 @@ enum RoleName: string
             self::SupportAgent => [
                 Permission::ViewAdminPanel->value,
                 Permission::ManageSupportTickets->value,
+                Permission::ModerateReviews->value,
                 Permission::ViewAnalytics->value,
+                Permission::OverseeBookings->value,
+                Permission::ModerateClinics->value,
+                Permission::ManageUsers->value,
+                Permission::ViewErrorReports->value,
             ],
             self::ClinicOwner => [
                 Permission::ManageOwnClinic->value,

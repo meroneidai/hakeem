@@ -91,6 +91,21 @@ class PublicMarketplaceTest extends TestCase
         $this->get('/cities/'.$provider['city']->slug)
             ->assertOk()
             ->assertSee($provider['clinic']->name_ar);
+
+        $this->get('/specialties/'.$provider['specialty']->slug.'/'.$provider['city']->slug)
+            ->assertOk()
+            ->assertSee($provider['doctor']->name_ar);
+
+        $this->get('/services/'.$provider['serviceType']->slug.'/'.$provider['city']->slug)
+            ->assertOk()
+            ->assertSee(__('discover.services_page.in_place', [
+                'service' => $provider['serviceType']->name,
+                'place' => $provider['city']->name,
+            ]));
+
+        $this->get('/accessibility')->assertOk()->assertSee(__('pages.accessibility.heading'));
+        $this->get('/help/booking')->assertOk()->assertSee(__('pages.help.items.booking.title'));
+        $this->get('/medical-library')->assertOk();
     }
 
     public function test_search_is_noindex_and_finds_doctors(): void
@@ -116,6 +131,7 @@ class PublicMarketplaceTest extends TestCase
         $this->get('/cookies')->assertOk();
         $this->get('/cancellation-policy')->assertOk();
         $this->get('/medical-disclaimer')->assertOk();
+        $this->get('/accessibility')->assertOk();
         $this->get('/contact')->assertOk();
         $this->get('/login')->assertOk()->assertSee('noindex,nofollow');
     }

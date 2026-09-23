@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\BillingCycle;
+use App\Enums\ClinicModule;
 use App\Enums\RoleName;
 use App\Enums\ServiceTypeCode;
 use App\Enums\VerificationStatus;
@@ -73,6 +74,7 @@ class ClinicRegistrar
                 'subscription_plan_id' => $plan->id,
                 'verification_status' => VerificationStatus::Pending,
                 'is_active' => true,
+                'modules' => ClinicModule::normalize($data['modules'] ?? []),
             ]);
 
             $user->assignRole(RoleName::ClinicOwner, $clinic->id);

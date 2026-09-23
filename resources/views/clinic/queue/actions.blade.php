@@ -3,6 +3,9 @@
 @endphp
 
 <div class="flex flex-wrap items-center gap-1.5">
+    @if ($booking->isVideoVisit())
+        <x-button size="sm" variant="accent" :href="route('appointments.video', $booking)">{{ __('booking.video.join') }}</x-button>
+    @endif
     @if ($booking->status->canTransitionTo(\App\Enums\BookingStatus::Confirmed))
         <form method="POST" action="{{ $updateUrl }}">
             @csrf

@@ -4,12 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Enums\BookingStatus;
 use App\Enums\ServiceTypeCode;
+use App\Models\City;
 use App\Models\Clinic;
 use App\Models\Doctor;
 use App\Models\Governorate;
 use App\Models\ServiceType;
 use App\Models\Specialty;
 use App\Support\SearchQuery;
+use App\Support\SiteCopy;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -31,17 +33,39 @@ class ServiceDirectoryController extends Controller
         return view('services.show', $this->directory($serviceType, $this->validatedFilters($request)));
     }
 
-    public function homeCare(): View
+    public function showLocation(ServiceType $serviceType, string $location): View
     {
-        return $this->landing(ServiceTypeCode::HomeVisit, 'pages.home_care');
+        abort_unless($serviceType->is_active, 404);
+
+        $city = City::query()->active()->where('slug', $location)->first();
+
+        if ($city) {
+            return $this->cityView($serviceType, $city);
+        }
+
+        $governorate = Governorate::query()->active()->where('slug', $location)->firstOrFail();
+
+        return $this->governorateView($serviceType, $governorate);
     }
 
-    public function teleconsultation(): View
+    public function showCity(ServiceType $serviceType, Governorate $governorate, City $city): View
     {
-        return $this->landing(ServiceTypeCode::VideoConsultation, 'pages.teleconsultation');
+        abort_unless($serviceType->is_active && $city->is_active && (int) $city->governorate_id === (int) $governorate->id, 404);
+
+        return $this->cityView($serviceType, $city);
     }
 
-    private function landing(ServiceTypeCode $code, string $copyKey): View
+    public function homeCare(SiteCopy $copy): View
+    {
+        return $this->landing(ServiceTypeCode::HomeVisit, 'home-care', 'pages.home_care', $copy);
+    }
+
+    public function teleconsultation(SiteCopy $copy): View
+    {
+        return $this->landing(ServiceTypeCode::VideoConsultation, 'teleconsultation', 'pages.teleconsultation', $copy);
+    }
+
+    private function landing(ServiceTypeCode $code, string $slug, string $copyKey, SiteCopy $copy): View
     {
         $serviceType = ServiceType::query()->active()->where('code', $code->value)->first();
 
@@ -49,6 +73,8 @@ class ServiceDirectoryController extends Controller
 
         return view('services.landing', $this->directory($serviceType, []) + [
             'copyKey' => $copyKey,
+            'heading' => $copy->heading($slug, $copyKey.'.heading'),
+            'lead' => $copy->intro($slug, $copyKey.'.lead'),
         ]);
     }
 
@@ -83,6 +109,9 @@ class ServiceDirectoryController extends Controller
             'cities' => fn ($query) => $query->active()->ordered(),
         ])->get();
 
+        $place = $filters['_place'] ?? null;
+        unset($filters['_place']);
+
         return [
             'serviceType' => $serviceType,
             'filters' => $filters,
@@ -90,7 +119,60 @@ class ServiceDirectoryController extends Controller
             'governorates' => $governorates,
             'doctors' => $serviceType->isDoctorLed() ? $this->doctorsFor($serviceType, $filters) : collect(),
             'clinics' => $serviceType->isDoctorLed() ? collect() : $this->clinicsFor($serviceType, $filters),
+            'place' => $place,
+            'cities' => $this->citiesWithOfferings(
+                $serviceType,
+                $place instanceof City ? $place->governorate_id : ($place instanceof Governorate ? $place->id : null),
+                $place instanceof City ? $place->id : null,
+            ),
         ];
+    }
+
+    private function cityView(ServiceType $serviceType, City $city): View
+    {
+        $city->load('governorate');
+
+        return view('services.show', $this->directory($serviceType, [
+            'city' => $city->slug,
+            '_place' => $city,
+        ]));
+    }
+
+    private function governorateView(ServiceType $serviceType, Governorate $governorate): View
+    {
+        return view('services.show', $this->directory($serviceType, [
+            'governorate' => $governorate->slug,
+            '_place' => $governorate,
+        ]));
+    }
+
+    /**
+     * @return Collection<int, City>
+     */
+    private function citiesWithOfferings(ServiceType $serviceType, ?int $governorateId = null, ?int $exceptCityId = null)
+    {
+        return City::query()
+            ->active()
+            ->ordered()
+            ->when($governorateId, fn ($query) => $query->where('governorate_id', $governorateId))
+            ->when($exceptCityId, fn ($query) => $query->whereKeyNot($exceptCityId))
+            ->where(function (Builder $query) use ($serviceType) {
+                if ($serviceType->isDoctorLed()) {
+                    $query->whereHas(
+                        'addresses.clinic.doctors',
+                        fn (Builder $doctors) => $doctors->listable()->offering($serviceType)
+                    );
+
+                    return;
+                }
+
+                $query->whereHas(
+                    'addresses.clinic',
+                    fn (Builder $clinics) => $clinics->listable()->offering($serviceType)
+                );
+            })
+            ->limit(8)
+            ->get();
     }
 
     /**

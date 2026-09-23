@@ -31,6 +31,7 @@ return [
     'specialties' => 'التخصصات',
     'services' => 'الخدمات',
     'book_now' => 'احجز الآن',
+    'share' => 'مشاركة',
     'view_profile' => 'عرض الملف',
     'verified' => 'موثّقة',
     'why' => [
@@ -71,6 +72,7 @@ return [
     'specialties_page' => [
         'heading' => 'التخصصات',
         'subtitle' => 'تصفح الأطباء حسب التخصص في كل مصر.',
+        'in_place' => ':specialty في :place',
         'empty' => 'لا توجد تخصصات منشورة بعد.',
     ],
     'services_page' => [
@@ -80,6 +82,7 @@ return [
         'providers' => 'متاحة لدى',
         'doctors' => 'الأطباء لهذه الخدمة',
         'browse_clinic' => 'صفحة العيادة',
+        'in_place' => ':service في :place',
     ],
     'clinics' => [
         'heading' => 'العيادات في مصر',
@@ -94,6 +97,7 @@ return [
         'heading' => 'المحافظات والمدن',
         'subtitle' => 'اختر مدينتك لعرض الأطباء والعيادات القريبة.',
         'in_city' => 'في :city',
+        'nearby' => 'مناطق قريبة',
         'empty' => 'لا يوجد مقدمو خدمة في هذه المدينة بعد.',
     ],
     'search' => [
@@ -116,6 +120,12 @@ return [
         'soon' => 'قريبًا',
     ],
     'popular' => 'بحث شائع',
+    'library' => [
+        'heading' => 'المكتبة الطبية',
+        'lead' => 'مقالات تثقيفية بالعربية. لا تغني عن استشارة الطبيب.',
+        'empty' => 'لا توجد مقالات منشورة بعد.',
+        'related' => 'مقالات ذات صلة',
+    ],
     'footer' => [
         'browse' => 'تصفح',
         'care' => 'رعايتك',

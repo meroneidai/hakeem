@@ -10,9 +10,9 @@ use App\Models\Specialty;
 use Illuminate\Support\Collection;
 
 /**
- * Builds the programmatic SEO surface described in md_files/06 §3.1:
- * one landing page per governorate, city, specialty, governorate × specialty,
- * city × specialty and service type. Idempotent — only missing paths are added.
+ * Builds the programmatic SEO surface described in md_files/06 §3.1
+ * and hakeem-all-ui-interfaces (prefixed /specialties, /services, /cities paths).
+ * Idempotent — only missing paths are added.
  */
 class SeoPageGenerator
 {
@@ -62,7 +62,7 @@ class SeoPageGenerator
     {
         return $governorates->map(fn (Governorate $governorate) => $this->row(
             'governorate',
-            "/{$governorate->slug}",
+            "/cities/{$governorate->slug}",
             ['governorate_id' => $governorate->id],
             priority: 7,
         ))->filter()->values();
@@ -72,9 +72,9 @@ class SeoPageGenerator
     {
         return $cities->map(fn (City $city) => $this->row(
             'city',
-            "/{$city->slug}",
+            "/cities/{$city->slug}",
             ['city_id' => $city->id, 'governorate_id' => $city->governorate_id],
-            fallbackPath: "/{$city->governorate?->slug}/{$city->slug}",
+            fallbackPath: "/cities/{$city->governorate?->slug}/{$city->slug}",
             priority: 6,
         ))->filter()->values();
     }
@@ -83,7 +83,7 @@ class SeoPageGenerator
     {
         return $specialties->map(fn (Specialty $specialty) => $this->row(
             'specialty',
-            "/{$specialty->slug}",
+            "/specialties/{$specialty->slug}",
             ['specialty_id' => $specialty->id],
             priority: 7,
         ))->filter()->values();
@@ -93,7 +93,7 @@ class SeoPageGenerator
     {
         return $serviceTypes->map(fn (ServiceType $serviceType) => $this->row(
             'service',
-            "/service/{$serviceType->slug}",
+            "/services/{$serviceType->slug}",
             ['service_type_id' => $serviceType->id],
             priority: 8,
         ))->filter()->values();
@@ -104,7 +104,7 @@ class SeoPageGenerator
         return $governorates->crossJoin($specialties)->map(
             fn (array $pair) => $this->row(
                 'governorate_specialty',
-                "/{$pair[0]->slug}/{$pair[1]->slug}",
+                "/specialties/{$pair[1]->slug}/{$pair[0]->slug}",
                 ['governorate_id' => $pair[0]->id, 'specialty_id' => $pair[1]->id],
                 priority: 8,
             )
@@ -119,12 +119,13 @@ class SeoPageGenerator
         return $cities->crossJoin($specialties)->map(
             fn (array $pair) => $this->row(
                 'city_specialty',
-                "/{$pair[0]->slug}/{$pair[1]->slug}",
+                "/specialties/{$pair[1]->slug}/{$pair[0]->slug}",
                 [
                     'city_id' => $pair[0]->id,
                     'governorate_id' => $pair[0]->governorate_id,
                     'specialty_id' => $pair[1]->id,
                 ],
+                fallbackPath: "/specialties/{$pair[1]->slug}/{$pair[0]->governorate?->slug}/{$pair[0]->slug}",
                 priority: 10,
             )
         )->filter()->values();

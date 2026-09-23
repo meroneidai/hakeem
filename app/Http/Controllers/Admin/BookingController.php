@@ -43,7 +43,7 @@ class BookingController extends Controller implements HasMiddleware
         ]);
 
         $query = Booking::query()
-            ->with(['patient', 'clinic', 'doctor', 'serviceType'])
+            ->with(['patient', 'clinic', 'doctor', 'serviceType', 'clinicService'])
             ->when($filters['q'] ?? null, function ($builder, $term) {
                 $builder->where(function ($inner) use ($term) {
                     if (ctype_digit($term)) {
@@ -84,6 +84,7 @@ class BookingController extends Controller implements HasMiddleware
             'doctor.specialty',
             'address.city',
             'serviceType',
+            'clinicService',
             'statusHistory.changedBy',
             'review',
         ]);

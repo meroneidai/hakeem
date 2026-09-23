@@ -2,55 +2,56 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Enums\RoleName;
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Models\InsuranceProvider;
+use App\Services\PatientRegistrar;
+use App\Support\AccountIdentifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 
-/**
- * Patient registration — phone, name and password only (md_files/01 §6.1).
- * Everything else on the profile stays optional and deferred.
- */
 class RegisterController extends Controller
 {
     public function create(): View
     {
-        return view('auth.register');
+        return view('auth.register', [
+            'insuranceProviders' => InsuranceProvider::selectable(),
+        ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, PatientRegistrar $registrar): RedirectResponse
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:120'],
-            'phone' => ['required', 'string', 'max:32'],
+            'identifier' => ['nullable', 'string', 'max:190'],
+            'phone' => ['nullable', 'string', 'max:32'],
+            'email' => ['nullable', 'string', 'max:190'],
             'password' => ['required', 'confirmed', Password::min(8)],
+            'insurance_provider_id' => ['nullable', 'integer', InsuranceProvider::activeIdRule()],
         ]);
 
-        $phone = User::normalizePhone($validated['phone']);
-
-        $request->validate(
-            ['phone' => [Rule::unique('users', 'phone')->where(fn ($q) => $q->where('phone', $phone))]],
-            [],
-            ['phone' => __('auth.phone')],
+        $identifier = AccountIdentifier::fromRequest(
+            $validated['identifier'] ?? null,
+            $validated['phone'] ?? null,
+            $validated['email'] ?? null,
         );
 
-        $user = User::create([
-            'name' => $validated['name'],
-            'phone' => $phone,
-            'password' => $validated['password'],
-            'preferred_language' => app()->getLocale(),
-        ]);
+        $user = $registrar->registerAndLogin(
+            $validated['name'],
+            $identifier,
+            $validated['password'],
+            $request->session()->pull('referral_code') ?: $request->input('ref'),
+            $validated['insurance_provider_id'] ?? null,
+        );
 
-        $user->assignRole(RoleName::Patient);
-
-        Auth::login($user, true);
         $request->session()->regenerate();
+        $request->session()->put('locale', $user->preferred_language);
 
-        return redirect()->intended(url('/'));
+        $status = $identifier->channel === 'email'
+            ? __('auth.verify_sent_email')
+            : __('auth.verify_sent_phone');
+
+        return redirect()->intended(route('account.edit'))->with('status', $status);
     }
 }

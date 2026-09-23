@@ -14,21 +14,22 @@
     $navServices = $navServices ?? collect();
     $navSpecialties = $navSpecialties ?? collect();
     $support = app(\App\Support\SupportLinks::class);
+    $branding = $branding ?? app(\App\Support\Branding::class);
 @endphp
 
-<x-layouts.base :seo="$seo" body-class="min-h-screen theme-v2">
+<x-layouts.base :seo="$seo" body-class="min-h-screen theme-v2" theme-color="#3B82F6">
     <div x-data @close-mega.window="$store.shell.mega = false" class="min-h-screen pb-24 lg:pb-0">
-        <header class="relative sticky top-0 z-40 border-b border-ink-200/80 bg-white/90 backdrop-blur-md">
+        <header class="relative sticky top-0 z-40 border-b border-ink-200/70 bg-white/85 backdrop-blur-md">
             <div class="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
                 <a href="{{ route('home') }}" class="flex shrink-0 items-center gap-2.5">
                     @if (($branding ?? null)?->logoUrl())
-                        <img src="{{ $branding->logoUrl() }}" alt="{{ __('common.app_name') }}" class="size-10 rounded-2xl object-cover shadow-sm">
+                        <img src="{{ $branding->logoUrl() }}" alt="{{ $branding->name() }}" class="size-10 rounded-2xl object-cover shadow-sm">
                     @else
-                        <span class="grid size-10 place-items-center rounded-2xl bg-primary-600 text-xl font-bold text-white shadow-sm">ح</span>
+                        <span class="grid size-10 place-items-center rounded-2xl bg-primary-700 text-xl font-bold text-white shadow-[0_4px_20px_rgba(15,42,95,0.08)]">ح</span>
                     @endif
                     <span class="hidden sm:block">
-                        <span class="block text-base font-bold text-ink-900">{{ __('common.app_name') }}</span>
-                        <span class="block text-xs text-ink-500">{{ ($branding ?? null)?->tagline() ?: __('common.app_tagline') }}</span>
+                        <span class="block text-base font-bold text-ink-900">{{ $branding->name() }}</span>
+                        <span class="block text-xs text-ink-500">{{ $branding->tagline() }}</span>
                     </span>
                 </a>
 
@@ -46,19 +47,14 @@
                     <a href="{{ route('clinics.index') }}" class="rounded-lg px-3 py-2 hover:bg-primary-50 hover:text-primary-800">{{ __('discover.nav.clinics') }}</a>
                     <a href="{{ route('offers.index') }}" class="rounded-lg px-3 py-2 hover:bg-primary-50 hover:text-primary-800">{{ __('discover.nav.offers') }}</a>
                     <a href="{{ route('labs.index') }}" class="rounded-lg px-3 py-2 hover:bg-primary-50 hover:text-primary-800">{{ __('discover.nav.labs') }}</a>
+                    <a href="{{ route('library.index') }}" class="rounded-lg px-3 py-2 hover:bg-primary-50 hover:text-primary-800">{{ __('discover.nav.library') }}</a>
                 </nav>
 
                 <div class="flex-1"></div>
 
                 <div class="flex shrink-0 items-center gap-1.5">
-                    <a href="{{ route('search') }}"
-                       class="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-primary-50 px-2.5 py-2 text-sm font-medium text-primary-800 hover:bg-primary-100"
-                       aria-label="{{ __('common.search') }}">
-                        <x-icon name="search" class="size-5"/>
-                        <span class="hidden sm:inline">{{ __('common.search') }}</span>
-                    </a>
                     <a href="{{ route('labs.cart') }}"
-                       class="relative grid size-10 place-items-center rounded-full bg-accent-50 text-accent-700 ring-1 ring-accent-100 transition hover:bg-accent-100 hover:text-accent-800"
+                       class="relative grid size-10 place-items-center rounded-full bg-primary-50 text-primary-700 ring-1 ring-primary-100 transition hover:bg-primary-100 hover:text-primary-800"
                        aria-label="{{ __('labs.cart.heading') }}">
                         <x-icon name="bag" class="size-5"/>
                         <span x-cloak
@@ -69,26 +65,18 @@
                     <x-locale-switcher/>
                     @auth
                         <x-inbox-bell/>
-                        @unless (auth()->user()->isInternalStaff())
-                            <span class="hidden lg:inline-flex">
-                                <x-button :href="route('account.edit')" variant="ghost" size="sm">{{ __('account.profile') }}</x-button>
-                            </span>
-                            <span class="hidden lg:inline-flex">
-                                <x-button :href="route('appointments.index')" variant="ghost" size="sm">{{ __('booking.my_appointments') }}</x-button>
-                            </span>
-                        @endunless
                         @if (auth()->user()->isInternalStaff())
                             <span class="hidden lg:inline-flex">
-                                <x-button :href="route('admin.dashboard')" size="sm">{{ __('admin.title') }}</x-button>
-                            </span>
-                            <span class="hidden lg:inline-flex">
-                                <x-button :href="route('account.edit')" variant="ghost" size="sm">{{ __('account.profile') }}</x-button>
+                                <x-button :href="route('admin.dashboard')" size="sm">{{ __('account.dashboard') }}</x-button>
                             </span>
                         @elseif (auth()->user()->isClinicStaff())
                             <span class="hidden lg:inline-flex">
-                                <x-button :href="route('clinic.dashboard')" size="sm">{{ __('clinic.title') }}</x-button>
+                                <x-button :href="route('clinic.dashboard')" size="sm">{{ __('account.dashboard') }}</x-button>
                             </span>
                         @endif
+                        <span class="hidden lg:inline-flex">
+                            <x-button :href="route('account.edit')" variant="ghost" size="sm">{{ __('discover.dock.account') }}</x-button>
+                        </span>
                         <form method="POST" action="{{ route('logout') }}" class="hidden lg:block">
                             @csrf
                             <x-button variant="ghost" size="sm">{{ __('common.logout') }}</x-button>
@@ -162,21 +150,8 @@
                         <x-icon name="x-mark" class="size-5"/>
                     </button>
                 </div>
-                <div class="flex-1 overflow-y-auto px-4 py-4">
-                    <form method="GET" action="{{ route('search') }}" class="mb-4">
-                        <label class="sr-only" for="mobile-menu-q">{{ __('common.search') }}</label>
-                        <div class="relative">
-                            <span class="pointer-events-none absolute inset-y-0 start-3 flex items-center text-primary-600">
-                                <x-icon name="search" class="size-4"/>
-                            </span>
-                            <input id="mobile-menu-q"
-                                   type="search"
-                                   name="q"
-                                   enterkeyhint="search"
-                                   placeholder="{{ __('discover.search_placeholder') }}"
-                                   class="field-input min-h-11 ps-10 text-base">
-                        </div>
-                    </form>
+                <div class="flex-1 overflow-y-auto px-4 py-4 pb-28">
+                    @guest
                     <div class="mb-4 grid grid-cols-2 gap-2">
                         <a href="{{ $support->whatsappUrl() }}" @if ($support->hasWhatsapp()) target="_blank" rel="noopener" @endif
                            class="flex items-center gap-2 rounded-2xl bg-success-50 px-3 py-3 text-sm font-medium text-success-800">
@@ -188,55 +163,55 @@
                             {{ __('discover.dock.call') }}
                         </a>
                     </div>
-                    <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400">{{ __('discover.mega.services') }}</p>
-                    <div class="mb-4 space-y-1">
-                        @foreach ($navServices as $type)
-                            <a href="{{ route('services.show', $type) }}" class="flex items-center gap-2 rounded-xl px-2 py-2 text-sm hover:bg-primary-50">
-                                <x-icon :name="$type->uiIcon()" class="size-4 text-primary-700"/>
-                                {{ $type->name }}
-                            </a>
-                        @endforeach
-                    </div>
-                    <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400">{{ __('account.profile') }}</p>
-                    <div class="mb-4 space-y-1 text-sm">
-                        @auth
-                            <a class="flex items-center gap-2 rounded-xl bg-primary-50 px-2 py-2 font-medium text-primary-800" href="{{ route('account.edit') }}"><x-icon name="user" class="size-4"/>{{ __('account.profile') }}</a>
-                            @unless (auth()->user()->isInternalStaff())
-                                <a class="flex items-center gap-2 rounded-xl px-2 py-2 hover:bg-ink-50" href="{{ route('appointments.index') }}"><x-icon name="calendar" class="size-4 text-ink-400"/>{{ __('booking.my_appointments') }}</a>
-                            @endunless
-                            @if (auth()->user()->isClinicStaff())
-                                <a class="flex items-center gap-2 rounded-xl px-2 py-2 hover:bg-ink-50" href="{{ route('clinic.dashboard') }}"><x-icon name="building" class="size-4 text-ink-400"/>{{ __('clinic.title') }}</a>
-                            @endif
+                    @endguest
+                    @auth
+                        <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400">{{ __('discover.dock.account') }}</p>
+                        <div class="mb-4 space-y-1 text-sm">
                             @if (auth()->user()->isInternalStaff())
-                                <a class="flex items-center gap-2 rounded-xl px-2 py-2 hover:bg-ink-50" href="{{ route('admin.dashboard') }}"><x-icon name="grid" class="size-4 text-ink-400"/>{{ __('admin.title') }}</a>
+                                <a class="flex items-center gap-2 rounded-xl bg-primary-50 px-2 py-2 font-medium text-primary-800" href="{{ route('admin.dashboard') }}"><x-icon name="grid" class="size-4"/>{{ __('account.dashboard') }}</a>
+                            @elseif (auth()->user()->isClinicStaff())
+                                <a class="flex items-center gap-2 rounded-xl bg-primary-50 px-2 py-2 font-medium text-primary-800" href="{{ route('clinic.dashboard') }}"><x-icon name="building" class="size-4"/>{{ __('account.dashboard') }}</a>
                             @endif
+                            <a class="flex items-center gap-2 rounded-xl px-2 py-2 hover:bg-ink-50" href="{{ route('account.edit') }}"><x-icon name="user" class="size-4 text-ink-400"/>{{ __('discover.dock.account') }}</a>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <button type="submit" class="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-start hover:bg-ink-50"><x-icon name="logout" class="size-4 text-ink-400"/>{{ __('common.logout') }}</button>
                             </form>
-                        @else
+                        </div>
+                    @else
+                        <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400">{{ __('discover.mega.services') }}</p>
+                        <div class="mb-4 space-y-1">
+                            @foreach ($navServices as $type)
+                                <a href="{{ route('services.show', $type) }}" class="flex items-center gap-2 rounded-xl px-2 py-2 text-sm hover:bg-primary-50">
+                                    <x-icon :name="$type->uiIcon()" class="size-4 text-primary-700"/>
+                                    {{ $type->name }}
+                                </a>
+                            @endforeach
+                        </div>
+                        <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400">{{ __('account.profile') }}</p>
+                        <div class="mb-4 space-y-1 text-sm">
                             <a class="flex items-center gap-2 rounded-xl bg-primary-50 px-2 py-2 font-medium text-primary-800" href="{{ route('login') }}"><x-icon name="user" class="size-4"/>{{ __('auth.login') }}</a>
                             <a class="flex items-center gap-2 rounded-xl px-2 py-2 hover:bg-ink-50" href="{{ route('register') }}"><x-icon name="user" class="size-4 text-ink-400"/>{{ __('auth.register') }}</a>
-                        @endauth
-                    </div>
-                    <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400">{{ __('discover.nav.menu') }}</p>
-                    <div class="space-y-1 text-sm">
-                        <a class="flex items-center gap-2 rounded-xl bg-ink-50 px-2 py-2 font-medium hover:bg-primary-50" href="{{ route('search') }}"><x-icon name="search" class="size-4 text-primary-700"/>{{ __('common.search') }}</a>
-                        <a class="flex items-center gap-2 rounded-xl px-2 py-2 hover:bg-ink-50" href="{{ route('doctors.index') }}"><x-icon name="stethoscope" class="size-4 text-ink-400"/>{{ __('discover.nav.doctors') }}</a>
-                        <a class="flex items-center gap-2 rounded-xl px-2 py-2 hover:bg-ink-50" href="{{ route('clinics.index') }}"><x-icon name="building" class="size-4 text-ink-400"/>{{ __('discover.nav.clinics') }}</a>
-                        <a class="flex items-center gap-2 rounded-xl px-2 py-2 hover:bg-ink-50" href="{{ route('offers.index') }}"><x-icon name="megaphone" class="size-4 text-ink-400"/>{{ __('discover.nav.offers') }}</a>
-                        <a class="flex items-center gap-2 rounded-xl px-2 py-2 hover:bg-ink-50" href="{{ route('labs.index') }}"><x-icon name="beaker" class="size-4 text-ink-400"/>{{ __('discover.nav.labs') }}</a>
-                        <a class="flex items-center gap-2 rounded-xl px-2 py-2 hover:bg-ink-50" href="{{ route('labs.cart') }}">
-                            <span class="relative">
-                                <x-icon name="bag" class="size-4 text-ink-400"/>
-                                <span x-cloak x-show="$store.labCart.count > 0" x-text="$store.labCart.count" class="absolute -top-2 -end-2 grid min-w-4 place-items-center rounded-full bg-accent-500 px-1 text-[9px] font-bold text-white">{{ $cartCount ?: '' }}</span>
-                            </span>
-                            {{ __('labs.cart.heading') }}
-                        </a>
-                        <a class="flex items-center gap-2 rounded-xl px-2 py-2 hover:bg-ink-50" href="{{ route('home-care') }}"><x-icon name="home" class="size-4 text-ink-400"/>{{ __('discover.nav.home_care') }}</a>
-                        <a class="flex items-center gap-2 rounded-xl px-2 py-2 hover:bg-ink-50" href="{{ route('teleconsultation') }}"><x-icon name="video" class="size-4 text-ink-400"/>{{ __('discover.nav.teleconsultation') }}</a>
-                        <a class="flex items-center gap-2 rounded-xl px-2 py-2 hover:bg-ink-50" href="{{ route('complaints.create') }}"><x-icon name="chat" class="size-4 text-ink-400"/>{{ __('pages.complaints.heading') }}</a>
-                    </div>
+                        </div>
+                        <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400">{{ __('discover.nav.menu') }}</p>
+                        <div class="space-y-1 text-sm">
+                            <a class="flex items-center gap-2 rounded-xl px-2 py-2 hover:bg-ink-50" href="{{ route('doctors.index') }}"><x-icon name="stethoscope" class="size-4 text-ink-400"/>{{ __('discover.nav.doctors') }}</a>
+                            <a class="flex items-center gap-2 rounded-xl px-2 py-2 hover:bg-ink-50" href="{{ route('clinics.index') }}"><x-icon name="building" class="size-4 text-ink-400"/>{{ __('discover.nav.clinics') }}</a>
+                            <a class="flex items-center gap-2 rounded-xl px-2 py-2 hover:bg-ink-50" href="{{ route('offers.index') }}"><x-icon name="megaphone" class="size-4 text-ink-400"/>{{ __('discover.nav.offers') }}</a>
+                            <a class="flex items-center gap-2 rounded-xl px-2 py-2 hover:bg-ink-50" href="{{ route('labs.index') }}"><x-icon name="beaker" class="size-4 text-ink-400"/>{{ __('discover.nav.labs') }}</a>
+                            <a class="flex items-center gap-2 rounded-xl px-2 py-2 hover:bg-ink-50" href="{{ route('library.index') }}"><x-icon name="layers" class="size-4 text-ink-400"/>{{ __('discover.nav.library') }}</a>
+                            <a class="flex items-center gap-2 rounded-xl px-2 py-2 hover:bg-ink-50" href="{{ route('labs.cart') }}">
+                                <span class="relative">
+                                    <x-icon name="bag" class="size-4 text-ink-400"/>
+                                    <span x-cloak x-show="$store.labCart.count > 0" x-text="$store.labCart.count" class="absolute -top-2 -end-2 grid min-w-4 place-items-center rounded-full bg-accent-500 px-1 text-[9px] font-bold text-white">{{ $cartCount ?: '' }}</span>
+                                </span>
+                                {{ __('labs.cart.heading') }}
+                            </a>
+                            <a class="flex items-center gap-2 rounded-xl px-2 py-2 hover:bg-ink-50" href="{{ route('home-care') }}"><x-icon name="home" class="size-4 text-ink-400"/>{{ __('discover.nav.home_care') }}</a>
+                            <a class="flex items-center gap-2 rounded-xl px-2 py-2 hover:bg-ink-50" href="{{ route('teleconsultation') }}"><x-icon name="video" class="size-4 text-ink-400"/>{{ __('discover.nav.teleconsultation') }}</a>
+                            <a class="flex items-center gap-2 rounded-xl px-2 py-2 hover:bg-ink-50" href="{{ route('complaints.create') }}"><x-icon name="chat" class="size-4 text-ink-400"/>{{ __('pages.complaints.heading') }}</a>
+                        </div>
+                    @endauth
                 </div>
             </aside>
         </div>
@@ -275,42 +250,54 @@
             <x-aurora-blobs footer/>
             <div class="relative mx-auto grid max-w-6xl gap-8 px-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div>
-                    @if (($branding ?? null)?->logoUrl())
+                    @if ($branding->logoUrl())
                         <img src="{{ $branding->logoUrl() }}" alt="" class="mb-3 h-11 w-11 rounded-xl object-cover ring-2 ring-white/20">
                     @else
-                        <span class="mb-3 grid size-11 place-items-center rounded-xl bg-accent-500 text-lg font-bold text-white">ح</span>
+                        <span class="mb-3 grid size-11 place-items-center rounded-xl bg-primary-500 text-lg font-bold text-white">ح</span>
                     @endif
-                    <p class="text-base font-semibold text-white">{{ __('common.app_name') }}</p>
-                    <p class="mt-2 text-xs text-primary-200">{{ ($branding ?? null)?->tagline() ?: __('common.app_tagline') }}</p>
+                    <p class="text-base font-semibold text-white">{{ $branding->name() }}</p>
+                    <p class="mt-2 text-xs text-primary-200">{{ $branding->tagline() }}</p>
                     <a href="{{ route('search') }}" class="mt-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-white ring-1 ring-white/20 hover:bg-white/20">
                         <x-icon name="search" class="size-3.5"/>
                         {{ __('common.search') }}
                     </a>
-                    @if (($branding ?? null)?->social())
+                    @if ($branding->social())
                         <div class="mt-4 flex flex-wrap gap-2">
                             @foreach ($branding->social() as $network => $url)
-                                <a href="{{ $url }}" class="text-xs font-medium text-accent-200 hover:text-white" rel="noopener noreferrer" target="_blank">{{ $network }}</a>
+                                <a href="{{ $url }}" class="text-xs font-medium text-primary-200 hover:text-white" rel="noopener noreferrer" target="_blank">{{ $network }}</a>
                             @endforeach
                         </div>
                     @endif
+                    <div class="mt-4 space-y-1 text-xs text-primary-100">
+                        @if ($support->hasPhone())
+                            <a href="{{ $support->phoneUrl() }}" class="block hover:text-white" dir="ltr">{{ $support->telephone() }}</a>
+                        @endif
+                        @if ($support->email())
+                            <a href="mailto:{{ $support->email() }}" class="block hover:text-white" dir="ltr">{{ $support->email() }}</a>
+                        @endif
+                        @if ($support->hasWhatsapp())
+                            <a href="{{ $support->whatsappUrl() }}" class="block hover:text-white" target="_blank" rel="noopener">{{ __('pages.contact.whatsapp') }}</a>
+                        @endif
+                    </div>
                 </div>
                 <div class="space-y-2">
-                    <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-accent-300">{{ __('discover.footer.browse') }}</p>
+                    <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-primary-200">{{ __('discover.footer.browse') }}</p>
                     <a class="block text-primary-100 hover:text-white" href="{{ route('doctors.index') }}">{{ __('discover.nav.doctors') }}</a>
                     <a class="block text-primary-100 hover:text-white" href="{{ route('clinics.index') }}">{{ __('discover.nav.clinics') }}</a>
                     <a class="block text-primary-100 hover:text-white" href="{{ route('specialties.index') }}">{{ __('discover.nav.specialties') }}</a>
                     <a class="block text-primary-100 hover:text-white" href="{{ route('services.index') }}">{{ __('discover.nav.services') }}</a>
                 </div>
                 <div class="space-y-2">
-                    <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-accent-300">{{ __('discover.footer.care') }}</p>
+                    <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-primary-200">{{ __('discover.footer.care') }}</p>
                     <a class="block text-primary-100 hover:text-white" href="{{ route('offers.index') }}">{{ __('discover.nav.offers') }}</a>
                     <a class="block text-primary-100 hover:text-white" href="{{ route('labs.index') }}">{{ __('discover.nav.labs') }}</a>
+                    <a class="block text-primary-100 hover:text-white" href="{{ route('library.index') }}">{{ __('discover.nav.library') }}</a>
                     <a class="block text-primary-100 hover:text-white" href="{{ route('cities.index') }}">{{ __('discover.nav.cities') }}</a>
                     <a class="block text-primary-100 hover:text-white" href="{{ route('home-care') }}">{{ __('discover.nav.home_care') }}</a>
                     <a class="block text-primary-100 hover:text-white" href="{{ route('teleconsultation') }}">{{ __('discover.nav.teleconsultation') }}</a>
                 </div>
                 <div class="space-y-2">
-                    <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-accent-300">{{ __('discover.footer.legal') }}</p>
+                    <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-primary-200">{{ __('discover.footer.legal') }}</p>
                     <a class="block text-primary-100 hover:text-white" href="{{ route('how-it-works') }}">{{ __('pages.how.heading') }}</a>
                     <a class="block text-primary-100 hover:text-white" href="{{ route('about') }}">{{ __('pages.about.heading') }}</a>
                     <a class="block text-primary-100 hover:text-white" href="{{ route('contact') }}">{{ __('pages.contact.heading') }}</a>
@@ -321,26 +308,30 @@
                     <a class="block text-primary-100 hover:text-white" href="{{ route('cookies') }}">{{ __('pages.cookies.heading') }}</a>
                     <a class="block text-primary-100 hover:text-white" href="{{ route('cancellation') }}">{{ __('pages.cancellation.heading') }}</a>
                     <a class="block text-primary-100 hover:text-white" href="{{ route('disclaimer') }}">{{ __('pages.disclaimer.heading') }}</a>
+                    <a class="block text-primary-100 hover:text-white" href="{{ route('accessibility') }}">{{ __('pages.accessibility.heading') }}</a>
                     <a class="block text-primary-100 hover:text-white" href="{{ route('admin.login') }}">{{ __('auth.admin_login') }}</a>
                 </div>
             </div>
-            <p class="relative mt-10 text-center text-xs text-primary-300">{{ __('common.app_name') }} — {{ now()->year }}</p>
+            <p class="relative mt-10 text-center text-xs text-primary-300">{{ $branding->name() }} — {{ now()->year }}</p>
         </footer>
+
+        @include('partials.cookie-banner')
 
         <div x-data="siteAgent(@js(route('agent.messages')), @js(csrf_token()), {
                  empty: @js(__('agent.empty')),
+                 error: @js(__('agent.error')),
              })"
              @open-agent.window="open = true"
              @close-agent.window="open = false">
             <button type="button"
                     @click="toggle()"
-                    class="fixed bottom-5 end-5 z-40 hidden size-14 items-center justify-center rounded-full bg-primary-600 text-white shadow-lg ring-4 ring-primary-100 transition hover:bg-primary-700 lg:flex"
+                    class="fixed bottom-5 end-5 z-40 hidden size-14 items-center justify-center rounded-full bg-teal-500 text-white shadow-[0_12px_40px_rgba(30,64,175,0.12)] ring-4 ring-teal-50 transition hover:bg-teal-600 lg:flex"
                     :aria-label="open ? @js(__('agent.close')) : @js(__('agent.open'))">
                 <span x-show="!open"><x-icon name="sparkles" class="size-6"/></span>
                 <span x-cloak x-show="open"><x-icon name="x-mark" class="size-6"/></span>
             </button>
             <div x-cloak x-show="open" x-transition
-                 class="fixed inset-x-3 bottom-24 z-50 flex h-[min(28rem,70vh)] flex-col overflow-hidden rounded-3xl border border-ink-200 bg-white shadow-xl lg:inset-auto lg:bottom-24 lg:end-5 lg:h-[28rem] lg:w-[22rem]">
+                 class="fixed inset-x-3 bottom-24 z-50 flex h-[min(34rem,78vh)] flex-col overflow-hidden rounded-3xl border border-ink-200 bg-white shadow-xl lg:inset-auto lg:bottom-24 lg:end-5 lg:h-[34rem] lg:w-[28rem]">
                 @include('partials.agent-thread')
             </div>
         </div>
@@ -358,21 +349,33 @@
                     {{ __('discover.dock.home') }}
                 </a>
                 @auth
-                    <a href="{{ route('appointments.index') }}" class="flex flex-1 flex-col items-center gap-0.5 rounded-2xl px-1 py-1.5 text-[10px] font-medium text-ink-600">
-                        <x-icon name="calendar" class="size-5"/>
-                        {{ __('discover.dock.appointments') }}
-                    </a>
+                    @if (auth()->user()->isInternalStaff())
+                        <a href="{{ route('admin.dashboard') }}" class="flex flex-1 flex-col items-center gap-0.5 rounded-2xl px-1 py-1.5 text-[10px] font-medium text-ink-600">
+                            <x-icon name="grid" class="size-5"/>
+                            {{ __('account.dashboard') }}
+                        </a>
+                    @elseif (auth()->user()->isClinicStaff())
+                        <a href="{{ route('clinic.dashboard') }}" class="flex flex-1 flex-col items-center gap-0.5 rounded-2xl px-1 py-1.5 text-[10px] font-medium text-ink-600">
+                            <x-icon name="building" class="size-5"/>
+                            {{ __('account.dashboard') }}
+                        </a>
+                    @else
+                        <a href="{{ route('labs.index') }}" class="flex flex-1 flex-col items-center gap-0.5 rounded-2xl px-1 py-1.5 text-[10px] font-medium text-ink-600">
+                            <x-icon name="beaker" class="size-5"/>
+                            {{ __('discover.nav.labs') }}
+                        </a>
+                    @endif
                 @else
-                    <a href="{{ route('search') }}" class="flex flex-1 flex-col items-center gap-0.5 rounded-2xl px-1 py-1.5 text-[10px] font-medium text-primary-700">
+                    <a href="{{ route('doctors.index') }}" class="flex flex-1 flex-col items-center gap-0.5 rounded-2xl px-1 py-1.5 text-[10px] font-medium text-primary-700">
                         <span class="grid size-8 place-items-center rounded-full bg-primary-50 text-primary-700">
-                            <x-icon name="search" class="size-4"/>
+                            <x-icon name="stethoscope" class="size-4"/>
                         </span>
-                        {{ __('discover.dock.search') }}
+                        {{ __('discover.nav.doctors') }}
                     </a>
                 @endauth
                 <button type="button"
                         @click="$dispatch('open-agent')"
-                        class="-mt-7 flex size-14 flex-col items-center justify-center rounded-full bg-primary-600 text-white shadow-lg ring-4 ring-white"
+                        class="-mt-7 flex size-14 flex-col items-center justify-center rounded-full bg-teal-500 text-white shadow-[0_12px_40px_rgba(15,42,95,0.16)] ring-4 ring-white"
                         aria-label="{{ __('discover.dock.agent') }}">
                     <x-icon name="sparkles" class="size-6"/>
                 </button>

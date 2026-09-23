@@ -36,7 +36,7 @@
                 <x-td class="font-medium text-ink-900">
                     <span class="flex items-center gap-2">
                         <x-media
-                            :src="\App\Support\PublicImage::url($test->image_path)"
+                            :src="$test->imageUrl()"
                             :alt="$test->name_ar"
                             class="size-8 rounded-lg"
                         />

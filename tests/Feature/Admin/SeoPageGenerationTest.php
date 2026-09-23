@@ -35,12 +35,12 @@ class SeoPageGenerationTest extends TestCase
     {
         app(SeoPageGenerator::class)->generateMissing();
 
-        $this->assertDatabaseHas('seo_pages', ['path' => '/cairo', 'page_type' => 'governorate']);
-        $this->assertDatabaseHas('seo_pages', ['path' => '/nasr-city', 'page_type' => 'city']);
-        $this->assertDatabaseHas('seo_pages', ['path' => '/dentistry', 'page_type' => 'specialty']);
-        $this->assertDatabaseHas('seo_pages', ['path' => '/service/home-visit', 'page_type' => 'service']);
-        $this->assertDatabaseHas('seo_pages', ['path' => '/cairo/dentistry', 'page_type' => 'governorate_specialty']);
-        $this->assertDatabaseHas('seo_pages', ['path' => '/nasr-city/dentistry', 'page_type' => 'city_specialty']);
+        $this->assertDatabaseHas('seo_pages', ['path' => '/cities/cairo', 'page_type' => 'governorate']);
+        $this->assertDatabaseHas('seo_pages', ['path' => '/cities/nasr-city', 'page_type' => 'city']);
+        $this->assertDatabaseHas('seo_pages', ['path' => '/specialties/dentistry', 'page_type' => 'specialty']);
+        $this->assertDatabaseHas('seo_pages', ['path' => '/services/home-visit', 'page_type' => 'service']);
+        $this->assertDatabaseHas('seo_pages', ['path' => '/specialties/dentistry/cairo', 'page_type' => 'governorate_specialty']);
+        $this->assertDatabaseHas('seo_pages', ['path' => '/specialties/dentistry/nasr-city', 'page_type' => 'city_specialty']);
     }
 
     /**
@@ -86,8 +86,8 @@ class SeoPageGenerationTest extends TestCase
 
         app(SeoPageGenerator::class)->generateMissing();
 
-        $this->assertDatabaseHas('seo_pages', ['path' => '/luxor', 'page_type' => 'governorate']);
-        $this->assertDatabaseHas('seo_pages', ['path' => '/luxor-city', 'page_type' => 'city']);
+        $this->assertDatabaseHas('seo_pages', ['path' => '/cities/luxor', 'page_type' => 'governorate']);
+        $this->assertDatabaseHas('seo_pages', ['path' => '/cities/luxor-city', 'page_type' => 'city']);
     }
 
     public function test_admin_can_trigger_generation_and_override_meta(): void
@@ -96,7 +96,7 @@ class SeoPageGenerationTest extends TestCase
 
         $this->post('/admin/seo-pages/generate')->assertRedirect();
 
-        $page = SeoPage::firstWhere('path', '/nasr-city/dentistry');
+        $page = SeoPage::firstWhere('path', '/specialties/dentistry/nasr-city');
 
         $this->put('/admin/seo-pages/'.$page->id, [
             'meta_title_ar' => 'أفضل أطباء الأسنان في مدينة نصر',

@@ -43,6 +43,21 @@ class CityDirectoryController extends Controller
             ->limit(12)
             ->get();
 
-        return view('cities.show', compact('city', 'clinics', 'doctors'));
+        $nearby = City::query()
+            ->active()
+            ->ordered()
+            ->where('governorate_id', $city->governorate_id)
+            ->whereKeyNot($city->id)
+            ->limit(8)
+            ->get();
+
+        return view('cities.show', compact('city', 'clinics', 'doctors', 'nearby'));
+    }
+
+    public function showNested(Governorate $governorate, City $city): View
+    {
+        abort_unless($city->is_active && (int) $city->governorate_id === (int) $governorate->id, 404);
+
+        return $this->show($city);
     }
 }

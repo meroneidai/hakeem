@@ -43,7 +43,10 @@ All six also support: dental & cosmetic clinic services, beauty/hydration/massag
 - Chat is available during the call for sharing files (e.g., prior lab results).
 
 ### 3.4 Lab Test (in-clinic) & 3.5 Home Lab Test
-- Booking specifies which test(s) are requested (multi-select from the clinic's test catalog).
+- The public lab catalog (`/labs`) lists every test with: what it measures, preparation/conditions, sample type, fasting, turnaround, and a guide price.
+- Packages (`lab_packages`) bundle two or more tests at one price, with inclusions and conditions (Vezeeta-style checkup deals).
+- Patients can add multiple tests **and** packages to a session cart (`LabCart`) before checkout. Checkout joins the Phase 3 booking engine.
+- Admin owns the master catalog (`/admin/lab-tests`, `/admin/lab-packages`). Clinics enable the items they actually offer, with their own price, promo price, and home-collection flag (`clinic_lab_offerings`).
 - Home Lab Test additionally requires a home address and a collection time window.
 - Results, once ready, are uploaded by clinic/lab staff and attached to the patient's Medical Record; patient is notified the moment results are available, viewable from dashboard or app as structured "Results," not just a raw file.
 

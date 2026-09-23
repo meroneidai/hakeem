@@ -74,6 +74,8 @@ return [
     'cookies' => [
         'heading' => 'Cookies',
         'body' => 'We use essential session cookies for login, the lab cart and language. Booking pages do not load third-party ads.',
+        'banner' => 'We use essential cookies for login, the lab cart and language.',
+        'accept' => 'Accept',
     ],
     'cancellation' => [
         'heading' => 'Cancellation policy',
@@ -82,5 +84,9 @@ return [
     'disclaimer' => [
         'heading' => 'Medical disclaimer',
         'body' => 'Content on Hakeem describes services and does not replace an in-person medical consultation.',
+    ],
+    'accessibility' => [
+        'heading' => 'Accessibility',
+        'body' => 'Hakeem supports Arabic RTL, labeled forms and keyboard navigation. Contact support if a page is hard to use.',
     ],
 ];

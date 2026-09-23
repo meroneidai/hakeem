@@ -224,6 +224,21 @@ class ServiceDirectoryTest extends TestCase
             ->assertSee('/services/video-consultation', false);
     }
 
+    public function test_service_city_landing_lists_doctors_offering_the_service(): void
+    {
+        $provider = $this->seedListableProvider();
+        $service = $this->createDoctorLedService(ServiceTypeCode::HomeVisit, 'home-visit', 'زيارة منزلية', 'Home Visit');
+        $this->offer($provider['clinic'], $service, $provider['specialty']->id);
+
+        $this->get('/services/home-visit/'.$provider['city']->slug)
+            ->assertOk()
+            ->assertSee(__('discover.services_page.in_place', [
+                'service' => $service->name,
+                'place' => $provider['city']->name,
+            ]))
+            ->assertSee($provider['doctor']->name_ar);
+    }
+
     private function createDoctorLedService(ServiceTypeCode $code, string $slug, string $nameAr, string $nameEn): ServiceType
     {
         return ServiceType::query()->create([

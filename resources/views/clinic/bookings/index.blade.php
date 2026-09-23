@@ -60,6 +60,7 @@
                 <x-td>{{ $booking->doctor?->name }}</x-td>
                 <x-td>
                     {{ $booking->serviceType?->name }}
+                    <span class="mt-0.5 block text-xs text-ink-400">{{ __('booking.duration_minutes', ['minutes' => $booking->durationMinutes()]) }}</span>
                     @if ($booking->is_evaluation)
                         <x-badge tone="accent" class="mt-1">{{ __('booking.evaluation') }}</x-badge>
                     @endif
@@ -72,6 +73,13 @@
                 </x-td>
                 <x-td>
                     @include('clinic.queue.actions', ['booking' => $booking])
+                    @if (in_array($booking->status, [\App\Enums\BookingStatus::InProgress, \App\Enums\BookingStatus::Completed], true))
+                        <div class="mt-2">
+                            <x-button size="sm" variant="secondary" :href="route('clinic.care.create', ['booking' => $booking->id])">
+                                {{ __('clinic.care.issue') }}
+                            </x-button>
+                        </div>
+                    @endif
                 </x-td>
             </tr>
         @empty

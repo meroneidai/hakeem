@@ -1,7 +1,7 @@
 <x-layouts.admin :title="__('admin.specialties.edit')">
     <x-page-header :title="__('admin.specialties.edit')" :subtitle="$specialty->name_ar"/>
 
-    <form method="POST" action="{{ route('admin.specialties.update', $specialty) }}">
+    <form method="POST" action="{{ route('admin.specialties.update', $specialty) }}" enctype="multipart/form-data">
         @csrf
         @method('PUT')
         <x-card class="max-w-3xl">

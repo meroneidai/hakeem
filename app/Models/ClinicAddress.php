@@ -97,4 +97,18 @@ class ClinicAddress extends Model
     {
         return $query->orderByDesc('is_primary')->orderBy('id');
     }
+
+    public function hasMapPin(): bool
+    {
+        return $this->latitude !== null && $this->longitude !== null;
+    }
+
+    public function mapsUrl(): ?string
+    {
+        if (! $this->hasMapPin()) {
+            return null;
+        }
+
+        return 'https://www.google.com/maps?q='.$this->latitude.','.$this->longitude;
+    }
 }

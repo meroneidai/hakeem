@@ -11,11 +11,23 @@
 
         <x-card class="max-w-3xl">
             <div class="grid gap-4">
+                <x-field :label="__('admin.seo.site_title_ar')" name="seo.site_title_ar">
+                    <x-input name="seo[site_title_ar]" :value="$values['seo.site_title_ar']" maxlength="70"/>
+                </x-field>
+                <x-field :label="__('admin.seo.site_title_en')" name="seo.site_title_en">
+                    <x-input name="seo[site_title_en]" :value="$values['seo.site_title_en']" dir="ltr" maxlength="70"/>
+                </x-field>
                 <x-field :label="__('admin.seo.default_description_ar')" name="seo.default_description_ar">
                     <x-textarea name="seo[default_description_ar]" :value="$values['seo.default_description_ar']" rows="3" maxlength="320"/>
                 </x-field>
                 <x-field :label="__('admin.seo.default_description_en')" name="seo.default_description_en">
                     <x-textarea name="seo[default_description_en]" :value="$values['seo.default_description_en']" rows="3" dir="ltr" maxlength="320"/>
+                </x-field>
+                <x-field :label="__('admin.seo.keywords_ar')" name="seo.keywords_ar">
+                    <x-textarea name="seo[keywords_ar]" :value="$values['seo.keywords_ar']" rows="2" maxlength="320"/>
+                </x-field>
+                <x-field :label="__('admin.seo.keywords_en')" name="seo.keywords_en">
+                    <x-textarea name="seo[keywords_en]" :value="$values['seo.keywords_en']" rows="2" dir="ltr" maxlength="320"/>
                 </x-field>
                 <x-field :label="__('admin.seo.og_image')" name="seo.og_image">
                     <x-input name="seo[og_image]" :value="$values['seo.og_image']" dir="ltr" maxlength="500"/>

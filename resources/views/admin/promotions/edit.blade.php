@@ -1,7 +1,7 @@
 <x-layouts.admin :title="__('admin.promotions.edit')">
     <x-page-header :title="__('admin.promotions.edit')" :subtitle="$promotion->title_ar"/>
 
-    <form method="POST" action="{{ route('admin.promotions.update', $promotion) }}">
+    <form method="POST" action="{{ route('admin.promotions.update', $promotion) }}" enctype="multipart/form-data">
         @csrf
         @method('PUT')
         <x-card class="max-w-4xl">

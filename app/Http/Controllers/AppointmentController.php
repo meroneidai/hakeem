@@ -18,7 +18,7 @@ class AppointmentController extends Controller
     {
         $bookings = Booking::query()
             ->whereBelongsTo($request->user(), 'patient')
-            ->with(['clinic', 'doctor.specialty', 'address.city', 'serviceType', 'review', 'promotion'])
+            ->with(['clinic', 'doctor.specialty', 'address.city', 'serviceType', 'clinicService', 'review', 'promotion'])
             ->orderByDesc('scheduled_at')
             ->orderByDesc('id')
             ->paginate(12);
@@ -49,5 +49,14 @@ class AppointmentController extends Controller
         $orders->transition($labOrder, LabOrderStatus::Cancelled, $request->user());
 
         return back()->with('status', __('labs.checkout.cancelled'));
+    }
+
+    public function video(Request $request, Booking $booking): View
+    {
+        abort_unless($booking->canAccessVideo($request->user()), 404);
+
+        $booking->load(['clinic', 'doctor', 'serviceType']);
+
+        return view('appointments.video', compact('booking'));
     }
 }

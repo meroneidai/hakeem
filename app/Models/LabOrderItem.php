@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
     'lab_order_id', 'item_type', 'lab_test_id', 'lab_package_id', 'qty', 'unit_price', 'line_total',
+    'result_value', 'result_unit', 'result_flag', 'result_note',
 ])]
 class LabOrderItem extends Model
 {

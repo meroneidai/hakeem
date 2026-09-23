@@ -51,6 +51,12 @@
                 <x-td>
                     <span class="font-medium">{{ $order->patient?->name }}</span>
                     <span class="mt-0.5 block text-xs text-ink-400" dir="ltr">{{ $order->patient?->phone }}</span>
+                    @if ($order->collection_mode->value === 'home' && $order->hasMapPin())
+                        <a href="{{ $order->mapsUrl() }}" target="_blank" rel="noopener" class="mt-1 inline-flex items-center gap-1 text-xs font-medium text-primary-700">
+                            <x-icon name="map-pin" class="size-3"/>
+                            {{ __('clinic.lab_orders.directions') }}
+                        </a>
+                    @endif
                 </x-td>
                 <x-td>
                     {{ $order->items->map(fn ($item) => $item->catalogItem()?->name)->filter()->join('، ') }}
@@ -76,12 +82,7 @@
                             </form>
                         @endif
                         @if ($order->status->canTransitionTo(\App\Enums\LabOrderStatus::Completed))
-                            <form method="POST" action="{{ route('clinic.lab-orders.update', $order) }}">
-                                @csrf
-                                @method('PUT')
-                                <input type="hidden" name="action" value="complete">
-                                <x-button size="sm">{{ __('clinic.queue.complete') }}</x-button>
-                            </form>
+                            <x-button size="sm" :href="route('clinic.lab-orders.show', $order)">{{ __('clinic.lab_orders.results') }}</x-button>
                         @endif
                         @if ($order->status->canTransitionTo(\App\Enums\LabOrderStatus::Cancelled))
                             <form method="POST" action="{{ route('clinic.lab-orders.update', $order) }}">
@@ -99,6 +100,7 @@
                                 {{ $order->isPaid() ? __('clinic.queue.mark_unpaid') : __('clinic.queue.mark_paid') }}
                             </x-button>
                         </form>
+                        <x-button size="sm" variant="ghost" :href="route('clinic.lab-orders.show', $order)">{{ __('common.view') }}</x-button>
                     </div>
                 </x-td>
             </tr>

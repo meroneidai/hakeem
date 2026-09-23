@@ -38,6 +38,11 @@
                     <dd class="mt-0.5 text-xs text-ink-500">
                         @if ($order->collection_mode->value === 'home')
                             {{ $order->patient_home_address ?: __('labs.collection.home') }}
+                            @if ($order->hasMapPin())
+                                <a href="{{ $order->mapsUrl() }}" target="_blank" rel="noopener" class="mt-1 inline-flex items-center gap-1 font-medium text-primary-700">
+                                    {{ __('discover.clinics.map') }}
+                                </a>
+                            @endif
                         @else
                             {{ $order->address?->displayName() ?: __('labs.collection.clinic') }}
                         @endif
@@ -68,6 +73,17 @@
                                 {{ $item->item_type === 'package' ? __('labs.packages') : __('labs.tests') }}
                                 · ×{{ $item->qty }}
                             </p>
+                            @if ($order->status === \App\Enums\LabOrderStatus::Completed && ($item->result_value || $item->result_note))
+                                <p class="mt-1 text-sm text-ink-700">
+                                    {{ $item->result_value }} {{ $item->result_unit }}
+                                    @if ($item->result_flag)
+                                        <span class="text-xs text-warning-700">{{ $item->result_flag }}</span>
+                                    @endif
+                                </p>
+                                @if ($item->result_note)
+                                    <p class="text-xs text-ink-400">{{ $item->result_note }}</p>
+                                @endif
+                            @endif
                         </div>
                         <p class="shrink-0 font-semibold text-ink-900">{{ number_format((float) $item->line_total) }} {{ __('common.currency') }}</p>
                     </li>
@@ -109,6 +125,11 @@
             <p class="text-sm text-ink-500">{{ __('labs.checkout.pending_hint') }}</p>
             <div class="flex flex-wrap gap-2">
                 <x-button :href="route('appointments.index')" variant="accent">{{ __('booking.my_appointments') }}</x-button>
+                @if ($order->careDocuments->isNotEmpty())
+                    <x-button :href="route('records.show', $order->careDocuments->first())" variant="secondary">{{ __('records.view_results') }}</x-button>
+                @else
+                    <x-button :href="route('records.index')" variant="ghost">{{ __('records.heading') }}</x-button>
+                @endif
                 <x-button :href="route('labs.index')" variant="ghost">{{ __('labs.tests') }}</x-button>
             </div>
         </x-card>

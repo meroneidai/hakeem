@@ -39,6 +39,16 @@ class UserFactory extends Factory
         return $this->state(fn () => ['email' => null, 'email_verified_at' => null]);
     }
 
+    public function emailOnly(): static
+    {
+        return $this->state(fn () => [
+            'phone' => null,
+            'phone_verified_at' => null,
+            'email' => fake()->unique()->safeEmail(),
+            'email_verified_at' => now(),
+        ]);
+    }
+
     public function withRole(RoleName $role): static
     {
         return $this->afterCreating(fn (User $user) => $user->assignRole($role));

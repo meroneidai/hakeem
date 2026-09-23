@@ -34,30 +34,7 @@
 
         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             @forelse ($offers as $offer)
-                <a href="{{ route('offers.show', $offer) }}" class="card p-4 hover:ring-2 hover:ring-accent-200">
-                    @if ($offer->banner_image_path)
-                        <x-media
-                            :src="\App\Support\PublicImage::url($offer->banner_image_path)"
-                            :alt="$offer->title"
-                            class="mb-3 h-36 w-full rounded-xl"
-                        />
-                    @endif
-                    <x-badge tone="accent">{{ $offer->category?->label() ?? __('admin.promotions.statuses.running') }}</x-badge>
-                    <h2 class="mt-2 font-semibold text-ink-900">{{ $offer->title }}</h2>
-                    <p class="mt-1 text-sm text-ink-500">{{ $offer->includes }}</p>
-                    @if ($offer->offer_price)
-                        <p class="mt-3 text-sm">
-                            @if ($offer->original_price)
-                                <span class="text-ink-400 line-through">{{ number_format((float) $offer->original_price) }}</span>
-                            @endif
-                            <span class="ms-1 font-semibold text-ink-900">{{ number_format((float) $offer->offer_price) }} {{ __('common.currency') }}</span>
-                        </p>
-                    @endif
-                    <x-rating class="mt-2" :average="$offer->clinic?->ratingAverage()" :count="$offer->clinic?->ratingCount() ?? 0"/>
-                    @if ($offer->clinic)
-                        <p class="mt-2 text-xs text-ink-400">{{ $offer->clinic->name }}</p>
-                    @endif
-                </a>
+                <x-offer-card :offer="$offer"/>
             @empty
                 <x-card class="sm:col-span-2 lg:col-span-3">
                     <x-empty-state :message="__('offers.empty')"/>

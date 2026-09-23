@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureClinicModule;
 use App\Http\Middleware\EnsureClinicStaff;
 use App\Http\Middleware\EnsureHermesAgent;
 use App\Http\Middleware\EnsureInternalStaff;
@@ -24,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'internal-staff' => EnsureInternalStaff::class,
             'clinic-staff' => EnsureClinicStaff::class,
+            'clinic-module' => EnsureClinicModule::class,
             'hermes' => EnsureHermesAgent::class,
         ]);
     })

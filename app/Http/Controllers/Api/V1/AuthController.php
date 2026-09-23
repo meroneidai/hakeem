@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\InsuranceProvider;
 use App\Models\User;
 use App\Services\LoyaltyProgram;
 use App\Services\PatientRegistrar;
@@ -60,7 +61,7 @@ class AuthController extends Controller
 
         return response()->json([
             'token' => $user->createToken($request->input('device_name') ?? 'mobile')->plainTextToken,
-            'user' => $this->userPayload($user->load('city', 'roles')),
+            'user' => $this->userPayload($user->load('city', 'insuranceProvider', 'roles')),
         ]);
     }
 
@@ -74,6 +75,7 @@ class AuthController extends Controller
             'password' => ['required', Password::min(8)],
             'ref' => ['nullable', 'string', 'max:16'],
             'device_name' => ['nullable', 'string', 'max:80'],
+            'insurance_provider_id' => ['nullable', 'integer', InsuranceProvider::activeIdRule()],
         ]);
 
         $identifier = AccountIdentifier::fromRequest(
@@ -87,11 +89,12 @@ class AuthController extends Controller
             $identifier,
             $validated['password'],
             $validated['ref'] ?? null,
+            $validated['insurance_provider_id'] ?? null,
         );
 
         return response()->json([
             'token' => $user->createToken($validated['device_name'] ?? 'mobile')->plainTextToken,
-            'user' => $this->userPayload($user->load('city', 'roles')),
+            'user' => $this->userPayload($user->load('city', 'insuranceProvider', 'roles')),
         ], 201);
     }
 
@@ -104,7 +107,7 @@ class AuthController extends Controller
 
     public function show(Request $request): JsonResponse
     {
-        return response()->json($this->userPayload($request->user()->load('city', 'roles')));
+        return response()->json($this->userPayload($request->user()->load('city', 'insuranceProvider', 'roles')));
     }
 
     public function update(Request $request, VerificationService $verification): JsonResponse
@@ -117,6 +120,7 @@ class AuthController extends Controller
             'date_of_birth' => ['nullable', 'date_format:Y-m-d', 'before:today'],
             'gender' => ['nullable', Rule::in(['male', 'female'])],
             'city_id' => ['nullable', 'integer', 'exists:cities,id'],
+            'insurance_provider_id' => ['nullable', 'integer', InsuranceProvider::activeIdRule($user->insurance_provider_id)],
             'notify_email' => ['boolean'],
             'notify_sms' => ['boolean'],
             'notify_push' => ['boolean'],
@@ -161,7 +165,7 @@ class AuthController extends Controller
             $verification->sendPhoneCode($user->fresh());
         }
 
-        return response()->json($this->userPayload($user->fresh()->load('city', 'roles')));
+        return response()->json($this->userPayload($user->fresh()->load('city', 'insuranceProvider', 'roles')));
     }
 
     public function sendPhoneCode(Request $request, VerificationService $verification): JsonResponse
@@ -179,7 +183,7 @@ class AuthController extends Controller
 
         $verification->confirmPhone($request->user(), $validated['code']);
 
-        return response()->json($this->userPayload($request->user()->fresh()->load('city', 'roles')));
+        return response()->json($this->userPayload($request->user()->fresh()->load('city', 'insuranceProvider', 'roles')));
     }
 
     /**
@@ -200,6 +204,11 @@ class AuthController extends Controller
             'referral_url' => app(LoyaltyProgram::class)->referralUrl($user),
             'app_installed' => $user->hasInstalledApp(),
             'city_id' => $user->city_id,
+            'insurance_provider_id' => $user->insurance_provider_id,
+            'insurance_provider' => $user->insuranceProvider === null ? null : [
+                'id' => $user->insuranceProvider->id,
+                'name' => $user->insuranceProvider->name,
+            ],
             'roles' => $user->roles->pluck('name'),
             'notify' => [
                 'email' => (bool) $user->notify_email,

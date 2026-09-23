@@ -1,0 +1,33 @@
+<?php
+
+return [
+    'heading' => 'Medical records',
+    'subtitle' => 'Consultations, lab results, prescriptions and sick leave in one place.',
+    'empty' => 'No records yet. They appear after a completed visit or lab results.',
+    'download_pdf' => 'Download verified PDF',
+    'verification' => 'Verification code',
+    'verify_heading' => 'Verify a medical document',
+    'verified' => 'Verified Hakeem document',
+    'verified_footer' => 'Any pharmacy or clinic can verify this document with the code and link below.',
+    'verify_hint' => 'Verify this document:',
+    'view_results' => 'View results in records',
+    'patient' => 'Patient',
+    'medications' => 'Medications',
+    'results' => 'Lab results',
+    'lab_title' => 'Lab results :reference',
+    'valid_range' => 'Valid from :from to :until',
+    'med_name' => 'Medicine',
+    'med_dose' => 'Dose',
+    'med_frequency' => 'Frequency',
+    'med_duration' => 'Duration',
+    'result_name' => 'Test',
+    'result_value' => 'Result',
+    'result_flag' => 'Flag',
+    'types' => [
+        'consultation' => 'Consultation',
+        'prescription' => 'Prescription',
+        'lab_result' => 'Lab results',
+        'sick_leave' => 'Sick leave',
+        'treatment_plan' => 'Treatment plan',
+    ],
+];

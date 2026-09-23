@@ -6,6 +6,7 @@ use App\Enums\Permission;
 use App\Http\Controllers\Controller;
 use App\Models\Specialty;
 use App\Support\Audit;
+use App\Support\PublicImage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -71,6 +72,7 @@ class SpecialtyController extends Controller implements HasMiddleware
     public function destroy(Specialty $specialty): RedirectResponse
     {
         Audit::deleted($specialty);
+        PublicImage::delete($specialty->image_path);
         $specialty->delete();
 
         return redirect()->route('admin.specialties.index')
@@ -87,6 +89,7 @@ class SpecialtyController extends Controller implements HasMiddleware
             'description_ar' => ['nullable', 'string', 'max:2000'],
             'description_en' => ['nullable', 'string', 'max:2000'],
             'icon' => ['nullable', 'string', 'max:64'],
+            'image' => PublicImage::rules(),
             'display_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
             'is_active' => ['boolean'],
             'is_featured' => ['boolean'],
@@ -96,6 +99,8 @@ class SpecialtyController extends Controller implements HasMiddleware
         $data['display_order'] ??= 0;
         $data['is_active'] = $request->boolean('is_active');
         $data['is_featured'] = $request->boolean('is_featured');
+        unset($data['image']);
+        $data['image_path'] = PublicImage::store($request, 'image', 'specialties', $specialty?->image_path);
 
         return $data;
     }

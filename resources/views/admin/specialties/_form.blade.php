@@ -36,6 +36,8 @@
     <x-field :label="__('common.display_order')" name="display_order">
         <x-input name="display_order" type="number" min="0" :value="$specialty->display_order ?? 0"/>
     </x-field>
+
+    <x-image-field name="image" :path="$specialty->image_path"/>
 </div>
 
 <div class="mt-4 space-y-2.5">

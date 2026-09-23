@@ -16,6 +16,15 @@
     <x-field :label="__('clinic.doctors.experience')" name="years_of_experience">
         <x-input name="years_of_experience" type="number" min="0" max="70" :value="$doctor->years_of_experience"/>
     </x-field>
+    <x-field :label="__('clinic.doctors.gender')" name="gender">
+        <x-select name="gender" :placeholder="__('discover.doctors.any_gender')"
+                  :options="['male' => __('discover.doctors.male'), 'female' => __('discover.doctors.female')]"
+                  :selected="$doctor->gender"/>
+    </x-field>
+    <x-field :label="__('clinic.doctors.fee')" name="consultation_fee">
+        <x-input name="consultation_fee" type="number" step="0.01" min="0" :value="$doctor->consultation_fee" dir="ltr"/>
+    </x-field>
+    <x-image-field name="photo" :path="$doctor->profile_photo_path" :label="__('clinic.doctors.photo')"/>
     <x-field :label="__('common.description_ar')" name="bio_ar" class="sm:col-span-2">
         <x-textarea name="bio_ar" :value="$doctor->bio_ar"/>
     </x-field>

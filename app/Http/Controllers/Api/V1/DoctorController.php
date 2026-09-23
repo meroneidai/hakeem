@@ -34,7 +34,7 @@ class DoctorController extends Controller
             'slug' => $doctor->slug,
             'url' => $this->namedUrl('doctors.show', '/doctors/'.$doctor->slug, $doctor),
             'book_url' => $this->namedUrl('book.doctors.create', '/book/doctors/'.$doctor->slug, $doctor),
-            'slots_url' => $this->namedUrl('api.agent.v1.doctors.slots', '/api/agent/v1/doctors/'.$doctor->slug.'/slots', $doctor),
+            'slots_url' => $this->namedUrl('api.v1.doctors.slots', '/api/v1/doctors/'.$doctor->slug.'/slots', $doctor),
             'specialty' => $doctor->specialty?->name,
             'bio' => $doctor->translated('bio'),
             'years' => $doctor->years_of_experience,

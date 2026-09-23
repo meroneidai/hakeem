@@ -43,5 +43,16 @@
                 @endforelse
             </div>
         </section>
+
+        @if (($nearby ?? collect())->isNotEmpty())
+            <section class="mt-10">
+                <h2 class="mb-4 text-lg font-semibold text-ink-900">{{ __('discover.cities_page.nearby') }}</h2>
+                <div class="flex flex-wrap gap-2">
+                    @foreach ($nearby as $area)
+                        <a href="{{ route('cities.show', $area) }}" class="rounded-full bg-white px-3 py-1.5 text-sm text-ink-700 ring-1 ring-ink-200 hover:ring-primary-300">{{ $area->name }}</a>
+                    @endforeach
+                </div>
+            </section>
+        @endif
     </div>
 </x-layouts.public>

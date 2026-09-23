@@ -31,6 +31,7 @@ return [
     'specialties' => 'Specialties',
     'services' => 'Services',
     'book_now' => 'Book now',
+    'share' => 'Share',
     'view_profile' => 'View profile',
     'verified' => 'Verified',
     'why' => [
@@ -71,6 +72,7 @@ return [
     'specialties_page' => [
         'heading' => 'Specialties',
         'subtitle' => 'Browse doctors by specialty across Egypt.',
+        'in_place' => ':specialty in :place',
         'empty' => 'No specialties published yet.',
     ],
     'services_page' => [
@@ -80,6 +82,7 @@ return [
         'providers' => 'Available at',
         'doctors' => 'Doctors for this service',
         'browse_clinic' => 'Clinic page',
+        'in_place' => ':service in :place',
     ],
     'clinics' => [
         'heading' => 'Clinics in Egypt',
@@ -94,6 +97,7 @@ return [
         'heading' => 'Governorates and cities',
         'subtitle' => 'Pick a city to see nearby doctors and clinics.',
         'in_city' => 'in :city',
+        'nearby' => 'Nearby areas',
         'empty' => 'No providers in this city yet.',
     ],
     'search' => [
@@ -116,6 +120,12 @@ return [
         'soon' => 'Coming soon',
     ],
     'popular' => 'Popular searches',
+    'library' => [
+        'heading' => 'Medical library',
+        'lead' => 'Health guides in plain language. This is not a medical consultation.',
+        'empty' => 'No articles published yet.',
+        'related' => 'Related articles',
+    ],
     'footer' => [
         'browse' => 'Browse',
         'care' => 'Your care',

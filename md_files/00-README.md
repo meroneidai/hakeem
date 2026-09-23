@@ -2,6 +2,31 @@
 
 Full specification for Hakeem, a healthcare booking and clinic-management platform for Egypt, connecting patients, doctors, and clinics for clinic appointments, home visits, video consultations, lab tests (in-clinic and home), and online psychiatric consultations — with a unified, consent-gated patient medical record.
 
+## Public website URLs (Phase 1)
+
+Canonical public routes follow `hakeem-all-ui-interfaces/hakeem-website-seo-pages.md`:
+
+- `/` homepage
+- `/search` (noindex)
+- `/doctors`, `/doctors/{slug}`
+- `/clinics`, `/clinics/{slug}` (verified + active clinics only)
+- `/specialties`, `/specialties/{slug}`
+- `/services`, `/services/{slug}`
+- `/offers`, `/offers/{slug}`
+- `/labs` catalog + cart
+- `/cities`, `/cities/{slug}`
+- `/home-care`, `/teleconsultation`
+- `/how-it-works`, `/about`, `/contact`, `/help`
+- `/terms`, `/privacy`, `/cookies`, `/cancellation-policy`, `/medical-disclaimer`
+- `/book/doctors/{slug}` pending booking request (auth, noindex)
+- `/appointments` patient booking list (auth, noindex)
+- `/clinic/queue` reception queue (clinic staff)
+- Payment mode on booking (admin-allowed modes; clinic override at `/clinic/payments`)
+
+Locale stays session-based (`APP_LOCALE=ar` RTL) via the header switcher. `/ar` and `/en` URL prefixes are deferred and must not replace the current switcher.
+
+Not in this slice: ratings, medical library, area pages, Hermes/mobile.
+
 ## Reading Order
 
 1. **01-overview-vision-personas.md** — What Hakeem is, business goals, Egypt geography model, user personas

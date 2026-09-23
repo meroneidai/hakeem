@@ -10,6 +10,8 @@ use App\Models\LabPackage;
 use App\Models\LabTest;
 use App\Services\LabCart;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class LabCatalogTest extends TestCase
@@ -34,6 +36,7 @@ class LabCatalogTest extends TestCase
             ->assertOk()
             ->assertSee('صورة دم كاملة')
             ->assertSee('فحص شامل')
+            ->assertSee('images/labs/blood.svg', false)
             ->assertDontSee('مخفي');
 
         $this->get('/labs/tests/'.$cbc->slug)
@@ -188,6 +191,8 @@ class LabCatalogTest extends TestCase
 
     public function test_admin_creates_a_lab_test(): void
     {
+        Storage::fake('public');
+
         $this->actingAsRole(RoleName::PlatformAdmin);
 
         $this->post('/admin/lab-tests', [
@@ -198,12 +203,33 @@ class LabCatalogTest extends TestCase
             'suggested_price' => 90,
             'fasting_hours' => 8,
             'is_active' => '1',
+            'image' => UploadedFile::fake()->image('glucose.jpg', 80, 80),
         ])->assertRedirect('/admin/lab-tests');
 
-        $this->assertDatabaseHas('lab_tests', [
-            'name_en' => 'Fasting Glucose',
-            'suggested_price' => 90,
-        ]);
+        $test = LabTest::query()->where('name_en', 'Fasting Glucose')->first();
+
+        $this->assertNotNull($test);
+        $this->assertNotNull($test->image_path);
+        Storage::disk('public')->assertExists($test->image_path);
+    }
+
+    public function test_admin_rejects_a_lab_test_without_an_image(): void
+    {
+        $this->actingAsRole(RoleName::PlatformAdmin);
+
+        $this->from('/admin/lab-tests/create')
+            ->post('/admin/lab-tests', [
+                'name_ar' => 'سكر صائم',
+                'name_en' => 'Fasting Glucose',
+                'category' => LabTestCategory::Diabetes->value,
+                'sample_type' => SampleType::Blood->value,
+                'suggested_price' => 90,
+                'is_active' => '1',
+            ])
+            ->assertRedirect('/admin/lab-tests/create')
+            ->assertSessionHasErrors('image');
+
+        $this->assertSame(0, LabTest::query()->count());
     }
 
     /**

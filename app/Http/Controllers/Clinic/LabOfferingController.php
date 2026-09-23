@@ -41,11 +41,13 @@ class LabOfferingController extends Controller
             'tests.*.enabled' => ['sometimes', 'boolean'],
             'tests.*.price' => ['nullable', 'numeric', 'min:0'],
             'tests.*.promo_price' => ['nullable', 'numeric', 'min:0'],
+            'tests.*.home_price' => ['nullable', 'numeric', 'min:0'],
             'tests.*.home' => ['sometimes', 'boolean'],
             'packages' => ['array'],
             'packages.*.enabled' => ['sometimes', 'boolean'],
             'packages.*.price' => ['nullable', 'numeric', 'min:0'],
             'packages.*.promo_price' => ['nullable', 'numeric', 'min:0'],
+            'packages.*.home_price' => ['nullable', 'numeric', 'min:0'],
             'packages.*.home' => ['sometimes', 'boolean'],
         ]);
 
@@ -78,6 +80,7 @@ class LabOfferingController extends Controller
                     'item_type' => $type,
                     'price' => $row['price'] ?? 0,
                     'promo_price' => filled($row['promo_price'] ?? null) ? $row['promo_price'] : null,
+                    'home_price' => filled($row['home_price'] ?? null) ? $row['home_price'] : null,
                     'allows_home_collection' => (bool) ($row['home'] ?? false),
                     'is_active' => true,
                 ],
