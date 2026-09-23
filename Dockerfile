@@ -1,4 +1,6 @@
 # syntax=docker/dockerfile:1.7
+# First-release image: Node 22 builds Vite assets, then PHP-FPM + nginx serve Laravel.
+# Prefer ./setup.sh --resetup for wipe + no-cache rebuild + migrate/seed.
 
 FROM node:22-bookworm-slim AS assets
 WORKDIR /app

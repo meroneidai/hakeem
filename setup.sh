@@ -18,18 +18,28 @@ usage() {
     cat <<'EOF'
 Usage: ./setup.sh [options]
 
+First release / rebuild / resetup for Hakeem.
+
 Installs PostgreSQL on the server (user/database: hakeem, unique password),
-installs Docker if needed, starts Hakeem in containers, writes .env.docker
-for you, and publishes the site on port 80 through host nginx.
+installs Docker if needed, builds the app image (PHP + Node 22 + npm run build),
+starts containers, migrates + seeds (including demo catalog), and publishes
+the site on port 80 through host nginx.
 
 Run this from the project directory, usually /var/hakeem.
+
+First release:
+  ./setup.sh --domain eg.hakeem.com.sa --url https://eg.hakeem.com.sa
+
+Full resetup (wipe DB volumes, no-cache image rebuild, migrate + seed):
+  ./setup.sh --resetup --domain eg.hakeem.com.sa --url https://eg.hakeem.com.sa
 
 Options:
   --url URL       Public URL (default: http://<ip> or http://<domain>)
   --domain NAME   Server name for nginx (example: hakeem.example.com)
   --port PORT     Internal Docker HTTP port (default: 8080)
-  --fresh         Drop Docker volumes and reseed
-  --rebuild       Rebuild the app image (setup always rebuilds Node/npm/Vite)
+  --fresh         Drop Docker volumes + host DB, then reseed
+  --rebuild       Force docker compose build --no-cache (Node/npm/Vite image)
+  --resetup       Same as --fresh --rebuild (first-release wipe and rebuild)
   -h, --help      Show this help
 EOF
 }
@@ -41,6 +51,7 @@ while [[ $# -gt 0 ]]; do
         --port) PORT="${2:-}"; shift 2 ;;
         --fresh) FRESH=1; shift ;;
         --rebuild) REBUILD=1; shift ;;
+        --resetup) FRESH=1; REBUILD=1; shift ;;
         -h|--help) usage; exit 0 ;;
         *)
             echo "Unknown option: $1" >&2
@@ -327,6 +338,7 @@ write_env_file() {
     set_env APP_DEBUG true
     set_env HAKEEM_HTTP_PORT "$PORT"
     set_env HAKEEM_HTTP_BIND 127.0.0.1
+    set_env HAKEEM_SEED_DEMO true
     set_env DB_CONNECTION pgsql
     set_env DB_HOST host.docker.internal
     set_env DB_PORT 5432
@@ -375,15 +387,22 @@ start_stack() {
         "${COMPOSE[@]}" --env-file .env.docker down -v --remove-orphans
     fi
 
-    echo "==> Building image (Node 22, npm install, npm run build)"
-    "${COMPOSE[@]}" --env-file .env.docker up -d --build --wait
+    if [[ "$REBUILD" -eq 1 ]]; then
+        echo "==> Rebuilding image with --no-cache (Node 22, npm install, npm run build)"
+        "${COMPOSE[@]}" --env-file .env.docker build --no-cache --pull
+        "${COMPOSE[@]}" --env-file .env.docker up -d --wait --force-recreate
+    else
+        echo "==> Building image (Node 22, npm install, npm run build)"
+        "${COMPOSE[@]}" --env-file .env.docker up -d --build --wait
+    fi
 
     verify_frontend_build
 
-    echo "==> Migrating and seeding"
+    echo "==> Migrating and seeding (service types + demo catalog when HAKEEM_SEED_DEMO=true)"
     "${COMPOSE[@]}" --env-file .env.docker exec -T app php artisan storage:link --force
     "${COMPOSE[@]}" --env-file .env.docker exec -T app php artisan migrate --force --no-interaction
     "${COMPOSE[@]}" --env-file .env.docker exec -T app php artisan db:seed --force --no-interaction
+    "${COMPOSE[@]}" --env-file .env.docker exec -T app php artisan optimize:clear
 }
 
 verify_frontend_build() {
@@ -426,11 +445,12 @@ cat <<EOF
 
 Hakeem is ready. Host PostgreSQL holds the data. PHP, Composer, Node, and npm run in Docker.
 The image runs npm install and npm run build so Vite assets are in public/build.
-Host nginx publishes the site on port 80.
+Host nginx publishes the site on port 80. Demo clinics/doctors are seeded (HAKEEM_SEED_DEMO).
 
   Project:  ${ROOT}
   Site:     ${APP_URL}
   Health:   ${APP_URL}/up
+  Services: ${APP_URL}/services/home-visit
   Database: ${DB_NAME} @ 127.0.0.1:5432
   DB user:  ${DB_USER}
   DB pass:  ${DB_PASSWORD}
@@ -442,5 +462,8 @@ Host nginx publishes the site on port 80.
 
 Point your domain A record to this server, then rerun:
   ./setup.sh --domain your-domain.com
+
+Full wipe and rebuild later:
+  ./setup.sh --resetup --domain your-domain.com --url https://your-domain.com
 
 EOF

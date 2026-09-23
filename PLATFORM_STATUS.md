@@ -54,16 +54,41 @@
 
 ---
 
+## نشر أول إصدار / إعادة بناء (Docker)
+
+```bash
+cd /var/hakeem
+git pull
+./setup.sh --resetup --domain eg.hakeem.com.sa --url https://eg.hakeem.com.sa
+```
+
+`--resetup` = `--fresh` + `--rebuild` (مسح volumes/قاعدة Docker، بناء صورة بدون كاش مع Node/npm/Vite، migrate + seed).
+
+بدون Docker (PHP على المضيف بعد `git pull`):
+
+```bash
+composer install --no-dev --optimize-autoloader
+npm ci && npm run build
+php artisan migrate --force
+HAKEEM_SEED_DEMO=true php artisan db:seed --force   # أول إطلاق فقط؛ ثم عطّل المتغير
+php artisan optimize:clear
+```
+
+`ServiceTypeSeeder` يملأ أنواع الخدمات دائماً. الكتالوج التجريبي (عيادات/أطباء) يعمل في `local` أو عند `HAKEEM_SEED_DEMO=true`. `EnsureClinicServiceOfferingsSeeder` يربط الخدمات بالعيادات القائمة حتى لا تبقى صفحات `/services/{slug}` فارغة.
+
+---
+
 ## ما تم في 23 سبتمبر 2026
 
 | المهمة | الحالة |
 | --- | --- |
+| إصلاح 500: `ServiceType::isDoctorLed()` لصفحات `/services/{slug}` | في الكود؛ يحتاج `git pull` على السيرفر |
+| Seeders أول إصدار + `HAKEEM_SEED_DEMO` + `EnsureClinicServiceOfferingsSeeder` | في الكود |
+| Docker/`setup.sh --resetup` لأول إصدار وإعادة البناء | في الكود |
 | ربط شات الموقع بـ Hermes عبر `HERMES_CHAT_URL` (OpenAI `/v1/chat/completions`) | مكتمل في الكود؛ ينتظر عنوان HTTPS العام من الوكيل |
 | واجهة الصفحة الرئيسية للسوق + مسارات الاكتشاف العامة | مرفوع (`e28de1b`) |
 | إصلاح 500: `Specialty::doctors()` وأيقونات الخدمات | مرفوع (`8cf35bd`) |
-| Mobile API: login/register، `/me`، حجوزات، سجل، تحاليل، أطباء/عيادات/slots، خريطة، OTP، أجهزة، `app-links` | مكتمل في الكود المحلي |
-| وسيط `clinic-module` للوحة العيادة | مكتمل في الكود المحلي |
-| المكتبة الطبية، CMS، السجل، deeplinks، الفواتير الغنية | مكتمل محلياً — **لم يُرفع كله إلى GitHub بعد** |
+| Mobile API / CMS / السجل / deeplinks | مرفوع (`5d7c4b0`) |
 
 ---
 
