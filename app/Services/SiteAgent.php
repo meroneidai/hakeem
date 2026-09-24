@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\BookingStatus;
+use App\Models\AgentConversation;
 use App\Models\Booking;
 use App\Models\Specialty;
 use App\Models\User;
@@ -28,7 +29,8 @@ class SiteAgent
      *     source: string,
      *     results: array<string, mixed>,
      *     actions: list<array{type: string, label: string, url?: string}>,
-     *     cards: list<array{title: string, subtitle: string, url: string, cta: string}>
+     *     cards: list<array{title: string, subtitle: string, url: string, cta: string}>,
+     *     forms: list<array<string, mixed>>
      * }
      */
     public function reply(string $message, ?User $user, ?string $conversationId = null): array
@@ -274,6 +276,7 @@ class SiteAgent
         }
 
         $history[] = ['role' => 'user', 'content' => $text];
+        $started = microtime(true);
 
         try {
             $completed = $this->hermes->complete($history, [
@@ -290,12 +293,21 @@ class SiteAgent
             return $this->payload($conversationId, 'error', __('agent.unavailable'), [], [], 'hermes');
         }
 
+        $elapsedMs = (int) round((microtime(true) - $started) * 1000);
         $history[] = ['role' => 'assistant', 'content' => $completed['reply']];
 
         Cache::put($this->cacheKey($conversationId), [
-            'history' => array_slice($history, -20),
+            'history' => array_slice($history, -40),
             'customer_token' => $customerToken,
-        ], now()->addHours(2));
+        ], now()->addHours(24));
+
+        $this->persistConversation(
+            $conversationId,
+            $user,
+            $text,
+            $completed,
+            $elapsedMs,
+        );
 
         return $this->payload(
             $conversationId,
@@ -304,16 +316,92 @@ class SiteAgent
             $completed['results'],
             $completed['actions'],
             'hermes',
+            $completed['forms'] ?? [],
         );
+    }
+
+    /**
+     * @param  array{
+     *     reply: string,
+     *     actions: list<array{type: string, label: string, url?: string}>,
+     *     results: array<string, mixed>,
+     *     forms?: list<array<string, mixed>>
+     * }  $completed
+     */
+    private function persistConversation(
+        string $conversationId,
+        ?User $user,
+        string $userText,
+        array $completed,
+        int $latencyMs,
+    ): void {
+        try {
+            $conversation = AgentConversation::query()->firstOrCreate(
+                ['id' => $conversationId],
+                [
+                    'patient_id' => $user?->id,
+                    'channel' => 'web',
+                    'locale' => app()->getLocale(),
+                    'visitor_name' => $user?->name,
+                    'ip' => request()->ip(),
+                    'started_at' => now(),
+                ],
+            );
+
+            if ($user && $conversation->patient_id === null) {
+                $conversation->forceFill([
+                    'patient_id' => $user->id,
+                    'visitor_name' => $user->name,
+                ])->save();
+            }
+
+            $conversation->messages()->create([
+                'role' => 'user',
+                'body' => $this->redact($userText),
+            ]);
+
+            $conversation->messages()->create([
+                'role' => 'assistant',
+                'body' => $completed['reply'],
+                'actions' => $completed['actions'] ?? null,
+                'results' => $completed['results'] ?? null,
+                'forms' => $completed['forms'] ?? null,
+                'latency_ms' => $latencyMs,
+            ]);
+
+            $conversation->forceFill([
+                'last_message_at' => now(),
+                'message_count' => $conversation->messages()->count(),
+            ])->save();
+        } catch (Throwable $exception) {
+            report($exception);
+        }
+    }
+
+    private function redact(string $text): string
+    {
+        if (preg_match('/(?:كلمة\s*المرور|password|passwd)\s*[:=]\s*\S+/iu', $text)) {
+            return '(بيانات دخول — لم تُسجَّل)';
+        }
+
+        return $text;
     }
 
     /**
      * @param  array<string, mixed>  $results
      * @param  list<array{type: string, label: string, url?: string}>  $actions
+     * @param  list<array<string, mixed>>  $forms
      * @return array<string, mixed>
      */
-    private function payload(string $conversationId, string $intent, string $reply, array $results, array $actions = [], string $source = 'rules'): array
-    {
+    private function payload(
+        string $conversationId,
+        string $intent,
+        string $reply,
+        array $results,
+        array $actions = [],
+        string $source = 'rules',
+        array $forms = [],
+    ): array {
         return [
             'conversation_id' => $conversationId,
             'reply' => $reply,
@@ -322,6 +410,7 @@ class SiteAgent
             'results' => $results,
             'actions' => $actions,
             'cards' => $this->cardsFromResults($results),
+            'forms' => $forms,
         ];
     }
 

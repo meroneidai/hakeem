@@ -28,7 +28,9 @@ class PublicSeoTest extends TestCase
             ->assertSee(__('discover.app.heading'))
             ->assertSee(__('agent.title'))
             ->assertSee(__('discover.dock.whatsapp'))
-            ->assertSee('x-data="headerSearch', false);
+            ->assertSee('x-data="headerSearch', false)
+            ->assertSee('images/logo/Hakeem-logo-top.png', false)
+            ->assertSee('images/logo/Hakeem-logo-footer.png', false);
     }
 
     public function test_doctor_profile_includes_physician_schema(): void
@@ -100,6 +102,10 @@ class PublicSeoTest extends TestCase
                 'facebook' => 'https://www.facebook.com/hakeem',
                 'instagram' => 'https://www.instagram.com/hakeem',
             ],
+            'features' => [
+                'agent_chat_web' => '1',
+                'agent_chat_mobile' => '1',
+            ],
         ])->assertRedirect();
 
         $settings = app(Settings::class);
@@ -110,6 +116,24 @@ class PublicSeoTest extends TestCase
         $this->assertSame('01000000000', $settings->get('general.support_whatsapp'));
         $this->assertSame('01000000001', $settings->get('general.support_phone'));
         $this->assertSame('https://www.facebook.com/hakeem', $settings->get('social.facebook'));
+        $this->assertTrue((bool) $settings->get('features.agent_chat_web'));
+        $this->assertTrue((bool) $settings->get('features.agent_chat_mobile'));
+    }
+
+    public function test_homepage_hides_agent_chat_when_disabled(): void
+    {
+        $this->seedListableProvider();
+        $settings = app(Settings::class);
+        $settings->setMany([
+            'features.agent_chat_web' => false,
+            'features.agent_chat_mobile' => false,
+        ], 'features');
+
+        $this->get('/')
+            ->assertOk()
+            ->assertDontSee('x-data="siteAgent', false)
+            ->assertDontSee("\$dispatch('open-agent')", false)
+            ->assertSee(__('discover.nav.offers'));
     }
 
     public function test_public_pages_include_fixed_title_keywords_contacts_and_schema(): void
@@ -138,7 +162,8 @@ class PublicSeoTest extends TestCase
             ->assertSee('+201000000001', false)
             ->assertSee('https://www.facebook.com/hakeem', false)
             ->assertSee('https://x.com/hakeem', false)
-            ->assertSee('favicon.svg', false);
+            ->assertSee('images/logo/Hakeem-logo-top.png', false)
+            ->assertSee('images/logo/Hakeem-logo-footer.png', false);
 
         $this->get('/contact')
             ->assertOk()

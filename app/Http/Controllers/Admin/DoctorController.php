@@ -7,6 +7,9 @@ use App\Enums\Permission;
 use App\Http\Controllers\Controller;
 use App\Models\Doctor;
 use App\Models\Specialty;
+use App\Support\Audit;
+use App\Support\PublicImage;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\View\View;
@@ -48,5 +51,31 @@ class DoctorController extends Controller implements HasMiddleware
             'specialties' => Specialty::query()->active()->ordered()->get(),
             'filters' => $filters,
         ]);
+    }
+
+    public function update(Request $request, Doctor $doctor): RedirectResponse
+    {
+        $action = $request->validate([
+            'action' => ['required', 'in:toggle_active'],
+        ])['action'];
+
+        if ($action === 'toggle_active') {
+            $doctor->update(['is_active' => ! $doctor->is_active]);
+        }
+
+        Audit::updated($doctor, []);
+
+        return back()->with('status', __('common.updated_successfully'));
+    }
+
+    public function destroy(Doctor $doctor): RedirectResponse
+    {
+        Audit::deleted($doctor);
+        PublicImage::delete($doctor->profile_photo_path);
+        $doctor->clinics()->detach();
+        $doctor->delete();
+
+        return redirect()->route('admin.doctors.index')
+            ->with('status', __('common.deleted_successfully'));
     }
 }

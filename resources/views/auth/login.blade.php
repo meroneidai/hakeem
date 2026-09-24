@@ -40,7 +40,7 @@
         <a href="{{ route('admin.login') }}" class="font-medium text-primary-600 hover:underline">{{ __('auth.admin_login') }}</a>
     </p>
 
-    @env('local')
+    @if (app(\App\Support\Branding::class)->showDemoLogins())
         <p class="mt-4 rounded-lg bg-ink-50 p-3 text-center text-xs text-ink-600">{{ __('auth.demo_phone_credentials') }}</p>
-    @endenv
+    @endif
 </x-layouts.auth>

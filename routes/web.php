@@ -175,7 +175,7 @@ Route::middleware(['auth', 'internal-staff'])
         Route::resource('specialties', Admin\SpecialtyController::class)->except('show');
         Route::resource('insurance-providers', Admin\InsuranceProviderController::class)->except('show');
         Route::resource('service-types', Admin\ServiceTypeController::class)
-            ->except(['show', 'destroy'])
+            ->except(['show'])
             ->parameters(['service-types' => 'serviceType']);
 
         // Subscriptions, discounts and payments
@@ -219,15 +219,21 @@ Route::middleware(['auth', 'internal-staff'])
         Route::get('support/{ticket}', [Admin\SupportTicketController::class, 'show'])->name('support.show');
         Route::put('support/{ticket}', [Admin\SupportTicketController::class, 'update'])->name('support.update');
         Route::post('support/{ticket}/reply', [Admin\SupportTicketController::class, 'reply'])->name('support.reply');
+        Route::get('agent-conversations', [Admin\AgentConversationController::class, 'index'])->name('agent-conversations.index');
+        Route::get('agent-conversations/{agentConversation}', [Admin\AgentConversationController::class, 'show'])->name('agent-conversations.show');
 
         Route::resource('staff', Admin\StaffController::class)->except('show');
         Route::get('users', [Admin\UserController::class, 'index'])->name('users.index');
         Route::get('users/{user}', [Admin\UserController::class, 'show'])->name('users.show');
         Route::put('users/{user}', [Admin\UserController::class, 'update'])->name('users.update');
+        Route::delete('users/{user}', [Admin\UserController::class, 'destroy'])->name('users.destroy');
         Route::get('clinics', [Admin\ClinicController::class, 'index'])->name('clinics.index');
         Route::get('clinics/{clinic}', [Admin\ClinicController::class, 'show'])->name('clinics.show');
         Route::put('clinics/{clinic}', [Admin\ClinicController::class, 'update'])->name('clinics.update');
+        Route::delete('clinics/{clinic}', [Admin\ClinicController::class, 'destroy'])->name('clinics.destroy');
         Route::get('doctors', [Admin\DoctorController::class, 'index'])->name('doctors.index');
+        Route::put('doctors/{doctor}', [Admin\DoctorController::class, 'update'])->name('doctors.update');
+        Route::delete('doctors/{doctor}', [Admin\DoctorController::class, 'destroy'])->name('doctors.destroy');
         Route::get('billing', [Admin\BillingController::class, 'index'])->name('billing');
         Route::get('billing/{subscription}', [Admin\BillingController::class, 'show'])->name('billing.show');
         Route::put('billing/{subscription}', [Admin\BillingController::class, 'update'])->name('billing.update');

@@ -55,9 +55,20 @@
                 <x-td><x-rating :average="$doctor->ratingAverage()" :count="$doctor->ratingCount()"/></x-td>
                 <x-td><x-status-dot :active="$doctor->is_active"/></x-td>
                 <x-td>
-                    <a href="{{ route('doctors.show', $doctor) }}" class="text-sm font-medium text-primary-700 hover:underline">
-                        {{ __('common.view') }}
-                    </a>
+                    <div class="flex items-center justify-end gap-1">
+                        <a href="{{ route('doctors.show', $doctor) }}" class="text-sm font-medium text-primary-700 hover:underline">
+                            {{ __('common.view') }}
+                        </a>
+                        <form method="POST" action="{{ route('admin.doctors.update', $doctor) }}">
+                            @csrf
+                            @method('PUT')
+                            <input type="hidden" name="action" value="toggle_active">
+                            <button type="submit" class="inline-flex items-center rounded-lg px-2 py-1.5 text-xs font-medium text-ink-600 hover:bg-ink-50">
+                                {{ $doctor->is_active ? __('common.deactivate') : __('common.activate') }}
+                            </button>
+                        </form>
+                        <x-row-actions :destroy="route('admin.doctors.destroy', $doctor)"/>
+                    </div>
                 </x-td>
             </tr>
         @empty

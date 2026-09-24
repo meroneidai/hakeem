@@ -68,6 +68,20 @@ class ServiceTypeController extends Controller implements HasMiddleware
             ->with('status', __('common.updated_successfully'));
     }
 
+    public function destroy(ServiceType $serviceType): RedirectResponse
+    {
+        if ($serviceType->bookings()->exists()) {
+            return back()->with('error', __('admin.service_types.cannot_delete_with_bookings'));
+        }
+
+        Audit::deleted($serviceType);
+        PublicImage::delete($serviceType->image_path);
+        $serviceType->delete();
+
+        return redirect()->route('admin.service-types.index')
+            ->with('status', __('common.deleted_successfully'));
+    }
+
     private function validated(Request $request, ?ServiceType $serviceType = null): array
     {
         $data = $request->validate([

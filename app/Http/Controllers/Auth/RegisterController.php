@@ -13,8 +13,12 @@ use Illuminate\View\View;
 
 class RegisterController extends Controller
 {
-    public function create(): View
+    public function create(Request $request): View
     {
+        if ($request->filled('ref')) {
+            $request->session()->put('referral_code', strtoupper(trim($request->string('ref')->toString())));
+        }
+
         return view('auth.register', [
             'insuranceProviders' => InsuranceProvider::selectable(),
         ]);
@@ -29,6 +33,7 @@ class RegisterController extends Controller
             'email' => ['nullable', 'string', 'max:190'],
             'password' => ['required', 'confirmed', Password::min(8)],
             'insurance_provider_id' => ['nullable', 'integer', InsuranceProvider::activeIdRule()],
+            'ref' => ['nullable', 'string', 'max:32'],
         ]);
 
         $identifier = AccountIdentifier::fromRequest(
@@ -41,7 +46,7 @@ class RegisterController extends Controller
             $validated['name'],
             $identifier,
             $validated['password'],
-            $request->session()->pull('referral_code') ?: $request->input('ref'),
+            $request->session()->pull('referral_code') ?: ($validated['ref'] ?? null),
             $validated['insurance_provider_id'] ?? null,
         );
 

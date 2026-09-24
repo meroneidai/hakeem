@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Agent\V1\BookingController;
 use App\Http\Controllers\Api\Agent\V1\CustomerController;
 use App\Http\Controllers\Api\Agent\V1\DiscoveryController;
 use App\Http\Controllers\Api\Agent\V1\ManifestController;
@@ -34,6 +35,7 @@ Route::middleware('throttle:10,1')->group(function () {
     Route::post('customers/password/forgot', [CustomerController::class, 'forgotPassword'])->name('customers.password.forgot');
     Route::post('customers/password/reset', [CustomerController::class, 'resetPassword'])->name('customers.password.reset');
     Route::post('support/tickets', [SupportTicketController::class, 'store'])->name('support.tickets.store');
+    Route::post('bookings', [BookingController::class, 'store'])->name('bookings.store');
 });
 
 Route::get('customers/me', [CustomerController::class, 'show'])->name('customers.me');

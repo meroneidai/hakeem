@@ -12,6 +12,7 @@
                 <x-input name="rejection_reason" :value="$clinic->rejection_reason" :placeholder="__('admin.clinics.rejection')"/>
                 <x-button size="sm" variant="accent">{{ __('common.save_changes') }}</x-button>
             </form>
+            <x-row-actions :destroy="route('admin.clinics.destroy', $clinic)"/>
         </x-slot:actions>
     </x-page-header>
 

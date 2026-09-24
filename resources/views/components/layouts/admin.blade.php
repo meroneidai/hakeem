@@ -15,11 +15,15 @@
             :class="sidebar ? 'translate-x-0' : (document.documentElement.dir === 'rtl' ? 'translate-x-full lg:translate-x-0' : '-translate-x-full lg:translate-x-0')"
         >
             <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5 px-2 py-1">
-                @if (($branding ?? null)?->logoUrl())
-                    <img src="{{ $branding->logoUrl() }}" alt="" class="size-9 rounded-xl object-cover">
-                @else
-                    <span class="grid size-9 place-items-center rounded-xl bg-primary-600 text-lg font-bold text-white">ح</span>
-                @endif
+                <img
+                    src="{{ $branding->logoUrl() }}"
+                    alt=""
+                    @class([
+                        'shrink-0 object-contain',
+                        'h-8 w-auto max-w-[9rem]' => ! ($branding?->usesCustomLogo() ?? false),
+                        'size-9 rounded-xl object-cover' => $branding?->usesCustomLogo(),
+                    ])
+                >
                 <span>
                     <span class="block text-sm font-bold text-ink-900">{{ __('common.app_name') }}</span>
                     <span class="block text-[11px] text-ink-500">{{ __('admin.title') }}</span>
@@ -134,6 +138,11 @@
                                       :badge="$openTickets ?: null">
                         {{ __('admin.nav.support') }}
                     </x-admin.nav-item>
+                    @can(Permission::ManageSupportTickets->value)
+                        <x-admin.nav-item :href="route('admin.agent-conversations.index')" icon="chat" pattern="admin.agent-conversations.*">
+                            {{ __('admin.nav.agent_conversations') }}
+                        </x-admin.nav-item>
+                    @endcan
 
                     @can(Permission::ManageStaff->value)
                         <x-admin.nav-item :href="route('admin.staff.index')" icon="users" pattern="admin.staff.*">

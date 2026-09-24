@@ -21,7 +21,8 @@ class HermesChatClient
      * @return array{
      *     reply: string,
      *     actions: list<array{type: string, label: string, url?: string}>,
-     *     results: array<string, mixed>
+     *     results: array<string, mixed>,
+     *     forms: list<array<string, mixed>>
      * }
      */
     public function complete(array $messages, array $context = []): array
@@ -149,7 +150,8 @@ class HermesChatClient
      * @return array{
      *     reply: string,
      *     actions: list<array{type: string, label: string, url?: string}>,
-     *     results: array<string, mixed>
+     *     results: array<string, mixed>,
+     *     forms: list<array<string, mixed>>
      * }
      */
     private function normalize(?array $json, string $raw): array
@@ -157,6 +159,7 @@ class HermesChatClient
         $reply = '';
         $actions = [];
         $results = [];
+        $forms = [];
 
         if (is_array($json)) {
             $reply = $this->extractText($json);
@@ -165,6 +168,7 @@ class HermesChatClient
                 Arr::wrap($json['links'] ?? []),
             ));
             $results = is_array($json['results'] ?? null) ? $json['results'] : [];
+            $forms = $this->normalizeForms(Arr::wrap($json['forms'] ?? []));
         }
 
         if ($reply === '' && $raw !== '' && ! is_array($json)) {
@@ -181,17 +185,90 @@ class HermesChatClient
                 $results = is_array($decoded['results'] ?? null)
                     ? array_merge($results, $decoded['results'])
                     : $results;
+                $forms = array_merge($forms, $this->normalizeForms(Arr::wrap($decoded['forms'] ?? [])));
             }
         }
 
         $reply = trim((string) $reply);
+        // Extract form markers before cleaning so [[form:...]] is not lost.
+        $forms = array_merge($forms, $this->formsFromText($reply));
         $actions = $this->uniqueActions(array_merge($actions, $this->actionsFromText($reply)));
+        $reply = $this->cleanReplyText($reply);
 
         return [
             'reply' => $reply !== '' ? $reply : __('agent.empty'),
             'actions' => $actions,
             'results' => $results,
+            'forms' => $forms,
         ];
+    }
+
+    /**
+     * @param  list<mixed>  $items
+     * @return list<array<string, mixed>>
+     */
+    private function normalizeForms(array $items): array
+    {
+        $forms = [];
+
+        foreach ($items as $item) {
+            if (is_string($item) && $item !== '') {
+                $definition = config('agent.forms.'.$item);
+
+                if (is_array($definition)) {
+                    $forms[] = ['form' => $item] + $definition;
+                }
+
+                continue;
+            }
+
+            if (! is_array($item)) {
+                continue;
+            }
+
+            $key = (string) ($item['form'] ?? $item['name'] ?? '');
+
+            if ($key === '') {
+                continue;
+            }
+
+            $definition = config('agent.forms.'.$key, []);
+            $forms[] = array_merge(is_array($definition) ? $definition : [], $item, ['form' => $key]);
+        }
+
+        return $forms;
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function formsFromText(string $text): array
+    {
+        if (! preg_match_all('/\[\[form:([a-z0-9_-]+)\]\]/iu', $text, $matches)) {
+            return [];
+        }
+
+        $forms = [];
+
+        foreach ($matches[1] as $key) {
+            $definition = config('agent.forms.'.$key);
+
+            if (! is_array($definition)) {
+                continue;
+            }
+
+            $forms[] = ['form' => $key] + $definition;
+        }
+
+        return $forms;
+    }
+
+    private function cleanReplyText(string $text): string
+    {
+        $text = preg_replace('/\[\[form:[a-z0-9_-]+\]\]/iu', '', $text) ?? $text;
+        $text = preg_replace('/\[\[(?!form:)([^\]\[]{1,60})\]\]/u', '$1', $text) ?? $text;
+
+        return trim(preg_replace("/\n{3,}/", "\n\n", $text) ?? $text);
     }
 
     /**
@@ -257,7 +334,7 @@ class HermesChatClient
     }
 
     /**
-     * @return list<array{type: string, label: string, url?: string}>
+     * @return list<array{type: string, label: string, url?: string, value?: string}>
      */
     private function actionsFromText(string $text): array
     {
@@ -275,6 +352,22 @@ class HermesChatClient
                     'type' => 'link',
                     'label' => $match[1],
                     'url' => $url,
+                ];
+            }
+        }
+
+        if (preg_match_all('/\[\[(?!form:)([^\]\[]{1,60})\]\]/u', $text, $matches)) {
+            foreach ($matches[1] as $label) {
+                $label = trim($label);
+
+                if ($label === '') {
+                    continue;
+                }
+
+                $actions[] = [
+                    'type' => 'reply',
+                    'label' => $label,
+                    'value' => $label,
                 ];
             }
         }

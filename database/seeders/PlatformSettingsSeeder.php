@@ -41,7 +41,7 @@ class PlatformSettingsSeeder extends Seeder
         ], 'notifications');
 
         $settings->setMany([
-            'general.support_whatsapp' => '01000000000',
+            'general.support_whatsapp' => '01000000001',
             'general.support_phone' => '01000000001',
             'general.support_email' => 'support@hakeem.test',
         ], 'general');

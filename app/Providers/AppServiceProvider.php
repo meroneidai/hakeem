@@ -50,7 +50,6 @@ class AppServiceProvider extends ServiceProvider
 
         View::composer('components.layouts.public', function ($view): void {
             $featured = Specialty::query()->active()->featured()->ordered()->limit(10)->get();
-            $settings = app(Settings::class);
             $branding = app(Branding::class);
 
             $view->with([
@@ -58,8 +57,8 @@ class AppServiceProvider extends ServiceProvider
                 'navSpecialties' => $featured->isNotEmpty()
                     ? $featured
                     : Specialty::query()->active()->ordered()->limit(10)->get(),
-                'appIosUrl' => $settings->get('seo.app_ios_url'),
-                'appAndroidUrl' => $settings->get('seo.app_android_url'),
+                'appIosUrl' => $branding->appIosUrl(),
+                'appAndroidUrl' => $branding->appAndroidUrl(),
                 'branding' => $branding,
             ]);
         });

@@ -101,4 +101,19 @@ class UserController extends Controller implements HasMiddleware
 
         return back()->with('status', __('common.updated_successfully'));
     }
+
+    public function destroy(User $user): RedirectResponse
+    {
+        abort_unless($user->hasRole(RoleName::Patient), 404);
+
+        if ($user->bookings()->exists() || $user->ownedClinics()->exists()) {
+            return back()->with('error', __('admin.users.cannot_delete_with_relations'));
+        }
+
+        Audit::deleted($user);
+        $user->delete();
+
+        return redirect()->route('admin.users.index')
+            ->with('status', __('common.deleted_successfully'));
+    }
 }

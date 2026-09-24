@@ -5,11 +5,11 @@
         </x-slot:actions>
     </x-page-header>
 
-    <form method="POST" action="{{ route('admin.seo.site.update') }}" enctype="multipart/form-data">
+    <form method="POST" action="{{ route('admin.seo.site.update') }}" enctype="multipart/form-data" class="space-y-4">
         @csrf
         @method('PUT')
 
-        <x-card class="max-w-3xl">
+        <x-card :title="__('admin.branding.heading')" class="max-w-3xl">
             <div class="grid gap-4">
                 <x-field :label="__('admin.seo.site_title_ar')" name="seo.site_title_ar">
                     <x-input name="seo[site_title_ar]" :value="$values['seo.site_title_ar']" maxlength="70"/>
@@ -17,6 +17,19 @@
                 <x-field :label="__('admin.seo.site_title_en')" name="seo.site_title_en">
                     <x-input name="seo[site_title_en]" :value="$values['seo.site_title_en']" dir="ltr" maxlength="70"/>
                 </x-field>
+                <x-image-field name="logo" :path="$values['branding.logo_path']" :label="__('admin.branding.logo')"/>
+                <x-image-field name="favicon" :path="$values['branding.favicon_path']" :label="__('admin.branding.favicon')"/>
+                <x-field :label="__('admin.branding.tagline_ar')" name="branding.tagline_ar">
+                    <x-input name="branding[tagline_ar]" :value="$values['branding.tagline_ar']" maxlength="190"/>
+                </x-field>
+                <x-field :label="__('admin.branding.tagline_en')" name="branding.tagline_en">
+                    <x-input name="branding[tagline_en]" :value="$values['branding.tagline_en']" dir="ltr" maxlength="190"/>
+                </x-field>
+            </div>
+        </x-card>
+
+        <x-card :title="__('admin.seo.meta_section')" class="max-w-3xl">
+            <div class="grid gap-4">
                 <x-field :label="__('admin.seo.default_description_ar')" name="seo.default_description_ar">
                     <x-textarea name="seo[default_description_ar]" :value="$values['seo.default_description_ar']" rows="3" maxlength="320"/>
                 </x-field>
@@ -35,13 +48,12 @@
                 <x-field :label="__('admin.seo.twitter_site')" name="seo.twitter_site">
                     <x-input name="seo[twitter_site]" :value="$values['seo.twitter_site']" dir="ltr" maxlength="64"/>
                 </x-field>
-                <x-field :label="__('admin.seo.app_ios_url')" name="seo.app_ios_url">
-                    <x-input name="seo[app_ios_url]" :value="$values['seo.app_ios_url']" dir="ltr" maxlength="500"/>
-                </x-field>
-                <x-field :label="__('admin.seo.app_android_url')" name="seo.app_android_url">
-                    <x-input name="seo[app_android_url]" :value="$values['seo.app_android_url']" dir="ltr" maxlength="500"/>
-                </x-field>
-                <p class="text-sm text-ink-500">{{ __('admin.seo.support_hint') }}</p>
+            </div>
+        </x-card>
+
+        <x-card :title="__('admin.seo.support_section')" class="max-w-3xl">
+            <p class="mb-4 text-sm text-ink-500">{{ __('admin.seo.support_hint') }}</p>
+            <div class="grid gap-4">
                 <x-field :label="__('admin.seo.support_whatsapp')" name="general.support_whatsapp">
                     <x-input name="general[support_whatsapp]" :value="$values['general.support_whatsapp']" dir="ltr" maxlength="32"/>
                 </x-field>
@@ -51,22 +63,54 @@
                 <x-field :label="__('admin.seo.support_email')" name="general.support_email">
                     <x-input name="general[support_email]" type="email" :value="$values['general.support_email']" dir="ltr" maxlength="190"/>
                 </x-field>
+            </div>
+        </x-card>
 
-                <h2 class="pt-2 text-sm font-semibold text-ink-800">{{ __('admin.branding.heading') }}</h2>
-                <x-image-field name="logo" :path="$values['branding.logo_path']" :label="__('admin.branding.logo')"/>
-                <x-image-field name="favicon" :path="$values['branding.favicon_path']" :label="__('admin.branding.favicon')"/>
-                <x-field :label="__('admin.branding.tagline_ar')" name="branding.tagline_ar">
-                    <x-input name="branding[tagline_ar]" :value="$values['branding.tagline_ar']" maxlength="190"/>
+        <x-card :title="__('admin.seo.apps_section')" class="max-w-3xl">
+            <p class="mb-4 text-sm text-ink-500">{{ __('admin.seo.apps_hint') }}</p>
+            <div class="grid gap-4">
+                <x-field :label="__('admin.seo.app_ios_url')" name="seo.app_ios_url">
+                    <x-input name="seo[app_ios_url]" :value="$values['seo.app_ios_url']" dir="ltr" maxlength="500"/>
                 </x-field>
-                <x-field :label="__('admin.branding.tagline_en')" name="branding.tagline_en">
-                    <x-input name="branding[tagline_en]" :value="$values['branding.tagline_en']" dir="ltr" maxlength="190"/>
+                <x-field :label="__('admin.seo.app_android_url')" name="seo.app_android_url">
+                    <x-input name="seo[app_android_url]" :value="$values['seo.app_android_url']" dir="ltr" maxlength="500"/>
                 </x-field>
-                <h2 class="pt-2 text-sm font-semibold text-ink-800">{{ __('admin.branding.social') }}</h2>
+            </div>
+        </x-card>
+
+        <x-card :title="__('admin.branding.social')" class="max-w-3xl">
+            <div class="grid gap-4">
                 @foreach (['facebook', 'instagram', 'twitter', 'youtube', 'tiktok', 'linkedin'] as $network)
-                    <x-field :label="$network" :name="'social.'.$network">
+                    <x-field :label="__('admin.branding.networks.'.$network)" :name="'social.'.$network">
                         <x-input :name="'social['.$network.']'" :value="$values['social.'.$network]" dir="ltr" maxlength="500"/>
                     </x-field>
                 @endforeach
+            </div>
+        </x-card>
+
+        <x-card :title="__('admin.seo.features_section')" class="max-w-3xl">
+            <p class="mb-4 text-sm text-ink-500">{{ __('admin.seo.features_hint') }}</p>
+            <div class="grid gap-3">
+                <x-checkbox
+                    name="features[agent_chat_web]"
+                    :label="__('admin.seo.agent_chat_web')"
+                    :hint="__('admin.seo.agent_chat_web_hint')"
+                    :checked="$values['features.agent_chat_web']"
+                />
+                <x-checkbox
+                    name="features[agent_chat_mobile]"
+                    :label="__('admin.seo.agent_chat_mobile')"
+                    :hint="__('admin.seo.agent_chat_mobile_hint')"
+                    :checked="$values['features.agent_chat_mobile']"
+                />
+                @env('local')
+                    <x-checkbox
+                        name="general[show_demo_logins]"
+                        :label="__('admin.seo.show_demo_logins')"
+                        :hint="__('admin.seo.show_demo_logins_hint')"
+                        :checked="$values['general.show_demo_logins']"
+                    />
+                @endenv
             </div>
             <x-slot:footer>
                 <x-button variant="accent">{{ __('common.save_changes') }}</x-button>

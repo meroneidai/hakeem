@@ -26,7 +26,10 @@
                     </div>
                     <div class="flex shrink-0 flex-col items-end gap-2">
                         <x-status-dot :active="$type->is_active"/>
-                        <x-row-actions :edit="route('admin.service-types.edit', $type)"/>
+                        <x-row-actions
+                            :edit="route('admin.service-types.edit', $type)"
+                            :destroy="route('admin.service-types.destroy', $type)"
+                        />
                     </div>
                 </div>
 

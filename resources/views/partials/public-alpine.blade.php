@@ -194,9 +194,46 @@
             conversationId: null,
             scrollY: 0,
             labels,
-            messages: [{ role: 'assistant', text: labels.empty, actions: [], cards: [] }],
+            messages: [{ role: 'assistant', text: labels.empty, actions: [], cards: [], forms: [] }],
+            storageKey: 'hakeem.agent.chat',
             init() {
+                this.restore();
                 this.$watch('open', (value) => this.lockPage(value));
+                this.$watch('messages', () => this.persist(), { deep: true });
+                this.$watch('conversationId', () => this.persist());
+            },
+            restore() {
+                try {
+                    const raw = window.localStorage.getItem(this.storageKey);
+                    if (! raw) {
+                        return;
+                    }
+                    const saved = JSON.parse(raw);
+                    const maxAge = 24 * 60 * 60 * 1000;
+                    if (! saved?.saved_at || (Date.now() - saved.saved_at) > maxAge) {
+                        window.localStorage.removeItem(this.storageKey);
+                        return;
+                    }
+                    if (Array.isArray(saved.messages) && saved.messages.length) {
+                        this.messages = saved.messages;
+                    }
+                    if (saved.conversationId) {
+                        this.conversationId = saved.conversationId;
+                    }
+                } catch {
+                    window.localStorage.removeItem(this.storageKey);
+                }
+            },
+            persist() {
+                try {
+                    window.localStorage.setItem(this.storageKey, JSON.stringify({
+                        saved_at: Date.now(),
+                        conversationId: this.conversationId,
+                        messages: this.messages.slice(-40),
+                    }));
+                } catch {
+                    // Ignore quota / private mode failures.
+                }
             },
             toggle() {
                 this.open ? this.closeAgent() : this.openAgent();
@@ -233,7 +270,7 @@
                 if (! text || this.sending) {
                     return;
                 }
-                this.messages.push({ role: 'user', text, actions: [], cards: [] });
+                this.messages.push({ role: 'user', text, actions: [], cards: [], forms: [] });
                 this.message = '';
                 this.sending = true;
                 try {
@@ -257,6 +294,7 @@
                         text: data.reply || (response.ok ? '' : labels.error),
                         actions: data.actions || [],
                         cards: data.cards || [],
+                        forms: data.forms || [],
                     });
                 } catch {
                     this.messages.push({
@@ -264,6 +302,7 @@
                         text: labels.error,
                         actions: [],
                         cards: [],
+                        forms: [],
                     });
                 } finally {
                     this.sending = false;

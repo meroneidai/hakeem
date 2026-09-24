@@ -15,6 +15,7 @@
                 <input type="hidden" name="action" value="toggle_active">
                 <x-button size="sm" variant="secondary">{{ $user->is_active ? __('common.deactivate') : __('common.activate') }}</x-button>
             </form>
+            <x-row-actions :destroy="route('admin.users.destroy', $user)"/>
         </x-slot:actions>
     </x-page-header>
 

@@ -36,6 +36,7 @@ class SiteSeoController extends Controller implements HasMiddleware
                 'general.support_whatsapp' => $settings->get('general.support_whatsapp'),
                 'general.support_phone' => $settings->get('general.support_phone'),
                 'general.support_email' => $settings->get('general.support_email'),
+                'general.show_demo_logins' => $settings->bool('general.show_demo_logins', true),
                 'branding.logo_path' => $settings->get('branding.logo_path'),
                 'branding.favicon_path' => $settings->get('branding.favicon_path'),
                 'branding.tagline_ar' => $settings->get('branding.tagline_ar'),
@@ -46,6 +47,8 @@ class SiteSeoController extends Controller implements HasMiddleware
                 'social.youtube' => $settings->get('social.youtube'),
                 'social.tiktok' => $settings->get('social.tiktok'),
                 'social.linkedin' => $settings->get('social.linkedin'),
+                'features.agent_chat_web' => $settings->bool('features.agent_chat_web', true),
+                'features.agent_chat_mobile' => $settings->bool('features.agent_chat_mobile', true),
             ],
         ]);
     }
@@ -66,6 +69,7 @@ class SiteSeoController extends Controller implements HasMiddleware
             'general.support_whatsapp' => ['nullable', 'string', 'max:32'],
             'general.support_phone' => ['nullable', 'string', 'max:32'],
             'general.support_email' => ['nullable', 'email', 'max:190'],
+            'general.show_demo_logins' => ['boolean'],
             'branding.tagline_ar' => ['nullable', 'string', 'max:190'],
             'branding.tagline_en' => ['nullable', 'string', 'max:190'],
             'logo' => PublicImage::rules(),
@@ -76,6 +80,8 @@ class SiteSeoController extends Controller implements HasMiddleware
             'social.youtube' => ['nullable', 'url', 'max:500'],
             'social.tiktok' => ['nullable', 'url', 'max:500'],
             'social.linkedin' => ['nullable', 'url', 'max:500'],
+            'features.agent_chat_web' => ['boolean'],
+            'features.agent_chat_mobile' => ['boolean'],
         ]);
 
         $seo = $data['seo'] ?? [];
@@ -100,6 +106,7 @@ class SiteSeoController extends Controller implements HasMiddleware
             'general.support_whatsapp' => $general['support_whatsapp'] ?? null,
             'general.support_phone' => $general['support_phone'] ?? null,
             'general.support_email' => $general['support_email'] ?? null,
+            'general.show_demo_logins' => $request->boolean('general.show_demo_logins'),
         ], 'general');
 
         $logoPath = PublicImage::store($request, 'logo', 'branding', $settings->get('branding.logo_path'));
@@ -120,6 +127,11 @@ class SiteSeoController extends Controller implements HasMiddleware
             'social.tiktok' => $social['tiktok'] ?? null,
             'social.linkedin' => $social['linkedin'] ?? null,
         ], 'social');
+
+        $settings->setMany([
+            'features.agent_chat_web' => $request->boolean('features.agent_chat_web'),
+            'features.agent_chat_mobile' => $request->boolean('features.agent_chat_mobile'),
+        ], 'features');
 
         Audit::log('seo.site_updated');
 

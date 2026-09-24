@@ -1,6 +1,7 @@
 @php
-    $ios = $appIosUrl ?? null;
-    $android = $appAndroidUrl ?? null;
+    $branding = $branding ?? app(\App\Support\Branding::class);
+    $ios = $appIosUrl ?? $branding->appIosUrl();
+    $android = $appAndroidUrl ?? $branding->appAndroidUrl();
 @endphp
 
 <section class="overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-primary-500 to-primary-700 p-6 text-white shadow-[0_12px_40px_rgba(30,64,175,0.16)] sm:p-8">

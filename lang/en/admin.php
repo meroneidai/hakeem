@@ -36,6 +36,7 @@ return [
         'bookings' => 'Bookings',
         'lab_orders' => 'Lab orders',
         'support' => 'Support tickets',
+        'agent_conversations' => 'Agent chats',
         'staff' => 'Platform staff',
         'notifications' => 'Notification settings',
         'system' => 'System settings',
@@ -162,6 +163,7 @@ return [
         'duration_hint' => 'Default visit length. Clinics can pick a different length from the same list.',
         'payment_modes' => 'Payment methods for this service',
         'payment_modes_hint' => 'Enable only the methods this service accepts. Online consultation typically needs online payment only. Combined with platform and clinic settings.',
+        'cannot_delete_with_bookings' => 'This service type has bookings and cannot be deleted. Deactivate it or remove the bookings first.',
     ],
 
     'plans' => [
@@ -379,6 +381,18 @@ return [
         'support_phone' => 'Support phone',
         'support_email' => 'Support email',
         'support_hint' => 'Shown on the mobile bar. Empty values open the contact form instead.',
+        'meta_section' => 'SEO & sharing',
+        'support_section' => 'Support contacts',
+        'apps_section' => 'App store links',
+        'apps_hint' => 'Shown on the homepage and footer. Leave empty to show “Coming soon”.',
+        'features_section' => 'Interface features',
+        'features_hint' => 'Turning chat off hides the Hakeem button. On mobile the dock replaces it with Offers.',
+        'agent_chat_web' => 'Hakeem chat on desktop',
+        'agent_chat_web_hint' => 'Floating button on large screens.',
+        'agent_chat_mobile' => 'Hakeem chat on mobile',
+        'agent_chat_mobile_hint' => 'Center dock button and full-screen chat sheet.',
+        'show_demo_logins' => 'Show demo login credentials',
+        'show_demo_logins_hint' => 'Local only. Never shown in production.',
     ],
 
     'articles' => [
@@ -480,6 +494,24 @@ return [
             'technical' => 'Technical',
             'complaint' => 'Complaint',
             'other' => 'Other',
+        ],
+    ],
+
+    'agent_conversations' => [
+        'heading' => 'Agent chats',
+        'subheading' => 'Logged conversations with Hakeem visitors. Retention follows the privacy policy.',
+        'visitor' => 'Visitor',
+        'channel' => 'Channel',
+        'messages' => 'Messages',
+        'last_message' => 'Last message',
+        'started' => 'Started',
+        'latency' => 'Latency',
+        'anonymous' => 'Guest',
+        'empty' => 'No conversations yet.',
+        'channels' => [
+            'web' => 'Web',
+            'whatsapp' => 'WhatsApp',
+            'telegram' => 'Telegram',
         ],
     ],
 
@@ -643,6 +675,7 @@ return [
         'bookings' => 'Bookings',
         'last_login' => 'Last login',
         'mark_verified' => 'Mark phone verified',
+        'cannot_delete_with_relations' => 'This user has bookings or clinics and cannot be deleted. Deactivate them instead.',
     ],
 
     'loyalty' => [
@@ -760,6 +793,14 @@ return [
         'tagline_ar' => 'Arabic tagline',
         'tagline_en' => 'English tagline',
         'social' => 'Social profiles',
+        'networks' => [
+            'facebook' => 'Facebook',
+            'instagram' => 'Instagram',
+            'twitter' => 'X / Twitter',
+            'youtube' => 'YouTube',
+            'tiktok' => 'TikTok',
+            'linkedin' => 'LinkedIn',
+        ],
     ],
 
     'inbox' => [

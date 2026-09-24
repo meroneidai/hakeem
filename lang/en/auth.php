@@ -3,6 +3,7 @@
 return [
     'failed' => 'These credentials do not match our records.',
     'inactive' => 'This account is disabled. Please contact support.',
+    'identifier_not_found' => 'That phone or email is not registered with us.',
     'password' => 'The provided password is incorrect.',
     'throttle' => 'Too many login attempts. Please try again in :seconds seconds.',
 

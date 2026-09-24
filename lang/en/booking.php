@@ -59,6 +59,7 @@ return [
     'outside_hours' => 'This time is outside the doctor or branch hours.',
     'slot_in_past' => 'Choose a time in the future.',
     'home_address' => 'Home visit address',
+    'home_address_required' => 'This service needs your full address.',
     'egypt_time' => 'Egypt time',
     'video' => [
         'heading' => 'Video visit',

@@ -9,15 +9,21 @@
         <div @class(['w-full', 'max-w-3xl' => $wide, 'max-w-md' => ! $wide])>
             <div class="mb-6 flex items-center justify-between">
                 <a href="{{ url('/') }}" class="flex items-center gap-2.5">
-                    @if ($branding->logoUrl())
-                        <img src="{{ $branding->logoUrl() }}" alt="{{ $branding->name() }}" class="size-10 rounded-xl object-cover">
-                    @else
-                        <span class="grid size-10 place-items-center rounded-xl bg-primary-600 text-xl font-bold text-white">ح</span>
+                    <img
+                        src="{{ $branding->logoUrl() }}"
+                        alt="{{ $branding->name() }}"
+                        @class([
+                            'shrink-0 object-contain',
+                            'h-10 w-auto max-w-[11rem]' => ! $branding->usesCustomLogo(),
+                            'size-10 rounded-xl object-cover' => $branding->usesCustomLogo(),
+                        ])
+                    >
+                    @if ($branding->usesCustomLogo())
+                        <span>
+                            <span class="block text-base font-bold text-ink-900">{{ $branding->name() }}</span>
+                            <span class="block text-xs text-ink-500">{{ $branding->tagline() }}</span>
+                        </span>
                     @endif
-                    <span>
-                        <span class="block text-base font-bold text-ink-900">{{ $branding->name() }}</span>
-                        <span class="block text-xs text-ink-500">{{ $branding->tagline() }}</span>
-                    </span>
                 </a>
                 <x-locale-switcher/>
             </div>

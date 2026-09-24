@@ -294,7 +294,7 @@ class AgentApiTest extends TestCase
             ->assertJsonStructure(['token']);
     }
 
-    public function test_email_password_reset_does_not_reveal_missing_accounts(): void
+    public function test_email_password_reset_rejects_missing_accounts_for_the_agent(): void
     {
         Mail::fake();
 
@@ -302,8 +302,8 @@ class AgentApiTest extends TestCase
             ->postJson('/api/agent/v1/customers/password/forgot', [
                 'email' => 'missing@hakeem.test',
             ])
-            ->assertOk()
-            ->assertJsonPath('channel', 'email');
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('identifier');
 
         Mail::assertNothingSent();
     }

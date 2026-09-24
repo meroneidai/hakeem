@@ -15,22 +15,31 @@
     $navSpecialties = $navSpecialties ?? collect();
     $support = app(\App\Support\SupportLinks::class);
     $branding = $branding ?? app(\App\Support\Branding::class);
+    $agentWeb = $branding->agentChatEnabled('web');
+    $agentMobile = $branding->agentChatEnabled('mobile');
+    $agentAny = $branding->agentChatAvailable();
 @endphp
 
 <x-layouts.base :seo="$seo" body-class="min-h-screen theme-v2" theme-color="#3B82F6">
     <div x-data @close-mega.window="$store.shell.mega = false" class="min-h-screen pb-24 lg:pb-0">
         <header class="relative sticky top-0 z-40 border-b border-ink-200/70 bg-white/85 backdrop-blur-md">
             <div class="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
-                <a href="{{ route('home') }}" class="flex shrink-0 items-center gap-2.5">
-                    @if (($branding ?? null)?->logoUrl())
-                        <img src="{{ $branding->logoUrl() }}" alt="{{ $branding->name() }}" class="size-10 rounded-2xl object-cover shadow-sm">
-                    @else
-                        <span class="grid size-10 place-items-center rounded-2xl bg-primary-700 text-xl font-bold text-white shadow-[0_4px_20px_rgba(15,42,95,0.08)]">ح</span>
+                <a href="{{ route('home') }}" class="flex min-w-0 shrink items-center gap-2.5">
+                    <img
+                        src="{{ $branding->logoUrl() }}"
+                        alt="{{ $branding->name() }}"
+                        @class([
+                            'shrink-0 object-contain',
+                            'h-9 w-auto max-w-[10rem] sm:h-10 sm:max-w-[12rem]' => ! $branding->usesCustomLogo(),
+                            'size-10 rounded-2xl object-cover shadow-sm' => $branding->usesCustomLogo(),
+                        ])
+                    >
+                    @if ($branding->usesCustomLogo())
+                        <span class="min-w-0">
+                            <span class="block truncate text-base font-bold text-ink-900">{{ $branding->name() }}</span>
+                            <span class="hidden truncate text-xs text-ink-500 sm:block">{{ $branding->tagline() }}</span>
+                        </span>
                     @endif
-                    <span class="hidden sm:block">
-                        <span class="block text-base font-bold text-ink-900">{{ $branding->name() }}</span>
-                        <span class="block text-xs text-ink-500">{{ $branding->tagline() }}</span>
-                    </span>
                 </a>
 
                 <nav class="hidden items-center gap-1 text-sm font-medium text-ink-600 lg:flex">
@@ -142,10 +151,13 @@
             <div class="absolute inset-0 bg-ink-900/40" @click="$store.shell.mobile = false"></div>
             <aside class="absolute inset-y-0 start-0 flex w-[min(22rem,92vw)] flex-col bg-white shadow-xl">
                 <div class="flex items-center justify-between border-b border-ink-100 px-5 py-4">
-                    <div>
-                        <p class="font-semibold text-ink-900">{{ __('discover.nav.menu') }}</p>
-                        <p class="text-xs text-ink-400">{{ __('common.app_tagline') }}</p>
-                    </div>
+                    <a href="{{ route('home') }}" class="flex min-w-0 items-center gap-2" @click="$store.shell.mobile = false">
+                        <img
+                            src="{{ $branding->logoUrl() }}"
+                            alt="{{ $branding->name() }}"
+                            class="h-8 w-auto max-w-[9.5rem] shrink-0 object-contain"
+                        >
+                    </a>
                     <button type="button" class="grid size-9 place-items-center rounded-full bg-ink-50" @click="$store.shell.mobile = false" aria-label="{{ __('discover.nav.close_menu') }}">
                         <x-icon name="x-mark" class="size-5"/>
                     </button>
@@ -250,13 +262,21 @@
             <x-aurora-blobs footer/>
             <div class="relative mx-auto grid max-w-6xl gap-8 px-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div>
-                    @if ($branding->logoUrl())
-                        <img src="{{ $branding->logoUrl() }}" alt="" class="mb-3 h-11 w-11 rounded-xl object-cover ring-2 ring-white/20">
+                    <img
+                        src="{{ $branding->footerLogoUrl() }}"
+                        alt="{{ $branding->name() }}"
+                        @class([
+                            'mb-3 object-contain',
+                            'h-12 w-auto max-w-[12rem]' => ! $branding->usesCustomFooterLogo(),
+                            'h-11 w-11 rounded-xl object-cover ring-2 ring-white/20' => $branding->usesCustomFooterLogo(),
+                        ])
+                    >
+                    @if ($branding->usesCustomFooterLogo())
+                        <p class="text-base font-semibold text-white">{{ $branding->name() }}</p>
+                        <p class="mt-2 text-xs text-primary-200">{{ $branding->tagline() }}</p>
                     @else
-                        <span class="mb-3 grid size-11 place-items-center rounded-xl bg-primary-500 text-lg font-bold text-white">ح</span>
+                        <p class="mt-1 text-xs text-primary-200">{{ $branding->tagline() }}</p>
                     @endif
-                    <p class="text-base font-semibold text-white">{{ $branding->name() }}</p>
-                    <p class="mt-2 text-xs text-primary-200">{{ $branding->tagline() }}</p>
                     <a href="{{ route('search') }}" class="mt-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-white ring-1 ring-white/20 hover:bg-white/20">
                         <x-icon name="search" class="size-3.5"/>
                         {{ __('common.search') }}
@@ -264,8 +284,18 @@
                     @if ($branding->social())
                         <div class="mt-4 flex flex-wrap gap-2">
                             @foreach ($branding->social() as $network => $url)
-                                <a href="{{ $url }}" class="text-xs font-medium text-primary-200 hover:text-white" rel="noopener noreferrer" target="_blank">{{ $network }}</a>
+                                <a href="{{ $url }}" class="text-xs font-medium text-primary-200 hover:text-white" rel="noopener noreferrer" target="_blank">{{ __('admin.branding.networks.'.$network) }}</a>
                             @endforeach
+                        </div>
+                    @endif
+                    @if ($branding->appIosUrl() || $branding->appAndroidUrl())
+                        <div class="mt-4 flex flex-wrap gap-2">
+                            @if ($branding->appIosUrl())
+                                <a href="{{ $branding->appIosUrl() }}" class="rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white ring-1 ring-white/20 hover:bg-white/20" target="_blank" rel="noopener">{{ __('discover.app.ios') }}</a>
+                            @endif
+                            @if ($branding->appAndroidUrl())
+                                <a href="{{ $branding->appAndroidUrl() }}" class="rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white ring-1 ring-white/20 hover:bg-white/20" target="_blank" rel="noopener">{{ __('discover.app.android') }}</a>
+                            @endif
                         </div>
                     @endif
                     <div class="mt-4 space-y-1 text-xs text-primary-100">
@@ -309,7 +339,9 @@
                     <a class="block text-primary-100 hover:text-white" href="{{ route('cancellation') }}">{{ __('pages.cancellation.heading') }}</a>
                     <a class="block text-primary-100 hover:text-white" href="{{ route('disclaimer') }}">{{ __('pages.disclaimer.heading') }}</a>
                     <a class="block text-primary-100 hover:text-white" href="{{ route('accessibility') }}">{{ __('pages.accessibility.heading') }}</a>
-                    <a class="block text-primary-100 hover:text-white" href="{{ route('admin.login') }}">{{ __('auth.admin_login') }}</a>
+                    @env('local')
+                        <a class="block text-primary-100 hover:text-white" href="{{ route('admin.login') }}">{{ __('auth.admin_login') }}</a>
+                    @endenv
                 </div>
             </div>
             <p class="relative mt-10 text-center text-xs text-primary-300">{{ $branding->name() }} — {{ now()->year }}</p>
@@ -317,29 +349,33 @@
 
         @include('partials.cookie-banner')
 
-        <div x-data="siteAgent(@js(route('agent.messages')), @js(csrf_token()), {
-                 empty: @js(__('agent.empty')),
-                 error: @js(__('agent.error')),
-             })"
-             @open-agent.window="openAgent()"
-             @close-agent.window="closeAgent()">
-            <button type="button"
-                    @click="toggle()"
-                    class="fixed bottom-5 end-5 z-40 hidden size-14 items-center justify-center rounded-full bg-teal-500 text-white shadow-[0_12px_40px_rgba(30,64,175,0.12)] ring-4 ring-teal-50 transition hover:bg-teal-600 lg:flex"
-                    :aria-label="open ? @js(__('agent.close')) : @js(__('agent.open'))">
-                <span x-show="!open"><x-icon name="sparkles" class="size-6"/></span>
-                <span x-cloak x-show="open"><x-icon name="x-mark" class="size-6"/></span>
-            </button>
-            <div x-cloak
-                 x-show="open"
-                 x-transition.opacity.duration.150ms
-                 class="app-sheet fixed inset-0 z-[70] flex h-[100dvh] max-h-[100dvh] flex-col overflow-hidden bg-white lg:inset-auto lg:bottom-24 lg:end-5 lg:h-[34rem] lg:max-h-[34rem] lg:w-[28rem] lg:rounded-3xl lg:border lg:border-ink-200 lg:shadow-xl"
-                 role="dialog"
-                 aria-modal="true"
-                 aria-label="{{ __('agent.title') }}">
-                @include('partials.agent-thread')
+        @if ($agentAny)
+            <div x-data="siteAgent(@js(route('agent.messages')), @js(csrf_token()), {
+                     empty: @js(__('agent.empty')),
+                     error: @js(__('agent.error')),
+                 })"
+                 @open-agent.window="openAgent()"
+                 @close-agent.window="closeAgent()">
+                @if ($agentWeb)
+                    <button type="button"
+                            @click="toggle()"
+                            class="fixed bottom-5 end-5 z-40 hidden size-14 items-center justify-center rounded-full bg-teal-500 text-white shadow-[0_12px_40px_rgba(30,64,175,0.12)] ring-4 ring-teal-50 transition hover:bg-teal-600 lg:flex"
+                            :aria-label="open ? @js(__('agent.close')) : @js(__('agent.open'))">
+                        <span x-show="!open"><x-icon name="sparkles" class="size-6"/></span>
+                        <span x-cloak x-show="open"><x-icon name="x-mark" class="size-6"/></span>
+                    </button>
+                @endif
+                <div x-cloak
+                     x-show="open"
+                     x-transition.opacity.duration.150ms
+                     class="app-sheet fixed inset-0 z-[70] flex h-[100dvh] max-h-[100dvh] flex-col overflow-hidden bg-white lg:inset-auto lg:bottom-24 lg:end-5 lg:h-[34rem] lg:max-h-[34rem] lg:w-[28rem] lg:rounded-3xl lg:border lg:border-ink-200 lg:shadow-xl"
+                     role="dialog"
+                     aria-modal="true"
+                     aria-label="{{ __('agent.title') }}">
+                    @include('partials.agent-thread')
+                </div>
             </div>
-        </div>
+        @endif
 
         <div x-cloak
              x-show="$store.labCart.toast"
@@ -348,7 +384,7 @@
         </div>
 
         <nav class="mobile-dock fixed inset-x-3 bottom-3 z-50 lg:hidden" aria-label="{{ __('discover.dock.label') }}">
-            <div class="flex items-end justify-between rounded-[1.75rem] border border-ink-200/80 bg-white/95 px-1.5 py-1.5 shadow-lg backdrop-blur-md">
+            <div class="flex {{ $agentMobile ? 'items-end justify-between' : 'items-center justify-around' }} rounded-[1.75rem] border border-ink-200/80 bg-white/95 px-1.5 py-1.5 shadow-lg backdrop-blur-md">
                 <a href="{{ route('home') }}" class="flex flex-1 flex-col items-center gap-0.5 rounded-2xl px-1 py-1.5 text-[10px] font-medium text-ink-600">
                     <x-icon name="home" class="size-5"/>
                     {{ __('discover.dock.home') }}
@@ -378,12 +414,21 @@
                         {{ __('discover.nav.doctors') }}
                     </a>
                 @endauth
-                <button type="button"
-                        @click="$dispatch('open-agent')"
-                        class="-mt-7 flex size-14 flex-col items-center justify-center rounded-full bg-teal-500 text-white shadow-[0_12px_40px_rgba(15,42,95,0.16)] ring-4 ring-white"
-                        aria-label="{{ __('discover.dock.agent') }}">
-                    <x-icon name="sparkles" class="size-6"/>
-                </button>
+                @if ($agentMobile)
+                    <button type="button"
+                            @click="$dispatch('open-agent')"
+                            class="-mt-7 flex size-14 flex-col items-center justify-center rounded-full bg-teal-500 text-white shadow-[0_12px_40px_rgba(15,42,95,0.16)] ring-4 ring-white"
+                            aria-label="{{ __('discover.dock.agent') }}">
+                        <x-icon name="sparkles" class="size-6"/>
+                    </button>
+                @else
+                    <a href="{{ route('offers.index') }}" class="flex flex-1 flex-col items-center gap-0.5 rounded-2xl px-1 py-1.5 text-[10px] font-medium text-accent-700">
+                        <span class="grid size-8 place-items-center rounded-full bg-accent-50 text-accent-700">
+                            <x-icon name="sparkles" class="size-4"/>
+                        </span>
+                        {{ __('discover.nav.offers') }}
+                    </a>
+                @endif
                 @auth
                     <a href="{{ route('account.edit') }}" class="flex flex-1 flex-col items-center gap-0.5 rounded-2xl px-1 py-1.5 text-[10px] font-medium text-primary-700">
                         <span class="grid size-8 place-items-center rounded-full bg-primary-50 text-primary-700">

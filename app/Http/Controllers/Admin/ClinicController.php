@@ -94,4 +94,14 @@ class ClinicController extends Controller implements HasMiddleware
 
         return back()->with('status', __('common.updated_successfully'));
     }
+
+    public function destroy(Clinic $clinic): RedirectResponse
+    {
+        Audit::deleted($clinic);
+        $clinic->doctors()->detach();
+        $clinic->delete();
+
+        return redirect()->route('admin.clinics.index')
+            ->with('status', __('common.deleted_successfully'));
+    }
 }

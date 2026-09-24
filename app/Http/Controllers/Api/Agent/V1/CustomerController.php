@@ -83,6 +83,14 @@ class CustomerController extends Controller
             $request->input('email'),
         );
 
+        $user = $identifier->findUser();
+
+        if (! $user || ! $user->is_active) {
+            throw ValidationException::withMessages([
+                'identifier' => __('auth.identifier_not_found'),
+            ]);
+        }
+
         $throttleKey = $identifier->throttleKey('agent-password-forgot', $request->ip());
 
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
