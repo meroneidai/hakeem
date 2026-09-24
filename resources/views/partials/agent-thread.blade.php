@@ -1,4 +1,4 @@
-<div class="bg-primary-700 px-4 py-3 text-white">
+<div class="app-sheet-header shrink-0 bg-primary-700 px-4 py-3 text-white">
     <div class="flex items-start justify-between gap-3">
         <div>
             <p class="text-sm font-semibold">{{ __('agent.title') }}</p>
@@ -10,12 +10,15 @@
                 </span>
             @endif
         </div>
-        <button type="button" class="rounded-full p-1 text-primary-100 hover:bg-primary-600 lg:hidden" @click="open = false" aria-label="{{ __('agent.close') }}">
+        <button type="button"
+                class="rounded-full p-1.5 text-primary-100 hover:bg-primary-600"
+                @click="closeAgent()"
+                aria-label="{{ __('agent.close') }}">
             <x-icon name="x-mark" class="size-4"/>
         </button>
     </div>
 </div>
-<div class="flex-1 space-y-3 overflow-y-auto bg-ink-50 p-3 text-sm" x-ref="thread">
+<div class="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain bg-ink-50 p-3 text-sm" x-ref="thread">
     <template x-for="(item, index) in messages" :key="index">
         <div :class="item.role === 'user' ? 'ms-8 rounded-2xl bg-primary-600 px-3 py-2 text-white' : 'me-4 rounded-2xl bg-white px-3 py-2 text-ink-800 shadow-sm'">
             <p class="whitespace-pre-line" x-text="item.text"></p>
@@ -42,12 +45,22 @@
         {{ __('agent.thinking') }}
     </div>
 </div>
-<form class="flex gap-2 border-t border-ink-200 p-3" @submit.prevent="send()">
+<form class="flex shrink-0 gap-2 border-t border-ink-200 bg-white p-3" @submit.prevent="send()">
     <input x-model="message"
-           class="field-input flex-1 rounded-full text-sm"
+           x-ref="composer"
+           type="text"
+           inputmode="text"
+           enterkeyhint="send"
+           class="field-input min-h-11 flex-1 rounded-full text-base leading-normal"
            placeholder="{{ __('agent.placeholder') }}"
-           autocomplete="off">
-    <button type="submit" class="grid size-10 place-items-center rounded-full bg-accent-500 text-white hover:bg-accent-600" :disabled="sending">
+           autocomplete="off"
+           autocorrect="off"
+           autocapitalize="sentences"
+           spellcheck="true">
+    <button type="submit"
+            class="grid size-11 shrink-0 place-items-center rounded-full bg-accent-500 text-white hover:bg-accent-600 disabled:opacity-60"
+            :disabled="sending"
+            aria-label="{{ __('agent.send') }}">
         <x-icon name="paper-airplane" class="size-4"/>
     </button>
 </form>

@@ -13,67 +13,78 @@
         @endif
     @endguest
 
-    <section class="hero-stage px-4 pb-16 pt-10 sm:pb-20 sm:pt-14">
+    <section class="hero-stage px-4 pb-10 pt-8 sm:pb-20 sm:pt-14">
         <x-aurora-blobs/>
-        <div class="relative mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
+        <div class="relative mx-auto grid max-w-6xl items-center gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-10">
             <div class="text-center lg:text-start">
                 <p class="mb-3 inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-xs font-medium text-primary-800 shadow-sm ring-1 ring-primary-200/80 backdrop-blur">
                     <x-icon name="sparkles" class="size-3.5"/>
                     {{ __('common.app_tagline') }}
                 </p>
-                <h1 class="text-3xl font-bold tracking-tight text-ink-900 sm:text-5xl">{{ $heroTitle }}</h1>
-                <p class="mx-auto mt-4 max-w-2xl text-base text-ink-600 lg:mx-0">{{ $heroSubtitle }}</p>
+                <h1 class="text-[1.65rem] font-bold leading-snug tracking-tight text-ink-900 sm:text-5xl sm:leading-tight">{{ $heroTitle }}</h1>
+                <p class="mx-auto mt-3 max-w-2xl text-sm leading-6 text-ink-600 sm:mt-4 sm:text-base lg:mx-0">{{ $heroSubtitle }}</p>
 
-                <form method="GET" action="{{ route('search') }}" class="home-panel-float mx-auto mt-8 p-2 sm:p-3 lg:mx-0"
-                      x-data="headerSearch(@js(url('/api/v1/search')))">
+                <form method="GET"
+                      action="{{ route('search') }}"
+                      class="hero-search home-panel-float mx-auto mt-6 w-full max-w-xl p-2 sm:mt-8 sm:p-3 lg:mx-0 lg:max-w-none"
+                      x-data="headerSearch(@js(url('/api/v1/search')))"
+                      @click.outside="open = false"
+                      @keydown.escape.window="open = false">
                     <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
                         <div class="relative min-w-0 flex-1">
-                            <span class="pointer-events-none absolute inset-y-0 start-4 flex items-center text-primary-600">
+                            <span class="pointer-events-none absolute inset-y-0 start-3.5 flex items-center text-primary-600 sm:start-4">
                                 <x-icon name="search" class="size-5"/>
                             </span>
                             <input name="q"
                                    type="search"
                                    enterkeyhint="search"
+                                   inputmode="search"
                                    x-model="q"
                                    @input="onInput()"
-                                   @focus="open = true"
+                                   @focus="open = q.trim().length >= 2"
                                    value="{{ $search['q'] ?? '' }}"
                                    placeholder="{{ __('discover.search_placeholder') }}"
-                                   class="field-input min-h-12 rounded-2xl border-0 bg-ink-50 py-3.5 ps-12 text-base focus:bg-white focus:ring-0"
-                                   autocomplete="off">
+                                   class="field-input min-h-12 w-full rounded-2xl border-0 bg-ink-50 py-3.5 ps-11 text-base leading-normal focus:bg-white focus:ring-0 sm:ps-12"
+                                   autocomplete="off"
+                                   autocorrect="off"
+                                   autocapitalize="off"
+                                   spellcheck="false">
                         </div>
-                        <x-button variant="accent" size="lg" class="min-h-12 shrink-0 rounded-2xl px-8">
+                        <x-button variant="accent" size="lg" class="min-h-12 w-full shrink-0 rounded-2xl px-6 sm:w-auto sm:px-8">
                             <x-icon name="search" class="size-4"/>
                             {{ __('discover.search_doctors') }}
                         </x-button>
                     </div>
-                    <div x-cloak x-show="open && (loading || results)" class="mt-3 border-t border-ink-100 pt-3 text-start text-sm">
+                    <div x-cloak
+                         x-show="open && (loading || results)"
+                         x-transition
+                         class="hero-search-results rounded-2xl border border-ink-100 bg-white p-2 text-start text-sm shadow-[0_12px_40px_rgba(15,42,95,0.12)]">
                         <p x-show="loading" class="px-2 py-2 text-ink-500">{{ __('discover.search.live') }}…</p>
                         <template x-if="results && !hasHits && !loading">
                             <p class="px-2 py-2 text-ink-500">{{ __('discover.search.empty') }}</p>
                         </template>
-                        <div class="grid gap-2 sm:grid-cols-2">
+                        <div class="grid gap-1.5">
                             <template x-for="item in (results?.doctors || [])" :key="'d'+item.slug">
-                                <a :href="item.url" class="flex items-center justify-between rounded-xl bg-primary-50 px-3 py-2 hover:bg-primary-100">
-                                    <span>
-                                        <span class="block font-medium text-ink-900" x-text="item.name"></span>
-                                        <span class="block text-xs text-ink-500" x-text="item.specialty"></span>
+                                <a :href="item.url" class="flex items-center justify-between rounded-xl bg-primary-50 px-3 py-2.5 hover:bg-primary-100">
+                                    <span class="min-w-0">
+                                        <span class="block truncate font-medium text-ink-900" x-text="item.name"></span>
+                                        <span class="block truncate text-xs text-ink-500" x-text="item.specialty"></span>
                                     </span>
-                                    <span class="text-xs font-semibold text-accent-600">{{ __('discover.nav.doctors') }}</span>
+                                    <span class="ms-2 shrink-0 text-xs font-semibold text-accent-600">{{ __('discover.nav.doctors') }}</span>
                                 </a>
                             </template>
                             <template x-for="item in (results?.clinics || [])" :key="'c'+item.slug">
-                                <a :href="item.url" class="flex items-center justify-between rounded-xl bg-success-50 px-3 py-2 hover:bg-success-50/80">
-                                    <span>
-                                        <span class="block font-medium text-ink-900" x-text="item.name"></span>
-                                        <span class="block text-xs text-ink-500" x-text="item.city"></span>
+                                <a :href="item.url" class="flex items-center justify-between rounded-xl bg-success-50 px-3 py-2.5 hover:bg-success-50/80">
+                                    <span class="min-w-0">
+                                        <span class="block truncate font-medium text-ink-900" x-text="item.name"></span>
+                                        <span class="block truncate text-xs text-ink-500" x-text="item.city"></span>
                                     </span>
-                                    <span class="text-xs font-semibold text-success-700">{{ __('discover.nav.clinics') }}</span>
+                                    <span class="ms-2 shrink-0 text-xs font-semibold text-success-700">{{ __('discover.nav.clinics') }}</span>
                                 </a>
                             </template>
                             <template x-for="item in (results?.services || [])" :key="'s'+item.slug">
-                                <a :href="item.url" class="rounded-xl bg-accent-50 px-3 py-2 font-medium text-ink-900 hover:bg-accent-100">
-                                    <span x-text="item.name"></span>
+                                <a :href="item.url" class="rounded-xl bg-accent-50 px-3 py-2.5 font-medium text-ink-900 hover:bg-accent-100">
+                                    <span class="block truncate" x-text="item.name"></span>
                                 </a>
                             </template>
                         </div>
@@ -81,7 +92,7 @@
                 </form>
 
                 @if ($specialties->isNotEmpty())
-                    <div class="mt-6 flex gap-2 overflow-x-auto pb-1 text-sm [-ms-overflow-style:none] [scrollbar-width:none] lg:flex-wrap lg:overflow-visible [&::-webkit-scrollbar]:hidden">
+                    <div class="mt-5 flex gap-2 overflow-x-auto pb-1 text-sm [-ms-overflow-style:none] [scrollbar-width:none] lg:mt-6 lg:flex-wrap lg:overflow-visible [&::-webkit-scrollbar]:hidden">
                         <span class="shrink-0 self-center text-xs font-medium text-ink-500">{{ __('discover.popular') }}</span>
                         @foreach ($specialties->take(6) as $specialty)
                             <a href="{{ route('search', ['q' => $specialty->name, 'specialty' => $specialty->slug]) }}"
@@ -93,7 +104,7 @@
                 @endif
             </div>
 
-            <div class="relative mx-auto w-full max-w-[16rem] sm:max-w-xs lg:max-w-md">
+            <div class="hero-search-scene relative mx-auto w-full max-w-[16rem] sm:max-w-xs lg:max-w-md">
                 <div class="absolute -inset-6 rounded-[2.5rem] bg-white/30 blur-2xl"></div>
                 <div class="relative overflow-hidden rounded-[1.75rem] bg-white/70 p-4 shadow-[0_12px_40px_rgba(30,64,175,0.10)] ring-1 ring-white/80 backdrop-blur-sm sm:p-6">
                     <x-care-scene class="h-auto w-full"/>

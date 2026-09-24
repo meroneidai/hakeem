@@ -192,10 +192,41 @@
             sending: false,
             message: '',
             conversationId: null,
+            scrollY: 0,
             labels,
             messages: [{ role: 'assistant', text: labels.empty, actions: [], cards: [] }],
+            init() {
+                this.$watch('open', (value) => this.lockPage(value));
+            },
             toggle() {
-                this.open = ! this.open;
+                this.open ? this.closeAgent() : this.openAgent();
+            },
+            openAgent() {
+                this.open = true;
+                this.$nextTick(() => this.$refs.composer?.focus({ preventScroll: true }));
+            },
+            closeAgent() {
+                this.open = false;
+            },
+            lockPage(locked) {
+                const body = document.body;
+
+                if (locked) {
+                    this.scrollY = window.scrollY || window.pageYOffset || 0;
+                    body.classList.add('app-sheet-open');
+                    body.style.position = 'fixed';
+                    body.style.top = `-${this.scrollY}px`;
+                    body.style.insetInline = '0';
+                    body.style.width = '100%';
+                    return;
+                }
+
+                body.classList.remove('app-sheet-open');
+                body.style.position = '';
+                body.style.top = '';
+                body.style.insetInline = '';
+                body.style.width = '';
+                window.scrollTo(0, this.scrollY);
             },
             async send() {
                 const text = this.message.trim();
@@ -241,6 +272,7 @@
                         if (pane) {
                             pane.scrollTop = pane.scrollHeight;
                         }
+                        this.$refs.composer?.focus({ preventScroll: true });
                     });
                 }
             },

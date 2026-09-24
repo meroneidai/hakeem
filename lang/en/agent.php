@@ -1,14 +1,14 @@
 <?php
 
 return [
-    'title' => 'Hermes',
+    'title' => 'Hakeem',
     'subtitle' => 'Your booking assistant',
     'placeholder' => 'Try: pediatrician in New Cairo…',
     'send' => 'Send',
     'open' => 'Hakeem assistant',
     'close' => 'Close assistant',
     'connected' => 'Connected to the agent',
-    'thinking' => 'Hermes is working…',
+    'thinking' => 'Hakeem is working…',
     'unavailable' => 'The agent is unavailable right now. Please try again in a moment.',
     'error' => 'The message could not be sent. Please try again.',
     'empty' => 'Tell me what you need: a doctor, clinic, lab test, or your appointments.',
@@ -27,7 +27,7 @@ return [
     'cannot_cancel' => 'That booking cannot be cancelled from its current status.',
     'cancelled' => 'Booking #:id was cancelled.',
     'api' => [
-        'unauthorized' => 'Hermes agent authentication failed.',
+        'unauthorized' => 'Hakeem agent authentication failed.',
         'credentials_required' => 'Ask the visitor for their phone or email and password before reading or updating a profile.',
         'suggest_doctors' => 'Search for doctors',
         'suggest_clinics' => 'Search for clinics',

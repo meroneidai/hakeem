@@ -135,7 +135,7 @@ return [
         'label' => 'Mobile bar',
         'home' => 'Home',
         'whatsapp' => 'WhatsApp',
-        'agent' => 'Assistant',
+        'agent' => 'Hakeem',
         'call' => 'Call',
         'more' => 'More',
         'account' => 'Account',

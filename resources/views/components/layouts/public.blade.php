@@ -321,8 +321,8 @@
                  empty: @js(__('agent.empty')),
                  error: @js(__('agent.error')),
              })"
-             @open-agent.window="open = true"
-             @close-agent.window="open = false">
+             @open-agent.window="openAgent()"
+             @close-agent.window="closeAgent()">
             <button type="button"
                     @click="toggle()"
                     class="fixed bottom-5 end-5 z-40 hidden size-14 items-center justify-center rounded-full bg-teal-500 text-white shadow-[0_12px_40px_rgba(30,64,175,0.12)] ring-4 ring-teal-50 transition hover:bg-teal-600 lg:flex"
@@ -330,8 +330,13 @@
                 <span x-show="!open"><x-icon name="sparkles" class="size-6"/></span>
                 <span x-cloak x-show="open"><x-icon name="x-mark" class="size-6"/></span>
             </button>
-            <div x-cloak x-show="open" x-transition
-                 class="fixed inset-x-3 bottom-24 z-50 flex h-[min(34rem,78vh)] flex-col overflow-hidden rounded-3xl border border-ink-200 bg-white shadow-xl lg:inset-auto lg:bottom-24 lg:end-5 lg:h-[34rem] lg:w-[28rem]">
+            <div x-cloak
+                 x-show="open"
+                 x-transition.opacity.duration.150ms
+                 class="app-sheet fixed inset-0 z-[70] flex h-[100dvh] max-h-[100dvh] flex-col overflow-hidden bg-white lg:inset-auto lg:bottom-24 lg:end-5 lg:h-[34rem] lg:max-h-[34rem] lg:w-[28rem] lg:rounded-3xl lg:border lg:border-ink-200 lg:shadow-xl"
+                 role="dialog"
+                 aria-modal="true"
+                 aria-label="{{ __('agent.title') }}">
                 @include('partials.agent-thread')
             </div>
         </div>
@@ -342,7 +347,7 @@
              class="pointer-events-none fixed bottom-28 left-1/2 z-[60] -translate-x-1/2 rounded-full bg-ink-900 px-4 py-2 text-sm font-medium text-white shadow-lg">
         </div>
 
-        <nav class="fixed inset-x-3 bottom-3 z-50 lg:hidden" aria-label="{{ __('discover.dock.label') }}">
+        <nav class="mobile-dock fixed inset-x-3 bottom-3 z-50 lg:hidden" aria-label="{{ __('discover.dock.label') }}">
             <div class="flex items-end justify-between rounded-[1.75rem] border border-ink-200/80 bg-white/95 px-1.5 py-1.5 shadow-lg backdrop-blur-md">
                 <a href="{{ route('home') }}" class="flex flex-1 flex-col items-center gap-0.5 rounded-2xl px-1 py-1.5 text-[10px] font-medium text-ink-600">
                     <x-icon name="home" class="size-5"/>

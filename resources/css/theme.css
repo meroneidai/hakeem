@@ -71,6 +71,7 @@
 @layer base {
     html {
         -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
     }
 
     body {
@@ -174,13 +175,78 @@
     body.theme-v2 :where(a, button).rounded-lg {
         border-radius: 12px;
     }
+
+    /*
+     * Phone shell: keep the public site stable like a mini-SPA / webview
+     * (no rubber-band jump, no focus zoom cascade, safe-area for the dock).
+     */
+    body.theme-v2 {
+        overscroll-behavior-y: none;
+        touch-action: manipulation;
+    }
+
+    body.app-sheet-open {
+        overflow: hidden;
+        overscroll-behavior: none;
+    }
+
+    body.app-sheet-open .mobile-dock {
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    .app-sheet {
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        touch-action: pan-y;
+    }
+
+    .app-sheet-header {
+        padding-top: max(0.75rem, env(safe-area-inset-top, 0px));
+    }
+
+    @media (min-width: 1024px) {
+        .app-sheet-header {
+            padding-top: 0.75rem;
+        }
+    }
+
+    .mobile-dock {
+        padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+    }
+
+    .hero-search {
+        position: relative;
+        z-index: 20;
+        isolation: isolate;
+    }
+
+    .hero-search-results {
+        position: absolute;
+        inset-inline: 0;
+        top: calc(100% + 0.5rem);
+        z-index: 30;
+        max-height: min(18rem, 45dvh);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    @media (max-width: 639px) {
+        .hero-stage {
+            padding-block: 1.75rem 2.5rem;
+        }
+
+        .hero-search-scene {
+            display: none;
+        }
+    }
 }
 
 @layer components {
     .hero-stage {
         position: relative;
         isolation: isolate;
-        overflow: hidden;
+        overflow: visible;
         background: linear-gradient(165deg, #e8f1f8 0%, #f3f7fb 32%, #eef4f9 62%, #f7fafc 100%);
     }
 
@@ -456,8 +522,10 @@
     border: 1px solid var(--color-ink-300);
     background-color: white;
     padding: 0.5rem 0.75rem;
-    font-size: 0.9375rem;
+    /* 16px minimum — iOS Safari zooms the page when focused inputs are smaller. */
+    font-size: 1rem;
     color: var(--color-ink-900);
+    touch-action: manipulation;
 }
 
 @utility field-input-focus {
