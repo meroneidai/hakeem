@@ -50,6 +50,8 @@ class AgentConversationController extends Controller implements HasMiddleware
             'messages' => fn ($query) => $query->orderBy('id'),
         ]);
 
+        $agentConversation->markSeenByAdmin();
+
         return view('admin.agent-conversations.show', [
             'conversation' => $agentConversation,
         ]);

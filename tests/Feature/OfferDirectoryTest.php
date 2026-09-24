@@ -81,6 +81,8 @@ class OfferDirectoryTest extends TestCase
         $this->assertDatabaseHas('promotions', [
             'title_en' => 'Dental cleaning',
             'offer_price' => 400,
+            'approval_status' => 'pending',
+            'is_active' => 0,
         ]);
     }
 }

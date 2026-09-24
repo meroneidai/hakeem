@@ -89,6 +89,7 @@ class AdminPagesRenderTest extends TestCase
             '/admin/system',
             '/admin/loyalty',
             '/admin/bookings',
+            '/admin/bookings/create',
             '/admin/lab-orders',
         ];
 

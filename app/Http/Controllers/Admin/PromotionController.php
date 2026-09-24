@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\OfferApprovalStatus;
 use App\Enums\OfferCategory;
 use App\Enums\Permission;
 use App\Http\Controllers\Controller;
@@ -27,13 +28,20 @@ class PromotionController extends Controller implements HasMiddleware
 
     public function index(Request $request): View
     {
+        $state = $request->string('state')->value();
+
         $promotions = Promotion::with(['specialty', 'serviceType', 'clinic'])
-            ->when($request->string('state')->value() === 'running', fn ($query) => $query->running())
+            ->when($state === 'running', fn ($query) => $query->running())
+            ->when($state === 'pending', fn ($query) => $query->pendingApproval())
             ->latest('starts_at')
             ->paginate(20)
             ->withQueryString();
 
-        return view('admin.promotions.index', compact('promotions'));
+        return view('admin.promotions.index', [
+            'promotions' => $promotions,
+            'pendingCount' => Promotion::query()->pendingApproval()->count(),
+            'state' => $state,
+        ]);
     }
 
     public function create(): View
@@ -41,6 +49,7 @@ class PromotionController extends Controller implements HasMiddleware
         return view('admin.promotions.create', [
             'promotion' => new Promotion([
                 'is_active' => true,
+                'approval_status' => OfferApprovalStatus::Approved,
                 'discount_type' => 'percentage',
                 'category' => OfferCategory::Lab,
                 'starts_at' => now(),
@@ -55,6 +64,10 @@ class PromotionController extends Controller implements HasMiddleware
         $promotion = Promotion::create([
             ...$this->validated($request),
             'created_by_user_id' => $request->user()->id,
+            'approval_status' => OfferApprovalStatus::Approved,
+            'reviewed_by_user_id' => $request->user()->id,
+            'reviewed_at' => now(),
+            'rejection_reason' => null,
         ]);
 
         Audit::created($promotion);
@@ -74,12 +87,56 @@ class PromotionController extends Controller implements HasMiddleware
     public function update(Request $request, Promotion $promotion): RedirectResponse
     {
         $before = $promotion->getOriginal();
-        $promotion->update($this->validated($request, $promotion));
+        $promotion->update([
+            ...$this->validated($request, $promotion),
+            'approval_status' => OfferApprovalStatus::Approved,
+            'reviewed_by_user_id' => $request->user()->id,
+            'reviewed_at' => now(),
+            'rejection_reason' => null,
+        ]);
 
         Audit::updated($promotion, $before);
 
         return redirect()->route('admin.promotions.index')
             ->with('status', __('common.updated_successfully'));
+    }
+
+    public function approve(Request $request, Promotion $promotion): RedirectResponse
+    {
+        $before = $promotion->getOriginal();
+
+        $promotion->update([
+            'approval_status' => OfferApprovalStatus::Approved,
+            'is_active' => true,
+            'reviewed_by_user_id' => $request->user()->id,
+            'reviewed_at' => now(),
+            'rejection_reason' => null,
+        ]);
+
+        Audit::updated($promotion, $before);
+
+        return back()->with('status', __('admin.promotions.approved'));
+    }
+
+    public function reject(Request $request, Promotion $promotion): RedirectResponse
+    {
+        $validated = $request->validate([
+            'rejection_reason' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $before = $promotion->getOriginal();
+
+        $promotion->update([
+            'approval_status' => OfferApprovalStatus::Rejected,
+            'is_active' => false,
+            'reviewed_by_user_id' => $request->user()->id,
+            'reviewed_at' => now(),
+            'rejection_reason' => $validated['rejection_reason'] ?? null,
+        ]);
+
+        Audit::updated($promotion, $before);
+
+        return back()->with('status', __('admin.promotions.rejected'));
     }
 
     public function destroy(Promotion $promotion): RedirectResponse
@@ -101,6 +158,9 @@ class PromotionController extends Controller implements HasMiddleware
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function validated(Request $request, ?Promotion $promotion = null): array
     {
         $data = $request->validate([

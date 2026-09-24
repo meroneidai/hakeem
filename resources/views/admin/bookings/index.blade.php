@@ -2,6 +2,10 @@
     <x-page-header :title="__('admin.bookings.heading')" :subtitle="__('admin.bookings.subheading')">
         <x-slot:actions>
             <x-button :href="route('admin.lab-orders.index')" variant="secondary">{{ __('admin.nav.lab_orders') }}</x-button>
+            <x-button :href="route('admin.bookings.create')" variant="accent">
+                <x-icon name="plus" class="size-4"/>
+                {{ __('admin.bookings.create') }}
+            </x-button>
         </x-slot:actions>
     </x-page-header>
 

@@ -2,14 +2,6 @@
     <x-page-header :title="__('admin.bookings.detail')" :subtitle="$booking->clinic?->name">
         <x-slot:actions>
             <x-button :href="route('admin.bookings.index')" variant="secondary">{{ __('common.back') }}</x-button>
-            @if ($booking->status->canTransitionTo(\App\Enums\BookingStatus::Cancelled))
-                <form method="POST" action="{{ route('admin.bookings.update', $booking) }}" onsubmit="return confirm(@js(__('admin.bookings.confirm_cancel')))">
-                    @csrf
-                    @method('PUT')
-                    <input type="hidden" name="action" value="cancel">
-                    <x-button variant="danger">{{ __('clinic.queue.cancel') }}</x-button>
-                </form>
-            @endif
         </x-slot:actions>
     </x-page-header>
 
@@ -41,6 +33,13 @@
             </dl>
         </x-card>
     </div>
+
+    <x-card class="mt-5" :title="__('common.actions')">
+        @include('clinic.queue.actions', [
+            'booking' => $booking,
+            'updateUrl' => route('admin.bookings.update', $booking),
+        ])
+    </x-card>
 
     <x-card class="mt-5" :title="__('admin.bookings.history')">
         <ul class="space-y-2 text-sm">

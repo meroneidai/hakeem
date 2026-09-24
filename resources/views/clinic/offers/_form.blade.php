@@ -63,6 +63,14 @@
 </div>
 
 <div class="mt-4 space-y-2.5">
-    <x-checkbox name="is_active" :label="__('common.is_active')" :checked="$offer->is_active ?? true"/>
+    <x-alert tone="info">{{ __('clinic.offers.approval_hint') }}</x-alert>
+    @if ($offer->exists)
+        <x-badge :tone="$offer->approval_status?->tone() ?? 'warning'">
+            {{ $offer->approval_status?->label() ?? __('admin.promotions.approval.pending') }}
+        </x-badge>
+        @if ($offer->rejection_reason)
+            <p class="text-sm text-danger-600">{{ $offer->rejection_reason }}</p>
+        @endif
+    @endif
     <x-checkbox name="is_featured" :label="__('admin.promotions.is_featured')" :checked="$offer->is_featured ?? false"/>
 </div>

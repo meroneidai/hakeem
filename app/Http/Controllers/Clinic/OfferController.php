@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Clinic;
 
+use App\Enums\OfferApprovalStatus;
 use App\Enums\OfferCategory;
 use App\Http\Controllers\Controller;
 use App\Models\Promotion;
@@ -34,7 +35,8 @@ class OfferController extends Controller
         return view('clinic.offers.create', [
             'clinic' => $this->clinic($request),
             'offer' => new Promotion([
-                'is_active' => true,
+                'is_active' => false,
+                'approval_status' => OfferApprovalStatus::Pending,
                 'category' => OfferCategory::Lab,
                 'discount_type' => 'percentage',
                 'starts_at' => now(),
@@ -49,7 +51,7 @@ class OfferController extends Controller
 
         $this->clinic($request)->promotions()->create($this->validated($request));
 
-        return redirect()->route('clinic.offers.index')->with('status', __('common.created_successfully'));
+        return redirect()->route('clinic.offers.index')->with('status', __('clinic.offers.submitted'));
     }
 
     public function edit(Request $request, Promotion $offer): View
@@ -70,7 +72,7 @@ class OfferController extends Controller
 
         $offer->update($this->validated($request, $offer));
 
-        return redirect()->route('clinic.offers.index')->with('status', __('common.updated_successfully'));
+        return redirect()->route('clinic.offers.index')->with('status', __('clinic.offers.resubmitted'));
     }
 
     public function destroy(Request $request, Promotion $offer): RedirectResponse
@@ -106,13 +108,16 @@ class OfferController extends Controller
             'starts_at' => ['required', 'date'],
             'ends_at' => ['required', 'date', 'after:starts_at'],
             'is_featured' => ['boolean'],
-            'is_active' => ['boolean'],
             'banner' => PublicImage::rules(),
         ]);
 
         $data['slug'] = UniqueSlug::for($data['title_en'], 'promotions', 'slug', $offer?->id);
         $data['is_featured'] = $request->boolean('is_featured');
-        $data['is_active'] = $request->boolean('is_active');
+        $data['is_active'] = false;
+        $data['approval_status'] = OfferApprovalStatus::Pending;
+        $data['reviewed_by_user_id'] = null;
+        $data['reviewed_at'] = null;
+        $data['rejection_reason'] = null;
         $data['created_by_user_id'] = $request->user()->id;
         unset($data['banner']);
         $data['banner_image_path'] = PublicImage::store($request, 'banner', 'offers', $offer?->banner_image_path);

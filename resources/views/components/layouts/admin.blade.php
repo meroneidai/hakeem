@@ -2,9 +2,10 @@
 
 @php
     use App\Enums\Permission;
+    use App\Support\AdminNavBadges;
 
     $user = auth()->user();
-    $openTickets = \App\Models\SupportTicket::unresolved()->count();
+    $badges = app(AdminNavBadges::class)->all();
 @endphp
 
 <x-layouts.base :title="$title ? $title.' — '.__('admin.title') : __('admin.title')" body-class="min-h-screen theme-v2" theme-color="#3B82F6">
@@ -82,10 +83,11 @@
 
                 @can(Permission::ManagePromotions->value)
                     <x-admin.nav-group :label="__('admin.nav.growth')">
-                        <x-admin.nav-item :href="route('admin.promotions.index')" icon="megaphone" pattern="admin.promotions.*">
+                        <x-admin.nav-item :href="route('admin.promotions.index')" icon="megaphone" pattern="admin.promotions.*"
+                                          :badge="$badges['promotions'] ?: null">
                             {{ __('admin.nav.promotions') }}
                         </x-admin.nav-item>
-                        <x-admin.nav-item :href="route('admin.seo-pages.index')" icon="search" pattern="admin.seo*">
+                        <x-admin.nav-item :href="route('admin.seo-pages.index')" icon="search" pattern="admin.seo-pages.*">
                             {{ __('admin.nav.seo') }}
                         </x-admin.nav-item>
                         <x-admin.nav-item :href="route('admin.articles.index')" icon="layers" pattern="admin.articles.*">
@@ -104,7 +106,8 @@
                         </x-admin.nav-item>
                     @endcan
                     @can(Permission::ModerateClinics->value)
-                        <x-admin.nav-item :href="route('admin.clinics.index')" icon="building" pattern="admin.clinics.*">
+                        <x-admin.nav-item :href="route('admin.clinics.index')" icon="building" pattern="admin.clinics.*"
+                                          :badge="$badges['clinics'] ?: null">
                             {{ __('admin.nav.clinics') }}
                         </x-admin.nav-item>
                         <x-admin.nav-item :href="route('admin.doctors.index')" icon="stethoscope" pattern="admin.doctors.*">
@@ -126,7 +129,8 @@
 
                 <x-admin.nav-group :label="__('admin.nav.operations')">
                     @can(Permission::OverseeBookings->value)
-                        <x-admin.nav-item :href="route('admin.bookings.index')" icon="calendar" pattern="admin.bookings.*">
+                        <x-admin.nav-item :href="route('admin.bookings.index')" icon="calendar" pattern="admin.bookings.*"
+                                          :badge="$badges['bookings'] ?: null">
                             {{ __('admin.nav.bookings') }}
                         </x-admin.nav-item>
                         <x-admin.nav-item :href="route('admin.lab-orders.index')" icon="beaker" pattern="admin.lab-orders.*">
@@ -135,11 +139,12 @@
                     @endcan
 
                     <x-admin.nav-item :href="route('admin.support.index')" icon="ticket" pattern="admin.support.*"
-                                      :badge="$openTickets ?: null">
+                                      :badge="$badges['support'] ?: null">
                         {{ __('admin.nav.support') }}
                     </x-admin.nav-item>
                     @can(Permission::ManageSupportTickets->value)
-                        <x-admin.nav-item :href="route('admin.agent-conversations.index')" icon="chat" pattern="admin.agent-conversations.*">
+                        <x-admin.nav-item :href="route('admin.agent-conversations.index')" icon="chat" pattern="admin.agent-conversations.*"
+                                          :badge="$badges['agent'] ?: null">
                             {{ __('admin.nav.agent_conversations') }}
                         </x-admin.nav-item>
                     @endcan
@@ -147,6 +152,12 @@
                     @can(Permission::ManageStaff->value)
                         <x-admin.nav-item :href="route('admin.staff.index')" icon="users" pattern="admin.staff.*">
                             {{ __('admin.nav.staff') }}
+                        </x-admin.nav-item>
+                    @endcan
+
+                    @can(Permission::ManageSeoPages->value)
+                        <x-admin.nav-item :href="route('admin.seo.site.edit')" icon="globe" pattern="admin.seo.site.*">
+                            {{ __('admin.nav.site_settings') }}
                         </x-admin.nav-item>
                     @endcan
 

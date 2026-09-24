@@ -45,7 +45,7 @@
                     @endif
                 </x-td>
                 <x-td>
-                    <x-badge :tone="['running' => 'success', 'scheduled' => 'primary', 'expired' => 'neutral', 'inactive' => 'warning'][$offer->status()]">
+                    <x-badge :tone="['running' => 'success', 'scheduled' => 'primary', 'expired' => 'neutral', 'inactive' => 'warning', 'pending_approval' => 'warning', 'rejected' => 'danger'][$offer->status()] ?? 'neutral'">
                         {{ __('admin.promotions.statuses.'.$offer->status()) }}
                     </x-badge>
                 </x-td>

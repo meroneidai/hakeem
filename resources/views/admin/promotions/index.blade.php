@@ -1,10 +1,22 @@
 @php
-    $tones = ['running' => 'success', 'scheduled' => 'primary', 'expired' => 'neutral', 'inactive' => 'warning'];
+    $tones = [
+        'running' => 'success',
+        'scheduled' => 'primary',
+        'expired' => 'neutral',
+        'inactive' => 'warning',
+        'pending_approval' => 'warning',
+        'rejected' => 'danger',
+    ];
 @endphp
 
 <x-layouts.admin :title="__('admin.promotions.heading')">
     <x-page-header :title="__('admin.promotions.heading')" :subtitle="__('admin.promotions.subheading')">
         <x-slot:actions>
+            @if ($pendingCount)
+                <x-button :href="route('admin.promotions.index', ['state' => 'pending'])" variant="secondary" size="sm">
+                    {{ __('admin.promotions.pending_count', ['count' => $pendingCount]) }}
+                </x-button>
+            @endif
             <x-button :href="route('admin.promotions.index', ['state' => 'running'])" variant="secondary" size="sm">
                 {{ __('admin.promotions.statuses.running') }}
             </x-button>
@@ -46,6 +58,9 @@
                                     {{ collect([$promotion->specialty?->name, $promotion->serviceType?->name])->filter()->join(' · ') }}
                                 </span>
                             @endif
+                            @if ($promotion->clinic)
+                                <span class="mt-0.5 block text-xs text-ink-400">{{ $promotion->clinic->name }}</span>
+                            @endif
                         </span>
                     </span>
                 </x-td>
@@ -64,13 +79,25 @@
                 <x-td class="text-sm text-ink-500">{{ $promotion->starts_at->translatedFormat('d M Y') }}</x-td>
                 <x-td class="text-sm text-ink-500">{{ $promotion->ends_at->translatedFormat('d M Y') }}</x-td>
                 <x-td>
-                    <x-badge :tone="$tones[$promotion->status()]">
+                    <x-badge :tone="$tones[$promotion->status()] ?? 'neutral'">
                         {{ __('admin.promotions.statuses.'.$promotion->status()) }}
                     </x-badge>
                 </x-td>
                 <x-td>
-                    <x-row-actions :edit="route('admin.promotions.edit', $promotion)"
-                                   :destroy="route('admin.promotions.destroy', $promotion)"/>
+                    <div class="flex flex-wrap items-center justify-end gap-1.5">
+                        @if ($promotion->approval_status === \App\Enums\OfferApprovalStatus::Pending)
+                            <form method="POST" action="{{ route('admin.promotions.approve', $promotion) }}">
+                                @csrf
+                                <x-button size="sm" variant="accent">{{ __('admin.promotions.approve') }}</x-button>
+                            </form>
+                            <form method="POST" action="{{ route('admin.promotions.reject', $promotion) }}">
+                                @csrf
+                                <x-button size="sm" variant="danger-ghost">{{ __('admin.promotions.reject') }}</x-button>
+                            </form>
+                        @endif
+                        <x-row-actions :edit="route('admin.promotions.edit', $promotion)"
+                                       :destroy="route('admin.promotions.destroy', $promotion)"/>
+                    </div>
                 </x-td>
             </tr>
         @empty

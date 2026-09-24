@@ -194,9 +194,12 @@ return [
 
     'offers' => [
         'heading' => 'Clinic offers',
-        'subtitle' => 'Discount, inclusions and conditions — shown on the public offers page.',
+        'subtitle' => 'Submitted for admin approval before patients can see them.',
         'add' => 'Add offer',
         'edit' => 'Edit offer',
+        'approval_hint' => 'Offers are sent for admin review. They stay hidden until approved.',
+        'submitted' => 'Offer submitted for approval.',
+        'resubmitted' => 'Offer updated and re-submitted for approval.',
     ],
 
     'doctors' => [
