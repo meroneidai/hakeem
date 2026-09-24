@@ -48,6 +48,7 @@ return [
     'send_code' => 'إرسال الرمز',
     'confirm_code' => 'تأكيد الرمز',
     'resend_email' => 'إعادة إرسال رابط البريد',
+    'verify_email_modal_help' => 'افتح بريدك واضغط رابط التأكيد. إن لم تصلك الرسالة، أعد الإرسال من هنا.',
     'phone_verified' => 'تم تفعيل رقم الهاتف.',
     'phone_unverified' => 'غير مفعّل',
     'email_verified' => 'تم تأكيد البريد.',

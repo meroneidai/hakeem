@@ -17,12 +17,23 @@ class BookingRequestTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_guest_is_redirected_from_booking_form(): void
+    public function test_booking_form_guides_location_day_and_slots_without_dual_dates(): void
     {
+        $this->seedRoles();
         $provider = $this->seedListableProvider();
+        $patient = User::factory()->create();
 
-        $this->get('/book/doctors/'.$provider['doctor']->slug)
-            ->assertRedirect('/login');
+        $this->actingAs($patient)
+            ->get('/book/doctors/'.$provider['doctor']->slug)
+            ->assertOk()
+            ->assertSee(__('booking.steps.location'))
+            ->assertSee(__('booking.steps.when'))
+            ->assertSee(__('booking.branch_hint'))
+            ->assertSee(__('booking.pick_slot'))
+            ->assertSee(__('booking.day_hint'))
+            ->assertDontSee(__('booking.or_custom_time'))
+            ->assertSee($provider['clinic']->name_ar)
+            ->assertSee($provider['address']->displayName());
     }
 
     public function test_patient_creates_a_pending_booking_request(): void

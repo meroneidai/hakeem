@@ -155,9 +155,88 @@ class Branding
 
     public function profileComplete(User $user): bool
     {
-        return filled($user->name)
-            && filled($user->phone)
-            && $user->phone_verified_at !== null
-            && filled($user->city_id);
+        return collect($this->profileChecklist($user))
+            ->where('required', true)
+            ->every(fn (array $item) => $item['done']);
+    }
+
+    /**
+     * Checklist of profile fields the patient should finish.
+     *
+     * @return list<array{key: string, label: string, hint: string, required: bool, done: bool, action: ?string, href: ?string}>
+     */
+    public function profileChecklist(User $user): array
+    {
+        $hasPhone = filled($user->phone);
+        $hasEmail = filled($user->email);
+        $hasCity = filled($user->city_id);
+
+        return [
+            [
+                'key' => 'name',
+                'label' => __('account.gaps.name'),
+                'hint' => __('account.gaps.name_hint'),
+                'required' => true,
+                'done' => filled($user->name),
+                'action' => null,
+                'href' => filled($user->name) ? null : '#profile-form',
+            ],
+            [
+                'key' => 'phone',
+                'label' => __('account.gaps.phone'),
+                'hint' => __('account.gaps.phone_hint'),
+                'required' => true,
+                'done' => $hasPhone,
+                'action' => null,
+                'href' => $hasPhone ? null : '#field-phone',
+            ],
+            [
+                'key' => 'phone_verify',
+                'label' => __('account.gaps.phone_verify'),
+                'hint' => __('account.gaps.phone_verify_hint'),
+                'required' => true,
+                'done' => $hasPhone && $user->isPhoneVerified(),
+                'action' => $hasPhone && ! $user->isPhoneVerified() ? 'phone' : null,
+                'href' => $hasPhone ? null : '#field-phone',
+            ],
+            [
+                'key' => 'city',
+                'label' => __('account.gaps.city'),
+                'hint' => __('account.gaps.city_hint'),
+                'required' => true,
+                'done' => $hasCity,
+                'action' => null,
+                'href' => $hasCity ? null : '#field-city',
+            ],
+            [
+                'key' => 'email',
+                'label' => __('account.gaps.email'),
+                'hint' => __('account.gaps.email_hint'),
+                'required' => false,
+                'done' => $hasEmail,
+                'action' => null,
+                'href' => $hasEmail ? null : '#field-email',
+            ],
+            [
+                'key' => 'email_verify',
+                'label' => __('account.gaps.email_verify'),
+                'hint' => __('account.gaps.email_verify_hint'),
+                'required' => false,
+                'done' => ! $hasEmail || $user->isEmailVerified(),
+                'action' => $hasEmail && ! $user->isEmailVerified() ? 'email' : null,
+                'href' => $hasEmail ? null : '#field-email',
+            ],
+        ];
+    }
+
+    /**
+     * @return list<array{key: string, label: string, hint: string, required: bool, done: bool, action: ?string, href: ?string}>
+     */
+    public function profileGaps(User $user): array
+    {
+        return array_values(array_filter(
+            $this->profileChecklist($user),
+            fn (array $item) => ! $item['done'],
+        ));
     }
 }

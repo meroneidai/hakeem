@@ -19,6 +19,8 @@ class ProfileController extends Controller
     public function edit(Request $request, LoyaltyProgram $loyalty): View
     {
         $user = $request->user()->load(['city', 'insuranceProvider']);
+        $branding = app(Branding::class);
+        $checklist = $branding->profileChecklist($user);
 
         return view('account.profile', [
             'user' => $user,
@@ -28,7 +30,10 @@ class ProfileController extends Controller
             'ledgers' => $user->walletLedgers()->latest('id')->limit(20)->get(),
             'campaign' => $loyalty->activeSignupCampaign(),
             'appointments' => $user->bookings()->with(['clinic', 'doctor', 'serviceType'])->latest('scheduled_at')->limit(5)->get(),
-            'complete' => app(Branding::class)->profileComplete($user),
+            'complete' => $branding->profileComplete($user),
+            'checklist' => $checklist,
+            'gaps' => array_values(array_filter($checklist, fn (array $item) => ! $item['done'])),
+            'openVerify' => session('open_verify'),
         ]);
     }
 
@@ -101,10 +106,18 @@ class ProfileController extends Controller
 
         if ($emailChanged && filled($email)) {
             $verification->sendEmailLink($user->fresh());
+
+            return back()
+                ->with('status', __('auth.verify_sent_email'))
+                ->with('open_verify', 'email');
         }
 
         if ($phoneChanged && filled($phone)) {
             $verification->sendPhoneCode($user->fresh());
+
+            return back()
+                ->with('status', __('auth.verify_sent_phone'))
+                ->with('open_verify', 'phone');
         }
 
         $user = $user->fresh();
@@ -121,7 +134,7 @@ class ProfileController extends Controller
     {
         $verification->sendPhoneCode($request->user());
 
-        return back()->with('status', __('auth.verify_sent_phone'));
+        return back()->with('status', __('auth.verify_sent_phone'))->with('open_verify', 'phone');
     }
 
     public function verifyPhone(Request $request, VerificationService $verification): RedirectResponse
@@ -145,7 +158,7 @@ class ProfileController extends Controller
     {
         $verification->sendEmailLink($request->user());
 
-        return back()->with('status', __('auth.verify_sent_email'));
+        return back()->with('status', __('auth.verify_sent_email'))->with('open_verify', 'email');
     }
 
     public function verifyEmail(Request $request, int $id, string $hash, VerificationService $verification): RedirectResponse

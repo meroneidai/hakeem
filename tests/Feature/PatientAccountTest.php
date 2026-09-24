@@ -290,6 +290,34 @@ class PatientAccountTest extends TestCase
             ->assertSee(route('appointments.index'), false);
     }
 
+    public function test_incomplete_profile_highlights_missing_steps_and_opens_phone_modal_after_code(): void
+    {
+        $this->seedRoles();
+        $patient = User::factory()->create([
+            'phone_verified_at' => null,
+            'email_verified_at' => null,
+            'city_id' => null,
+        ]);
+        $patient->assignRole(RoleName::Patient);
+
+        $this->actingAs($patient)
+            ->get('/account')
+            ->assertOk()
+            ->assertSee(__('account.checklist_heading'))
+            ->assertSee(__('account.gaps.phone_verify'))
+            ->assertSee(__('account.gaps.city'))
+            ->assertSee(__('account.gaps.email_verify'))
+            ->assertSee(__('auth.verify_phone_title'))
+            ->assertSee('openVerify(', false)
+            ->assertSee('role="dialog"', false);
+
+        $this->actingAs($patient)
+            ->post('/account/phone/code')
+            ->assertRedirect()
+            ->assertSessionHas('open_verify', 'phone')
+            ->assertSessionHas('status', __('auth.verify_sent_phone'));
+    }
+
     public function test_clinic_staff_menu_shows_dashboard_and_account_without_header_search(): void
     {
         $this->actingAsClinicOwner();

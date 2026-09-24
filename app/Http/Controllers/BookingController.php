@@ -77,7 +77,7 @@ class BookingController extends Controller
             'gatewayReady' => $this->payments->isGatewayConfigured(),
             'maxSessions' => max(1, $maxSessions),
             'requiresEvaluation' => $doctor->specialty?->category === 'physical_therapy',
-            'dayOptions' => BookingDays::upcoming(),
+            'dayOptions' => BookingDays::upcoming(21),
             'serviceFlags' => $serviceTypes->mapWithKeys(function (ServiceType $type) use ($doctor) {
                 $offering = $doctor->clinics
                     ->flatMap(fn ($clinic) => $clinic->services)

@@ -1,4 +1,24 @@
+@php
+    $requiredTotal = collect($checklist)->where('required', true)->count();
+    $requiredDone = collect($checklist)->where('required', true)->where('done', true)->count();
+    $progress = $requiredTotal > 0 ? (int) round(($requiredDone / $requiredTotal) * 100) : 100;
+    $needsPhoneVerify = filled($user->phone) && ! $user->isPhoneVerified();
+    $needsEmailVerify = filled($user->email) && ! $user->isEmailVerified();
+    $missingPhone = blank($user->phone);
+    $missingEmail = blank($user->email);
+    $missingCity = blank($user->city_id);
+    $openVerify = $openVerify ?? null;
+@endphp
+
 <x-layouts.public :title="__('discover.dock.account')" robots="noindex,nofollow">
+    <div
+        x-data="{
+            verify: @js($openVerify),
+            openVerify(kind) { this.verify = kind; },
+            closeVerify() { this.verify = null; },
+        }"
+        @keydown.escape.window="closeVerify()"
+    >
     <x-catalog-hero :title="__('discover.dock.account')" :subtitle="__('account.hub.subtitle')">
         <x-slot:crumbs>
             <a href="{{ route('home') }}" class="hover:text-primary-700">{{ __('discover.nav.home') }}</a>
@@ -55,12 +75,62 @@
                 </span>
             </a>
         </div>
+
         @if (session('profile_complete'))
             <x-alert tone="success">{{ __('account.complete') }}</x-alert>
         @elseif (! $complete && ! $user->isInternalStaff())
-            <x-alert tone="warning">
-                <a href="#profile-form" class="font-medium underline-offset-2 hover:underline">{{ __('account.incomplete') }}</a>
-            </x-alert>
+            <x-card :title="__('account.checklist_heading')" :subtitle="__('account.checklist_sub', ['done' => $requiredDone, 'total' => $requiredTotal])">
+                <div class="mb-4 h-2 overflow-hidden rounded-full bg-ink-100">
+                    <div class="h-full rounded-full bg-warning-500 transition-all" style="width: {{ $progress }}%"></div>
+                </div>
+                <ul class="space-y-2">
+                    @foreach ($checklist as $item)
+                        <li @class([
+                            'flex items-start gap-3 rounded-2xl border px-3 py-3',
+                            'border-success-200 bg-success-50/60' => $item['done'],
+                            'border-warning-300 bg-warning-50 ring-1 ring-warning-200' => ! $item['done'] && $item['required'],
+                            'border-ink-200 bg-ink-50/50' => ! $item['done'] && ! $item['required'],
+                        ])>
+                            <span @class([
+                                'mt-0.5 grid size-6 shrink-0 place-items-center rounded-full text-xs font-bold',
+                                'bg-success-600 text-white' => $item['done'],
+                                'bg-warning-500 text-white' => ! $item['done'] && $item['required'],
+                                'bg-ink-300 text-white' => ! $item['done'] && ! $item['required'],
+                            ])>
+                                @if ($item['done'])
+                                    <x-icon name="check" class="size-3.5"/>
+                                @else
+                                    !
+                                @endif
+                            </span>
+                            <span class="min-w-0 flex-1">
+                                <span class="flex flex-wrap items-center gap-2">
+                                    <span class="font-medium text-ink-900">{{ $item['label'] }}</span>
+                                    @if (! $item['required'])
+                                        <x-badge tone="neutral">{{ __('common.optional') }}</x-badge>
+                                    @endif
+                                </span>
+                                <span class="mt-0.5 block text-sm text-ink-500">{{ $item['hint'] }}</span>
+                            </span>
+                            @if (! $item['done'])
+                                @if ($item['action'] === 'phone')
+                                    <button type="button" class="shrink-0 text-sm font-semibold text-primary-700 hover:underline" @click="openVerify('phone')">
+                                        {{ __('account.gaps.fix_now') }}
+                                    </button>
+                                @elseif ($item['action'] === 'email')
+                                    <button type="button" class="shrink-0 text-sm font-semibold text-primary-700 hover:underline" @click="openVerify('email')">
+                                        {{ __('account.gaps.fix_now') }}
+                                    </button>
+                                @elseif ($item['href'])
+                                    <a href="{{ $item['href'] }}" class="shrink-0 text-sm font-semibold text-primary-700 hover:underline">
+                                        {{ __('account.gaps.complete_now') }}
+                                    </a>
+                                @endif
+                            @endif
+                        </li>
+                    @endforeach
+                </ul>
+            </x-card>
         @endif
 
         <div class="grid gap-3 sm:grid-cols-3">
@@ -68,20 +138,46 @@
                 <p class="text-xs font-medium text-ink-400">{{ __('account.loyalty.heading') }}</p>
                 <p class="mt-1 text-xl font-semibold tabular text-ink-900">{{ number_format((float) $user->wallet_balance, 2) }} {{ __('common.currency') }}</p>
             </x-card>
-            <x-card class="p-4">
+
+            <div @class([
+                'card p-4',
+                'ring-2 ring-warning-300 ring-offset-2' => $missingPhone || $needsPhoneVerify,
+            ])>
                 <p class="text-xs font-medium text-ink-400">{{ __('auth.phone') }}</p>
                 <p class="mt-1 font-semibold text-ink-900" dir="ltr">{{ $user->phone ?: '—' }}</p>
                 <p class="mt-1 text-xs {{ $user->isPhoneVerified() ? 'text-success-700' : 'text-warning-700' }}">
                     {{ $user->isPhoneVerified() ? __('auth.phone_verified') : __('auth.phone_unverified') }}
                 </p>
-            </x-card>
-            <x-card class="p-4">
+                @if ($needsPhoneVerify)
+                    <button type="button" class="mt-3 text-sm font-semibold text-primary-700 hover:underline" @click="openVerify('phone')">
+                        {{ __('auth.verify_phone_title') }}
+                    </button>
+                @elseif ($missingPhone)
+                    <a href="#field-phone" class="mt-3 inline-block text-sm font-semibold text-primary-700 hover:underline">{{ __('account.gaps.complete_now') }}</a>
+                @endif
+            </div>
+
+            <div @class([
+                'card p-4',
+                'ring-2 ring-warning-300 ring-offset-2' => $missingEmail || $needsEmailVerify,
+            ])>
                 <p class="text-xs font-medium text-ink-400">{{ __('auth.email') }}</p>
                 <p class="mt-1 break-all font-semibold text-ink-900" dir="ltr">{{ $user->email ?: '—' }}</p>
                 <p class="mt-1 text-xs {{ $user->isEmailVerified() ? 'text-success-700' : 'text-warning-700' }}">
-                    {{ $user->isEmailVerified() ? __('auth.email_verified') : __('auth.email_unverified') }}
+                    @if ($missingEmail)
+                        {{ __('account.gaps.email') }}
+                    @else
+                        {{ $user->isEmailVerified() ? __('auth.email_verified') : __('auth.email_unverified') }}
+                    @endif
                 </p>
-            </x-card>
+                @if ($needsEmailVerify)
+                    <button type="button" class="mt-3 text-sm font-semibold text-primary-700 hover:underline" @click="openVerify('email')">
+                        {{ __('auth.verify_email_title') }}
+                    </button>
+                @elseif ($missingEmail)
+                    <a href="#field-email" class="mt-3 inline-block text-sm font-semibold text-primary-700 hover:underline">{{ __('account.gaps.complete_now') }}</a>
+                @endif
+            </div>
         </div>
 
         <x-card :title="__('account.loyalty.heading')">
@@ -105,33 +201,6 @@
                 @endforelse
             </ul>
         </x-card>
-
-        @if (filled($user->phone) && ! $user->isPhoneVerified())
-            <x-card :title="__('auth.verify_phone_title')">
-                <p class="text-sm text-ink-500">{{ __('auth.verify_phone_hint') }}</p>
-                <form method="POST" action="{{ route('account.phone.code') }}" class="mt-3">
-                    @csrf
-                    <x-button variant="secondary" size="sm">{{ __('auth.send_code') }}</x-button>
-                </form>
-                <form method="POST" action="{{ route('account.phone.verify') }}" class="mt-4 flex flex-wrap items-end gap-3">
-                    @csrf
-                    <x-field :label="__('auth.reset_code')" name="code" required class="min-w-40 flex-1">
-                        <x-input name="code" dir="ltr" inputmode="numeric" autocomplete="one-time-code"/>
-                    </x-field>
-                    <x-button variant="accent" size="sm">{{ __('auth.confirm_code') }}</x-button>
-                </form>
-            </x-card>
-        @endif
-
-        @if (filled($user->email) && ! $user->isEmailVerified())
-            <x-card :title="__('auth.verify_email_title')">
-                <p class="text-sm text-ink-500">{{ __('auth.verify_email_hint') }}</p>
-                <form method="POST" action="{{ route('account.email.resend') }}" class="mt-3">
-                    @csrf
-                    <x-button variant="secondary" size="sm">{{ __('auth.resend_email') }}</x-button>
-                </form>
-            </x-card>
-        @endif
 
         <x-card :title="__('booking.my_appointments')">
             <ul class="divide-y divide-ink-100 text-sm">
@@ -162,12 +231,30 @@
             <x-field :label="__('auth.name')" name="name" required>
                 <x-input name="name" :value="$user->name"/>
             </x-field>
-            <x-field :label="__('auth.phone')" name="phone" :hint="__('auth.phone_profile_hint')">
-                <x-input name="phone" type="tel" dir="ltr" inputmode="tel" :value="$user->phone" :placeholder="__('auth.phone_placeholder')"/>
-            </x-field>
-            <x-field :label="__('auth.email')" name="email" :hint="__('auth.email_profile_hint')">
-                <x-input name="email" type="email" dir="ltr" :value="$user->email"/>
-            </x-field>
+            <div id="field-phone" @class(['rounded-2xl p-1 -mx-1', 'ring-2 ring-warning-300' => $missingPhone || $needsPhoneVerify])>
+                <x-field :label="__('auth.phone')" name="phone" :hint="__('auth.phone_profile_hint')">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <x-input class="flex-1" name="phone" type="tel" dir="ltr" inputmode="tel" :value="$user->phone" :placeholder="__('auth.phone_placeholder')"/>
+                        @if ($needsPhoneVerify)
+                            <button type="button" class="text-sm font-semibold text-primary-700 hover:underline" @click="openVerify('phone')">
+                                {{ __('account.gaps.fix_now') }}
+                            </button>
+                        @endif
+                    </div>
+                </x-field>
+            </div>
+            <div id="field-email" @class(['rounded-2xl p-1 -mx-1', 'ring-2 ring-warning-300' => $missingEmail || $needsEmailVerify])>
+                <x-field :label="__('auth.email')" name="email" :hint="__('auth.email_profile_hint')">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <x-input class="flex-1" name="email" type="email" dir="ltr" :value="$user->email"/>
+                        @if ($needsEmailVerify)
+                            <button type="button" class="text-sm font-semibold text-primary-700 hover:underline" @click="openVerify('email')">
+                                {{ __('account.gaps.fix_now') }}
+                            </button>
+                        @endif
+                    </div>
+                </x-field>
+            </div>
             <x-field :label="__('account.birth')" name="date_of_birth" :hint="__('account.birth_hint')">
                 @php
                     $savedBirth = old('date_of_birth', $user->date_of_birth?->format('Y-m-d'));
@@ -191,10 +278,12 @@
                 <x-select name="gender" :placeholder="__('common.optional')" :selected="$user->gender"
                           :options="['male' => __('account.male'), 'female' => __('account.female')]"/>
             </x-field>
-            <x-field :label="__('account.city')" name="city_id">
-                <x-select name="city_id" :placeholder="__('discover.doctors.any_city')" :selected="$user->city_id"
-                          :options="$cities->mapWithKeys(fn ($city) => [$city->id => $city->name])->all()"/>
-            </x-field>
+            <div id="field-city" @class(['rounded-2xl p-1 -mx-1', 'ring-2 ring-warning-300' => $missingCity])>
+                <x-field :label="__('account.city')" name="city_id">
+                    <x-select name="city_id" :placeholder="__('discover.doctors.any_city')" :selected="$user->city_id"
+                              :options="$cities->mapWithKeys(fn ($city) => [$city->id => $city->name])->all()"/>
+                </x-field>
+            </div>
             <x-insurance-select :providers="$insuranceProviders" :selected="$user->insurance_provider_id"/>
             <x-field :label="__('common.language')" name="preferred_language" required>
                 <x-select name="preferred_language" :options="collect(config('hakeem.locales'))->map(fn ($locale) => $locale['native'])->all()" :selected="$user->preferred_language"/>
@@ -204,5 +293,52 @@
             <x-checkbox name="notify_push" :label="__('account.notify_push')" :checked="$user->notify_push"/>
             <x-button variant="accent">{{ __('account.save') }}</x-button>
         </form>
+    </div>
+
+    @if ($needsPhoneVerify)
+        <x-modal show="verify === 'phone'" close="closeVerify()" :title="__('auth.verify_phone_title')">
+            <x-slot:subtitle>{{ __('auth.verify_phone_hint') }}</x-slot:subtitle>
+            <p class="mb-4 text-sm text-ink-600" dir="ltr">{{ $user->phone }}</p>
+            <form method="POST" action="{{ route('account.phone.code') }}" class="mb-4">
+                @csrf
+                <x-button variant="secondary" class="w-full sm:w-auto">{{ __('auth.send_code') }}</x-button>
+            </form>
+            <form method="POST" action="{{ route('account.phone.verify') }}" class="space-y-4">
+                @csrf
+                <x-field :label="__('auth.reset_code')" name="code" required :hint="__('auth.reset_code_hint')">
+                    <x-input
+                        name="code"
+                        dir="ltr"
+                        inputmode="numeric"
+                        autocomplete="one-time-code"
+                        maxlength="8"
+                        class="text-center text-xl tracking-[0.35em]"
+                        autofocus
+                    />
+                </x-field>
+                <div class="flex flex-wrap justify-end gap-2">
+                    <button type="button" class="rounded-xl px-4 py-2 text-sm font-medium text-ink-600 hover:bg-ink-100" @click="closeVerify()">
+                        {{ __('common.cancel') }}
+                    </button>
+                    <x-button variant="accent">{{ __('auth.confirm_code') }}</x-button>
+                </div>
+            </form>
+        </x-modal>
+    @endif
+
+    @if ($needsEmailVerify)
+        <x-modal show="verify === 'email'" close="closeVerify()" :title="__('auth.verify_email_title')">
+            <x-slot:subtitle>{{ __('auth.verify_email_hint') }}</x-slot:subtitle>
+            <p class="mb-4 break-all text-sm text-ink-600" dir="ltr">{{ $user->email }}</p>
+            <p class="mb-4 rounded-2xl bg-primary-50 px-3 py-2 text-sm text-primary-800">{{ __('auth.verify_email_modal_help') }}</p>
+            <form method="POST" action="{{ route('account.email.resend') }}" class="flex flex-wrap justify-end gap-2">
+                @csrf
+                <button type="button" class="rounded-xl px-4 py-2 text-sm font-medium text-ink-600 hover:bg-ink-100" @click="closeVerify()">
+                    {{ __('common.cancel') }}
+                </button>
+                <x-button variant="accent">{{ __('auth.resend_email') }}</x-button>
+            </form>
+        </x-modal>
+    @endif
     </div>
 </x-layouts.public>

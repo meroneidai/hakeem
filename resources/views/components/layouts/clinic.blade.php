@@ -150,8 +150,16 @@
                 @if (session('profile_complete'))
                     <x-alert tone="success" class="mb-5">{{ __('account.complete') }}</x-alert>
                 @elseif (! ($branding ?? app(\App\Support\Branding::class))->profileComplete($user))
+                    @php
+                        $firstGap = ($branding ?? app(\App\Support\Branding::class))->profileGaps($user)[0]['label'] ?? null;
+                    @endphp
                     <x-alert tone="warning" class="mb-5">
-                        <a href="{{ route('account.edit') }}" class="font-medium underline-offset-2 hover:underline">{{ __('account.incomplete') }}</a>
+                        <a href="{{ route('account.edit') }}" class="font-medium underline-offset-2 hover:underline">
+                            {{ __('account.incomplete') }}
+                            @if ($firstGap)
+                                <span class="font-semibold">— {{ $firstGap }}</span>
+                            @endif
+                        </a>
                     </x-alert>
                 @endif
 

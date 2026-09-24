@@ -7,6 +7,7 @@ return [
     'save' => 'Save',
     'save_changes' => 'Save changes',
     'cancel' => 'Cancel',
+    'close' => 'Close',
     'create' => 'Add',
     'edit' => 'Edit',
     'delete' => 'Delete',

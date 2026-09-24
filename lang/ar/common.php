@@ -7,6 +7,7 @@ return [
     'save' => 'حفظ',
     'save_changes' => 'حفظ التغييرات',
     'cancel' => 'إلغاء',
+    'close' => 'إغلاق',
     'create' => 'إضافة',
     'edit' => 'تعديل',
     'delete' => 'حذف',

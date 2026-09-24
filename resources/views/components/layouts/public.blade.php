@@ -249,8 +249,17 @@
                     {{ __('account.complete') }}
                 </div>
             @elseif ($needsProfile)
+                @php
+                    $profileGaps = ($branding ?? app(\App\Support\Branding::class))->profileGaps(auth()->user());
+                    $firstGap = $profileGaps[0]['label'] ?? null;
+                @endphp
                 <div class="border-b border-accent-200 bg-accent-50 px-4 py-2 text-center text-sm text-accent-900">
-                    <a href="{{ route('account.edit') }}" class="font-medium underline-offset-2 hover:underline">{{ __('account.incomplete') }}</a>
+                    <a href="{{ route('account.edit') }}" class="font-medium underline-offset-2 hover:underline">
+                        {{ __('account.incomplete') }}
+                        @if ($firstGap)
+                            <span class="font-semibold">— {{ $firstGap }}</span>
+                        @endif
+                    </a>
                 </div>
             @endif
         @endauth

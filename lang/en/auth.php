@@ -48,6 +48,7 @@ return [
     'send_code' => 'Send code',
     'confirm_code' => 'Confirm code',
     'resend_email' => 'Resend email link',
+    'verify_email_modal_help' => 'Open your inbox and tap the confirmation link. If it is missing, resend it from here.',
     'phone_verified' => 'Phone number verified.',
     'phone_unverified' => 'Not verified',
     'email_verified' => 'Email confirmed.',
