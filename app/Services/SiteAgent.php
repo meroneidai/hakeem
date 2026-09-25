@@ -22,6 +22,7 @@ class SiteAgent
     ) {}
 
     /**
+     * @param  array{mode?: string, locale?: string}  $options
      * @return array{
      *     conversation_id: string,
      *     reply: string,
@@ -33,13 +34,14 @@ class SiteAgent
      *     forms: list<array<string, mixed>>
      * }
      */
-    public function reply(string $message, ?User $user, ?string $conversationId = null): array
+    public function reply(string $message, ?User $user, ?string $conversationId = null, array $options = []): array
     {
         $conversationId = $conversationId ?: (string) Str::uuid();
         $text = trim($message);
+        $voiceMode = ($options['mode'] ?? 'text') === 'voice';
 
         if ($this->hermes->configured()) {
-            return $this->viaHermes($conversationId, $text, $user);
+            return $this->viaHermes($conversationId, $text, $user, $voiceMode);
         }
 
         $state = Cache::get($this->cacheKey($conversationId), []);
@@ -261,7 +263,7 @@ class SiteAgent
     /**
      * @return array<string, mixed>
      */
-    private function viaHermes(string $conversationId, string $text, ?User $user): array
+    private function viaHermes(string $conversationId, string $text, ?User $user, bool $voiceMode = false): array
     {
         if ($text === '') {
             return $this->payload($conversationId, 'help', __('agent.empty'), [], [], 'hermes');
@@ -286,6 +288,7 @@ class SiteAgent
                 'app_url' => url('/'),
                 'signed_in' => $user !== null,
                 'visitor_name' => $user?->name,
+                'voice_mode' => $voiceMode,
             ]);
         } catch (Throwable $exception) {
             report($exception);

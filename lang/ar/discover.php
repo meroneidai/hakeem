@@ -113,8 +113,11 @@ return [
         'results' => ':count نتيجة',
     ],
     'app' => [
+        'badge' => 'التطبيق',
         'heading' => 'حمّل تطبيق حكيم',
         'subtitle' => 'ابحث واحجز من هاتفك — قريبًا على المتاجر، والويب جاهز الآن.',
+        'download_on' => 'حمّل من',
+        'get_it_on' => 'احصل عليه من',
         'ios' => 'App Store',
         'android' => 'Google Play',
         'soon' => 'قريبًا',

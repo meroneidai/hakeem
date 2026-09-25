@@ -28,7 +28,7 @@ class ProfileController extends Controller
             'insuranceProviders' => InsuranceProvider::selectable($user->insurance_provider_id),
             'referralUrl' => $loyalty->referralUrl($user),
             'ledgers' => $user->walletLedgers()->latest('id')->limit(20)->get(),
-            'campaign' => $loyalty->activeSignupCampaign(),
+            'campaign' => $loyalty->publicSignupBanner(),
             'appointments' => $user->bookings()->with(['clinic', 'doctor', 'serviceType'])->latest('scheduled_at')->limit(5)->get(),
             'complete' => $branding->profileComplete($user),
             'checklist' => $checklist,

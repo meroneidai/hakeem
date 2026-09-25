@@ -10,7 +10,7 @@
 
         <div class="flex flex-wrap items-end justify-between gap-4">
             <div class="min-w-0">
-                <h1 class="text-2xl font-bold tracking-tight text-ink-900 sm:text-3xl">{{ $title }}</h1>
+                <h1 class="text-2xl font-extrabold tracking-normal text-ink-900 sm:text-3xl sm:leading-tight">{{ $title }}</h1>
                 @if ($subtitle)
                     <p class="mt-2 max-w-2xl text-sm text-ink-600">{{ $subtitle }}</p>
                 @endif

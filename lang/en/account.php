@@ -56,6 +56,7 @@ return [
         'share_hint' => 'Copy your link. Your friend gets a welcome credit on signup, and your reward is added after their first completed booking or lab order.',
         'empty' => 'No wallet activity yet.',
         'claim' => 'Sign up for the credit',
+        'claim_short' => 'Sign up',
         'signup_credit' => 'Welcome credit :amount EGP',
         'referral_credit' => 'Referral reward after :name completed a service (:amount EGP)',
         'friend_joined' => ':name signed up with your link. Your reward arrives after their first completed service.',

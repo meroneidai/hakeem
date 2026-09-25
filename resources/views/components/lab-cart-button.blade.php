@@ -19,6 +19,7 @@
     <input type="hidden" name="id" value="{{ $id }}">
     <x-button type="submit" :variant="$variant" :size="$size" class="w-full"
               x-bind:disabled="$store.labCart.busy">
+        <x-icon name="bag" class="size-4"/>
         <span x-text="$store.labCart.has(@js($type), {{ (int) $id }}) ? @js($inCartLabel) : @js($addLabel)">
             {{ $addLabel }}
         </span>

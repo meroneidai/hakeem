@@ -86,6 +86,7 @@ class LoyaltyReferralTest extends TestCase
 
         app(Settings::class)->setMany([
             'loyalty.signup_bonus_enabled' => true,
+            'loyalty.signup_banner_enabled' => true,
             'loyalty.signup_bonus_amount' => 50,
             'loyalty.signup_bonus_starts_at' => '2026-09-01 00:00:00',
             'loyalty.signup_bonus_ends_at' => '2026-09-20 23:59:00',
@@ -110,6 +111,42 @@ class LoyaltyReferralTest extends TestCase
         $this->post('/logout');
 
         $this->get('/')->assertOk()->assertDontSee('رصيد ترحيبي للتجربة');
+    }
+
+    public function test_signup_banner_can_be_hidden_while_credit_still_applies(): void
+    {
+        $this->seedRoles();
+        $this->travelTo('2026-09-15 12:00:00');
+
+        app(Settings::class)->setMany([
+            'loyalty.signup_bonus_enabled' => true,
+            'loyalty.signup_banner_enabled' => false,
+            'loyalty.signup_bonus_amount' => 50,
+            'loyalty.signup_bonus_starts_at' => '2026-09-01 00:00:00',
+            'loyalty.signup_bonus_ends_at' => '2026-09-20 23:59:00',
+            'loyalty.signup_headline_ar' => 'رصيد ترحيبي للتجربة',
+        ], 'loyalty');
+
+        $this->get('/')->assertOk()->assertDontSee('رصيد ترحيبي للتجربة');
+
+        $this->post('/register', [
+            'name' => 'مستخدم صامت',
+            'phone' => '01055557777',
+            'password' => 'password12',
+            'password_confirmation' => 'password12',
+        ])->assertRedirect();
+
+        $user = User::query()->where('phone', '201055557777')->first();
+
+        $this->assertSame('50.00', $user->wallet_balance);
+
+        $admin = $this->actingAsRole(RoleName::PlatformAdmin);
+
+        $this->actingAs($admin)
+            ->get('/admin/loyalty')
+            ->assertOk()
+            ->assertSee(__('admin.loyalty.campaign_live_hidden'))
+            ->assertSee(__('admin.loyalty.signup_banner_enabled'));
     }
 
     public function test_admin_user_page_exposes_the_referral_link_and_wallet(): void

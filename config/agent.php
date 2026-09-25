@@ -4,6 +4,10 @@ return [
 
     'retention_days' => (int) env('AGENT_RETENTION_DAYS', 90),
 
+    'tts_voice' => env('EDGE_TTS_VOICE', 'ar-EG-ShakirNeural'),
+    'tts_python' => env('TTS_PYTHON', 'python3'),
+    'tts_script' => env('TTS_SCRIPT', base_path('scripts/tts/say.py')),
+
     'forms' => [
         'booking' => [
             'title' => 'بيانات الحجز',

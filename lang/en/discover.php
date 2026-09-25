@@ -113,8 +113,11 @@ return [
         'results' => ':count results',
     ],
     'app' => [
+        'badge' => 'Mobile app',
         'heading' => 'Get the Hakeem app',
         'subtitle' => 'Search and book from your phone — coming to the stores; the web is ready now.',
+        'download_on' => 'Download on the',
+        'get_it_on' => 'Get it on',
         'ios' => 'App Store',
         'android' => 'Google Play',
         'soon' => 'Coming soon',

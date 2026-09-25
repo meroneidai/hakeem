@@ -15,16 +15,16 @@
     $share = \App\Support\Deeplink::forRoute('clinics.show', $clinic);
 @endphp
 
-<article {{ $attributes->merge(['class' => 'card flex flex-col p-4']) }}>
-    <a href="{{ route('clinics.show', $clinic) }}" class="flex items-start gap-3 hover:opacity-95">
+<article {{ $attributes->merge(['class' => '@container/card card flex h-full flex-col p-3 text-start sm:p-4']) }}>
+    <a href="{{ route('clinics.show', $clinic) }}" class="flex min-w-0 items-start gap-2.5 hover:opacity-95 sm:gap-3">
         <x-media
             :src="\App\Support\PublicImage::url($clinic->logo_path)"
             :alt="$clinic->name"
-            class="size-14 shrink-0 rounded-2xl"
+            class="size-12 shrink-0 rounded-2xl sm:size-14"
         />
         <div class="min-w-0 flex-1">
-            <h3 class="font-semibold text-ink-900">{{ $clinic->name }}</h3>
-            <p class="text-sm text-ink-500">{{ $city }}</p>
+            <h3 class="line-clamp-2 text-sm font-semibold text-ink-900 sm:text-base">{{ $clinic->name }}</h3>
+            <p class="truncate text-xs text-ink-500 sm:text-sm">{{ $city }}</p>
             <x-rating class="mt-1" :average="$clinic->ratingAverage()" :count="$clinic->ratingCount()"/>
             <div class="mt-2 flex flex-wrap gap-1.5 text-xs text-ink-500">
                 @if ($doctorsCount)
@@ -41,10 +41,10 @@
             @endif
         </div>
     </a>
-    <div class="mt-auto flex gap-2 pt-4">
-        <x-button :href="$bookUrl" variant="accent" size="sm" class="flex-1">
-            <x-icon name="calendar" class="size-4"/>
-            {{ __('discover.book_now') }}
+    <div class="mt-auto flex flex-col gap-1.5 pt-3 @[17rem]/card:flex-row sm:flex-row sm:gap-2 sm:pt-4">
+        <x-button :href="$bookUrl" variant="accent" size="sm" class="w-full flex-1 px-2 text-xs sm:px-3 sm:text-sm">
+            <x-icon name="calendar" class="size-4 shrink-0"/>
+            <span class="truncate">{{ __('discover.book_now') }}</span>
         </x-button>
         <x-share-button :url="$share['web']" :app-url="$share['app']" :title="$clinic->name"/>
     </div>

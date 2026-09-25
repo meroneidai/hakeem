@@ -8,18 +8,26 @@
     $visits = $doctor->getAttribute('completed_bookings_count');
 @endphp
 
-<article {{ $attributes->merge(['class' => 'card flex flex-col gap-4 p-4 sm:p-5']) }}>
-    <div class="flex items-start gap-3 sm:gap-4">
+<article {{ $attributes->merge(['class' => '@container/card card flex h-full flex-col gap-3 p-3 text-start sm:gap-4 sm:p-5']) }}>
+    <div class="flex min-w-0 items-start gap-2.5 sm:gap-4">
         <x-media
             :src="\App\Support\PublicImage::url($doctor->profile_photo_path)"
             :alt="$doctor->name"
-            class="size-16 shrink-0 rounded-2xl ring-1 ring-ink-100 sm:size-20"
+            class="size-12 shrink-0 rounded-2xl ring-1 ring-ink-100 sm:size-20"
         />
-        <div class="min-w-0 flex-1">
-            <a href="{{ route('doctors.show', $doctor) }}" class="text-base font-semibold text-ink-900 hover:text-primary-700">{{ $doctor->name }}</a>
-            <p class="mt-0.5 text-sm text-ink-500">{{ $doctor->specialty?->name }}</p>
-            <x-rating class="mt-1.5" :average="$doctor->ratingAverage()" :count="$doctor->ratingCount()"/>
-            <div class="mt-2 flex flex-wrap gap-1.5 text-xs text-ink-600">
+        <div class="min-w-0 flex-1 text-start">
+            <a href="{{ route('doctors.show', $doctor) }}" class="line-clamp-2 text-sm font-semibold text-ink-900 hover:text-primary-700 sm:text-base">{{ $doctor->name }}</a>
+            <p class="mt-0.5 truncate text-xs text-ink-500 sm:text-sm">{{ $doctor->specialty?->name }}</p>
+            <x-rating class="mt-1" :average="$doctor->ratingAverage()" :count="$doctor->ratingCount()"/>
+            <p class="mt-1.5 text-sm font-semibold tabular text-primary-700 sm:hidden">
+                @if ($doctor->consultation_fee)
+                    {{ number_format((float) $doctor->consultation_fee) }}
+                    <span class="text-xs font-medium text-ink-500">{{ __('common.currency') }}</span>
+                @else
+                    <span class="text-xs font-medium text-ink-400">{{ __('common.none') }}</span>
+                @endif
+            </p>
+            <div class="mt-2 hidden flex-wrap justify-start gap-1.5 text-xs text-ink-600 @[20rem]/card:flex sm:flex">
                 @if ($doctor->years_of_experience)
                     <span class="inline-flex items-center gap-1 rounded-full bg-ink-50 px-2 py-0.5">
                         <x-icon name="clock" class="size-3"/>
@@ -46,16 +54,16 @@
                 @endif
             </div>
             @if ($clinics->isNotEmpty())
-                <p class="mt-2 flex items-center gap-1 text-xs text-ink-500">
+                <p class="mt-2 hidden items-center justify-start gap-1 text-xs text-ink-500 @[20rem]/card:flex sm:flex">
                     <x-icon name="building" class="size-3.5 shrink-0"/>
                     <span class="line-clamp-1">{{ $clinics->pluck('name')->filter()->join(' · ') }}</span>
                 </p>
             @endif
             @if ($doctor->credentials)
-                <p class="mt-1 line-clamp-1 text-xs text-ink-400">{{ $doctor->credentials }}</p>
+                <p class="mt-1 hidden line-clamp-1 text-xs text-ink-400 @[20rem]/card:block sm:block">{{ $doctor->credentials }}</p>
             @endif
         </div>
-        <div class="shrink-0 text-end">
+        <div class="hidden shrink-0 text-end sm:block">
             <p class="text-[11px] text-ink-400">{{ __('discover.doctors.fee') }}</p>
             <p class="text-sm font-semibold tabular text-primary-700 sm:text-base">
                 @if ($doctor->consultation_fee)
@@ -67,14 +75,14 @@
             </p>
         </div>
     </div>
-    <div class="mt-auto flex gap-2">
-        <x-button :href="route('doctors.show', $doctor)" variant="secondary" size="sm" class="flex-1">
-            <x-icon name="user" class="size-4"/>
-            {{ __('discover.view_profile') }}
+    <div class="mt-auto flex flex-col gap-1.5 @[17rem]/card:flex-row sm:flex-row sm:gap-2">
+        <x-button :href="route('doctors.show', $doctor)" variant="secondary" size="sm" class="w-full flex-1 px-2 text-xs sm:px-3 sm:text-sm">
+            <x-icon name="user" class="size-4 shrink-0"/>
+            <span class="truncate">{{ __('discover.view_profile') }}</span>
         </x-button>
-        <x-button :href="$bookUrl" variant="accent" size="sm" class="flex-1">
-            <x-icon name="calendar" class="size-4"/>
-            {{ __('discover.book_now') }}
+        <x-button :href="$bookUrl" variant="accent" size="sm" class="w-full flex-1 px-2 text-xs sm:px-3 sm:text-sm">
+            <x-icon name="calendar" class="size-4 shrink-0"/>
+            <span class="truncate">{{ __('discover.book_now') }}</span>
         </x-button>
     </div>
 </article>

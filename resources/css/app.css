@@ -9,6 +9,19 @@
     .to-accent-50 {
         --tw-gradient-to: initial;
     }
+
+    /* Weight only — never force a color (avoids white text on light surfaces). */
+    .font-semibold {
+        --tw-font-weight: var(--font-weight-semibold);
+        font-weight: var(--font-weight-semibold);
+        color: unset;
+    }
+
+    .font-bold {
+        --tw-font-weight: var(--font-weight-bold);
+        font-weight: var(--font-weight-bold);
+        color: unset;
+    }
 }
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';

@@ -21,7 +21,7 @@
 @endphp
 
 <x-layouts.base :seo="$seo" body-class="min-h-screen theme-v2" theme-color="#3B82F6">
-    <div x-data @close-mega.window="$store.shell.mega = false" class="min-h-screen pb-24 lg:pb-0">
+    <div x-data @close-mega.window="$store.shell.mega = false" class="min-h-screen pb-28 lg:pb-0">
         <header class="relative sticky top-0 z-40 border-b border-ink-200/70 bg-white/85 backdrop-blur-md">
             <div class="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
                 <a href="{{ route('home') }}" class="flex min-w-0 shrink items-center gap-2.5">
@@ -36,13 +36,13 @@
                     >
                     @if ($branding->usesCustomLogo())
                         <span class="min-w-0">
-                            <span class="block truncate text-base font-bold text-ink-900">{{ $branding->name() }}</span>
-                            <span class="hidden truncate text-xs text-ink-500 sm:block">{{ $branding->tagline() }}</span>
+                            <span class="block truncate text-lg font-extrabold text-ink-900">{{ $branding->name() }}</span>
+                            <span class="hidden truncate text-sm font-medium text-ink-500 sm:block">{{ $branding->tagline() }}</span>
                         </span>
                     @endif
                 </a>
 
-                <nav class="hidden items-center gap-1 text-sm font-medium text-ink-600 lg:flex">
+                <nav class="hidden items-center gap-1 text-[0.975rem] font-semibold text-ink-600 lg:flex">
                     <div class="relative" @mouseenter="$store.shell.mega = true" @mouseleave="$store.shell.mega = false">
                         <button type="button"
                                 class="inline-flex items-center gap-1 rounded-lg px-3 py-2 hover:bg-primary-50 hover:text-primary-800"
@@ -147,22 +147,36 @@
             </div>
         </header>
 
-        <div x-cloak x-show="$store.shell.mobile" class="fixed inset-0 z-50 lg:hidden">
-            <div class="absolute inset-0 bg-ink-900/40" @click="$store.shell.mobile = false"></div>
-            <aside class="absolute inset-y-0 start-0 flex w-[min(22rem,92vw)] flex-col bg-white shadow-xl">
+        <div x-cloak
+             x-show="$store.shell.mobile"
+             x-transition.opacity.duration.200ms
+             @keydown.escape.window="$store.shell.closeMobile()"
+             class="fixed inset-0 z-[55] lg:hidden"
+             role="dialog"
+             aria-modal="true"
+             :aria-hidden="! $store.shell.mobile">
+            <div class="absolute inset-0 bg-ink-900/45 backdrop-blur-[2px]" @click="$store.shell.closeMobile()"></div>
+            <aside x-show="$store.shell.mobile"
+                   x-transition:enter="transform transition ease-out duration-200"
+                   x-transition:enter-start="-translate-x-full rtl:translate-x-full"
+                   x-transition:enter-end="translate-x-0"
+                   x-transition:leave="transform transition ease-in duration-150"
+                   x-transition:leave-start="translate-x-0"
+                   x-transition:leave-end="-translate-x-full rtl:translate-x-full"
+                   class="mobile-menu-panel absolute inset-y-0 start-0 flex w-[min(22rem,92vw)] flex-col bg-white shadow-2xl">
                 <div class="flex items-center justify-between border-b border-ink-100 px-5 py-4">
-                    <a href="{{ route('home') }}" class="flex min-w-0 items-center gap-2" @click="$store.shell.mobile = false">
+                    <a href="{{ route('home') }}" class="flex min-w-0 items-center gap-2" @click="$store.shell.closeMobile()">
                         <img
                             src="{{ $branding->logoUrl() }}"
                             alt="{{ $branding->name() }}"
                             class="h-8 w-auto max-w-[9.5rem] shrink-0 object-contain"
                         >
                     </a>
-                    <button type="button" class="grid size-9 place-items-center rounded-full bg-ink-50" @click="$store.shell.mobile = false" aria-label="{{ __('discover.nav.close_menu') }}">
+                    <button type="button" class="grid size-9 place-items-center rounded-full bg-ink-50" @click="$store.shell.closeMobile()" aria-label="{{ __('discover.nav.close_menu') }}">
                         <x-icon name="x-mark" class="size-5"/>
                     </button>
                 </div>
-                <div class="flex-1 overflow-y-auto px-4 py-4 pb-28">
+                <div class="flex-1 overflow-y-auto overscroll-contain px-4 py-4 pb-28">
                     @guest
                     <div class="mb-4 grid grid-cols-2 gap-2">
                         <a href="{{ $support->whatsappUrl() }}" @if ($support->hasWhatsapp()) target="_blank" rel="noopener" @endif
@@ -266,7 +280,11 @@
 
         {{ $slot }}
 
-        <footer class="footer-stage pt-16 pb-12 text-sm text-primary-100">
+        <div class="mx-auto max-w-6xl px-3 pb-6 pt-2 min-[390px]:px-4 sm:pb-8 sm:pt-4">
+            @include('partials.app-download')
+        </div>
+
+        <footer class="footer-stage pt-12 pb-10 text-sm text-primary-100 sm:pt-16 sm:pb-12">
             <x-hero-waves footer/>
             <x-aurora-blobs footer/>
             <div class="relative mx-auto grid max-w-6xl gap-8 px-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -359,16 +377,31 @@
         @include('partials.cookie-banner')
 
         @if ($agentAny)
-            <div x-data="siteAgent(@js(route('agent.messages')), @js(csrf_token()), {
+            <div x-data="siteAgent(@js(route('agent.messages')), @js(\Illuminate\Support\Facades\Route::has('agent.speech') ? route('agent.speech') : ''), @js(csrf_token()), {
                      empty: @js(__('agent.empty')),
                      error: @js(__('agent.error')),
+                     locale: @js(app()->getLocale()),
+                     call: {
+                         connecting: @js(__('agent.call.connecting')),
+                         listening: @js(__('agent.call.listening')),
+                         thinking: @js(__('agent.call.thinking')),
+                         speaking: @js(__('agent.call.speaking')),
+                         muted: @js(__('agent.call.muted')),
+                         filler: @js(__('agent.call.filler')),
+                         still_there: @js(__('agent.call.still_there')),
+                         goodbye: @js(__('agent.call.goodbye')),
+                         weak_line: @js(__('agent.call.weak_line')),
+                         mic_denied: @js(__('agent.call.mic_denied')),
+                         unsupported: @js(__('agent.call.unsupported')),
+                         tts_fallback: @js(__('agent.call.tts_fallback')),
+                     },
                  })"
                  @open-agent.window="openAgent()"
                  @close-agent.window="closeAgent()">
                 @if ($agentWeb)
                     <button type="button"
                             @click="toggle()"
-                            class="fixed bottom-5 end-5 z-40 hidden size-14 items-center justify-center rounded-full bg-teal-500 text-white shadow-[0_12px_40px_rgba(30,64,175,0.12)] ring-4 ring-teal-50 transition hover:bg-teal-600 lg:flex"
+                            class="fixed bottom-5 end-5 z-40 hidden size-14 items-center justify-center rounded-full bg-gradient-to-br from-primary-600 via-primary-700 to-primary-950 text-white shadow-[0_14px_36px_rgba(30,98,139,0.55)] ring-4 ring-primary-900/40 transition hover:from-primary-700 hover:via-primary-800 hover:to-ink-950 lg:flex"
                             :aria-label="open ? @js(__('agent.close')) : @js(__('agent.open'))">
                         <span x-show="!open"><x-icon name="sparkles" class="size-6"/></span>
                         <span x-cloak x-show="open"><x-icon name="x-mark" class="size-6"/></span>
@@ -392,76 +425,80 @@
              class="pointer-events-none fixed bottom-28 left-1/2 z-[60] -translate-x-1/2 rounded-full bg-ink-900 px-4 py-2 text-sm font-medium text-white shadow-lg">
         </div>
 
-        <nav class="mobile-dock fixed inset-x-3 bottom-3 z-50 lg:hidden" aria-label="{{ __('discover.dock.label') }}">
+        <nav class="mobile-dock fixed inset-x-3 bottom-3 z-[60] lg:hidden" aria-label="{{ __('discover.dock.label') }}">
             <div class="flex {{ $agentMobile ? 'items-end justify-between' : 'items-center justify-around' }} rounded-[1.75rem] border border-ink-200/80 bg-white/95 px-1.5 py-1.5 shadow-lg backdrop-blur-md">
-                <a href="{{ route('home') }}" class="flex flex-1 flex-col items-center gap-0.5 rounded-2xl px-1 py-1.5 text-[10px] font-medium text-ink-600">
+                <a href="{{ route('home') }}" class="flex flex-1 flex-col items-center gap-0.5 rounded-2xl px-1 py-1.5 text-[10px] font-medium text-ink-600" @click="$store.shell.closeMobile()">
                     <x-icon name="home" class="size-5"/>
-                    {{ __('discover.dock.home') }}
+                    <span class="dock-label">{{ __('discover.dock.home') }}</span>
                 </a>
                 @auth
                     @if (auth()->user()->isInternalStaff())
-                        <a href="{{ route('admin.dashboard') }}" class="flex flex-1 flex-col items-center gap-0.5 rounded-2xl px-1 py-1.5 text-[10px] font-medium text-ink-600">
+                        <a href="{{ route('admin.dashboard') }}" class="flex flex-1 flex-col items-center gap-0.5 rounded-2xl px-0.5 py-1.5 text-[10px] font-medium text-ink-600 min-[390px]:px-1" @click="$store.shell.closeMobile()">
                             <x-icon name="grid" class="size-5"/>
-                            {{ __('account.dashboard') }}
+                            <span class="dock-label">{{ __('account.dashboard') }}</span>
                         </a>
                     @elseif (auth()->user()->isClinicStaff())
-                        <a href="{{ route('clinic.dashboard') }}" class="flex flex-1 flex-col items-center gap-0.5 rounded-2xl px-1 py-1.5 text-[10px] font-medium text-ink-600">
+                        <a href="{{ route('clinic.dashboard') }}" class="flex flex-1 flex-col items-center gap-0.5 rounded-2xl px-0.5 py-1.5 text-[10px] font-medium text-ink-600 min-[390px]:px-1" @click="$store.shell.closeMobile()">
                             <x-icon name="building" class="size-5"/>
-                            {{ __('account.dashboard') }}
+                            <span class="dock-label">{{ __('account.dashboard') }}</span>
                         </a>
                     @else
-                        <a href="{{ route('labs.index') }}" class="flex flex-1 flex-col items-center gap-0.5 rounded-2xl px-1 py-1.5 text-[10px] font-medium text-ink-600">
+                        <a href="{{ route('labs.index') }}" class="flex flex-1 flex-col items-center gap-0.5 rounded-2xl px-0.5 py-1.5 text-[10px] font-medium text-ink-600 min-[390px]:px-1" @click="$store.shell.closeMobile()">
                             <x-icon name="beaker" class="size-5"/>
-                            {{ __('discover.nav.labs') }}
+                            <span class="dock-label">{{ __('discover.nav.labs') }}</span>
                         </a>
                     @endif
                 @else
-                    <a href="{{ route('doctors.index') }}" class="flex flex-1 flex-col items-center gap-0.5 rounded-2xl px-1 py-1.5 text-[10px] font-medium text-primary-700">
+                    <a href="{{ route('doctors.index') }}" class="flex flex-1 flex-col items-center gap-0.5 rounded-2xl px-0.5 py-1.5 text-[10px] font-medium text-primary-700 min-[390px]:px-1" @click="$store.shell.closeMobile()">
                         <span class="grid size-8 place-items-center rounded-full bg-primary-50 text-primary-700">
                             <x-icon name="stethoscope" class="size-4"/>
                         </span>
-                        {{ __('discover.nav.doctors') }}
+                        <span class="dock-label">{{ __('discover.nav.doctors') }}</span>
                     </a>
                 @endauth
                 @if ($agentMobile)
                     <button type="button"
-                            @click="$dispatch('open-agent')"
-                            class="-mt-7 flex size-14 flex-col items-center justify-center rounded-full bg-teal-500 text-white shadow-[0_12px_40px_rgba(15,42,95,0.16)] ring-4 ring-white"
+                            @click="$store.shell.closeMobile(); $dispatch('open-agent')"
+                            class="dock-agent -mt-6 flex size-12 flex-col items-center justify-center rounded-full bg-gradient-to-br from-primary-600 via-primary-700 to-primary-950 text-white shadow-[0_14px_36px_rgba(30,98,139,0.55)] ring-4 ring-primary-900/50 min-[390px]:-mt-7 min-[390px]:size-14"
                             aria-label="{{ __('discover.dock.agent') }}">
-                        <x-icon name="sparkles" class="size-6"/>
+                        <x-icon name="sparkles" class="size-5 min-[390px]:size-6"/>
                     </button>
                 @else
-                    <a href="{{ route('offers.index') }}" class="flex flex-1 flex-col items-center gap-0.5 rounded-2xl px-1 py-1.5 text-[10px] font-medium text-accent-700">
+                    <a href="{{ route('offers.index') }}" class="flex flex-1 flex-col items-center gap-0.5 rounded-2xl px-0.5 py-1.5 text-[10px] font-medium text-accent-700 min-[390px]:px-1" @click="$store.shell.closeMobile()">
                         <span class="grid size-8 place-items-center rounded-full bg-accent-50 text-accent-700">
                             <x-icon name="sparkles" class="size-4"/>
                         </span>
-                        {{ __('discover.nav.offers') }}
+                        <span class="dock-label">{{ __('discover.nav.offers') }}</span>
                     </a>
                 @endif
                 @auth
-                    <a href="{{ route('account.edit') }}" class="flex flex-1 flex-col items-center gap-0.5 rounded-2xl px-1 py-1.5 text-[10px] font-medium text-primary-700">
+                    <a href="{{ route('account.edit') }}" class="flex flex-1 flex-col items-center gap-0.5 rounded-2xl px-0.5 py-1.5 text-[10px] font-medium text-primary-700 min-[390px]:px-1" @click="$store.shell.closeMobile()">
                         <span class="grid size-8 place-items-center rounded-full bg-primary-50 text-primary-700">
                             <x-icon name="user" class="size-4"/>
                         </span>
-                        {{ __('discover.dock.account') }}
+                        <span class="dock-label">{{ __('discover.dock.account') }}</span>
                     </a>
                 @else
                     <a href="{{ $support->whatsappUrl() }}"
                        @if ($support->hasWhatsapp()) target="_blank" rel="noopener" @endif
-                       class="flex flex-1 flex-col items-center gap-0.5 rounded-2xl px-1 py-1.5 text-[10px] font-medium text-success-700">
+                       class="flex flex-1 flex-col items-center gap-0.5 rounded-2xl px-0.5 py-1.5 text-[10px] font-medium text-success-700 min-[390px]:px-1"
+                       @click="$store.shell.closeMobile()">
                         <span class="grid size-8 place-items-center rounded-full bg-success-50 text-success-700">
                             <x-icon name="chat" class="size-4"/>
                         </span>
-                        {{ __('discover.dock.whatsapp') }}
+                        <span class="dock-label">{{ __('discover.dock.whatsapp') }}</span>
                     </a>
                 @endauth
                 <button type="button"
-                        @click="$store.shell.mobile = true"
-                        class="flex flex-1 flex-col items-center gap-0.5 rounded-2xl px-1 py-1.5 text-[10px] font-medium text-ink-600">
-                    <x-icon name="bars-3" class="size-5"/>
-                    {{ __('discover.dock.more') }}
-                </button>
-            </div>
+                        @click="$store.shell.toggleMobile()"
+                        class="flex flex-1 flex-col items-center gap-0.5 rounded-2xl px-0.5 py-1.5 text-[10px] font-medium min-[390px]:px-1"
+                        :class="$store.shell.mobile ? 'bg-primary-50 text-primary-700' : 'text-ink-600'"
+                        :aria-expanded="$store.shell.mobile"
+                        :aria-label="$store.shell.mobile ? @js(__('discover.nav.close_menu')) : @js(__('discover.dock.more'))">
+                    <span x-show="! $store.shell.mobile"><x-icon name="bars-3" class="size-5"/></span>
+                    <span x-cloak x-show="$store.shell.mobile"><x-icon name="x-mark" class="size-5"/></span>
+                    <span class="dock-label" x-text="$store.shell.mobile ? @js(__('common.close')) : @js(__('discover.dock.more'))">{{ __('discover.dock.more') }}</span>
+                </button>            </div>
         </nav>
     </div>
 

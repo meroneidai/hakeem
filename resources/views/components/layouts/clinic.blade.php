@@ -21,7 +21,7 @@
                     @endif
                 </span>
                 <span>
-                    <span class="block truncate text-sm font-bold text-ink-900">{{ $clinic->name }}</span>
+                    <span class="block truncate text-base font-extrabold text-ink-900">{{ $clinic->name }}</span>
                     <span class="block text-[11px] text-ink-500">{{ __('clinic.title') }}</span>
                 </span>
             </a>

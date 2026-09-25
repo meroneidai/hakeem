@@ -36,7 +36,7 @@ class HomeController extends Controller
             'doctors' => Doctor::query()->listable()->with(['specialty', 'clinics.addresses.city'])->orderByDesc('years_of_experience')->limit(6)->get(),
             'clinics' => Clinic::query()->listable()->with(['primaryAddress.city', 'doctors.specialty'])->orderBy('name_ar')->limit(6)->get(),
             'search' => $request->only(['q', 'governorate', 'city', 'specialty']),
-            'signupCampaign' => $loyalty->activeSignupCampaign(),
+            'signupCampaign' => $loyalty->publicSignupBanner(),
         ]);
     }
 }

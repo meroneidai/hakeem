@@ -26,7 +26,7 @@
                     ])
                 >
                 <span>
-                    <span class="block text-sm font-bold text-ink-900">{{ __('common.app_name') }}</span>
+                    <span class="block text-base font-extrabold text-ink-900">{{ __('common.app_name') }}</span>
                     <span class="block text-[11px] text-ink-500">{{ __('admin.title') }}</span>
                 </span>
             </a>

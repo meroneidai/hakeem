@@ -27,6 +27,7 @@ class LoyaltyProgram
             'loyalty.referral_enabled' => true,
             'loyalty.referral_reward_amount' => 100,
             'loyalty.signup_bonus_enabled' => false,
+            'loyalty.signup_banner_enabled' => true,
             'loyalty.signup_bonus_amount' => 50,
             'loyalty.signup_bonus_starts_at' => null,
             'loyalty.signup_bonus_ends_at' => null,
@@ -135,7 +136,9 @@ class LoyaltyProgram
     }
 
     /**
-     * @return array{amount: float, starts_at: ?Carbon, ends_at: ?Carbon, headline: string, body: string}|null
+     * Active signup credit window (grants wallet credit regardless of banner).
+     *
+     * @return array{amount: float, starts_at: ?Carbon, ends_at: ?Carbon, headline: string, body: string, banner: bool}|null
      */
     public function activeSignupCampaign(): ?array
     {
@@ -177,7 +180,24 @@ class LoyaltyProgram
                     ?: $this->settings->get('loyalty.signup_body_ar')
                     ?: self::defaultSettings()['loyalty.signup_body_ar']),
             ),
+            'banner' => $this->settings->bool('loyalty.signup_banner_enabled', true),
         ];
+    }
+
+    /**
+     * Homepage / public-site promo strip. Null when the credit is active but the banner is hidden.
+     *
+     * @return array{amount: float, starts_at: ?Carbon, ends_at: ?Carbon, headline: string, body: string, banner: bool}|null
+     */
+    public function publicSignupBanner(): ?array
+    {
+        $campaign = $this->activeSignupCampaign();
+
+        if ($campaign === null || ! $campaign['banner']) {
+            return null;
+        }
+
+        return $campaign;
     }
 
     /**

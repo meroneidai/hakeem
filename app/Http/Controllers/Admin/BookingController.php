@@ -11,11 +11,13 @@ use App\Models\Clinic;
 use App\Models\ClinicAddress;
 use App\Models\Doctor;
 use App\Models\ServiceType;
+use App\Models\User;
 use App\Services\BookingManager;
 use App\Services\PaymentOptions;
 use App\Support\Audit;
 use App\Support\BookingDays;
 use App\Support\StatusTally;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -145,8 +147,45 @@ class BookingController extends Controller implements HasMiddleware
             'paymentModes' => $paymentModes,
             'defaultPaymentMode' => $defaultPaymentMode,
             'gatewayReady' => $this->payments->isGatewayConfigured(),
-            'dayOptions' => BookingDays::upcoming(),
+            'dayOptions' => BookingDays::upcoming(21),
             'serviceFlags' => $serviceFlags,
+            'doctorSlugs' => $clinic
+                ? $clinic->doctors->mapWithKeys(fn (Doctor $doctor) => [(string) $doctor->id => $doctor->slug])->all()
+                : [],
+        ]);
+    }
+
+    public function lookupPatient(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'phone' => ['required', 'string', 'max:32'],
+        ]);
+
+        $normalized = User::normalizePhone($validated['phone']);
+
+        if (strlen($normalized) < 11) {
+            throw ValidationException::withMessages([
+                'phone' => __('auth.invalid_phone'),
+            ]);
+        }
+
+        $patient = User::query()->where('phone', $normalized)->first();
+
+        if (! $patient) {
+            return response()->json([
+                'found' => false,
+                'phone' => $normalized,
+            ]);
+        }
+
+        return response()->json([
+            'found' => true,
+            'patient' => [
+                'id' => $patient->id,
+                'name' => $patient->name,
+                'phone' => $patient->phone,
+                'email' => $patient->email,
+            ],
         ]);
     }
 

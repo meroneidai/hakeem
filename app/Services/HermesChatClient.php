@@ -111,6 +111,7 @@ class HermesChatClient
             'signed_in' => (bool) ($context['signed_in'] ?? false),
             'visitor_name' => $context['visitor_name'] ?? null,
             'customer_token' => $context['customer_token'] ?? null,
+            'voice_mode' => (bool) ($context['voice_mode'] ?? false),
         ];
     }
 
@@ -138,6 +139,10 @@ class HermesChatClient
         $lines[] = $signedIn
             ? 'The visitor is signed in on the website. Visitor name: '.((string) ($context['visitor_name'] ?? ''))
             : 'The visitor is not signed in. Ask for phone/email and password only when they need their account.';
+
+        if (! empty($context['voice_mode'])) {
+            $lines[] = 'Voice call mode: reply in one or two short spoken sentences only. No lists, no markdown links, no bullet points. Write numbers as words. Ask at most one question.';
+        }
 
         return [
             'role' => 'system',

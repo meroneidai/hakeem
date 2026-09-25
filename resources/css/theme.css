@@ -9,8 +9,32 @@
  */
 
 @theme {
-    --font-sans: 'IBM Plex Sans Arabic', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-    --font-display: 'Almarai', 'IBM Plex Sans Arabic', 'Inter', ui-sans-serif, system-ui, sans-serif;
+    /* Tajawal — primary Arabic typeface across the product. */
+    --font-sans: 'Tajawal', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-display: 'Tajawal', 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+    /* Slightly larger, more readable scale (especially on mobile Arabic). */
+    --text-xs: 0.8125rem;
+    --text-xs--line-height: 1.35rem;
+    --text-sm: 0.9375rem;
+    --text-sm--line-height: 1.5rem;
+    --text-base: 1.0625rem;
+    --text-base--line-height: 1.75rem;
+    --text-lg: 1.1875rem;
+    --text-lg--line-height: 1.85rem;
+    --text-xl: 1.375rem;
+    --text-xl--line-height: 1.95rem;
+    --text-2xl: 1.625rem;
+    --text-2xl--line-height: 2.15rem;
+    --text-3xl: 1.875rem;
+    --text-3xl--line-height: 2.35rem;
+    --text-4xl: 2.25rem;
+    --text-4xl--line-height: 2.65rem;
+
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 700;
+    --font-weight-bold: 800;
 
     --color-primary-50: #f1f6fa;
     --color-primary-100: #dde9f3;
@@ -54,6 +78,11 @@
     --color-warning-500: #d8a12a;
     --color-warning-700: #97701c;
 
+    /* Rating stars — warm gold on cards (doctor / clinic). */
+    --color-star-400: #fbbf24;
+    --color-star-500: #f59e0b;
+    --color-star-muted: #e5e7eb;
+
     --color-danger-50: #fdf1f1;
     --color-danger-500: #cf4a4a;
     --color-danger-700: #9a3131;
@@ -72,22 +101,78 @@
     html {
         -webkit-text-size-adjust: 100%;
         text-size-adjust: 100%;
+        font-size: 100%;
     }
 
     body {
         font-family: var(--font-sans);
+        font-size: var(--text-base);
+        font-weight: 500;
+        line-height: var(--text-base--line-height);
+        letter-spacing: 0;
         background-color: var(--color-ink-50);
         color: var(--color-ink-800);
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
     }
 
     h1, h2, h3, h4, h5 {
         font-family: var(--font-display);
-        letter-spacing: -0.015em;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+        color: var(--color-ink-900);
+        line-height: 1.35;
     }
 
-    /* Arabic renders noticeably better with slightly looser leading. */
-    [dir='rtl'] body {
+    h1 {
+        font-size: var(--text-2xl);
+        line-height: var(--text-2xl--line-height);
+    }
+
+    h2 {
+        font-size: var(--text-xl);
+        line-height: var(--text-xl--line-height);
+        font-weight: 700;
+    }
+
+    h3 {
+        font-size: var(--text-lg);
+        line-height: var(--text-lg--line-height);
+        font-weight: 700;
+    }
+
+    p {
         line-height: 1.75;
+    }
+
+    small,
+    .text-caption {
+        font-size: var(--text-sm);
+        font-weight: 500;
+        line-height: var(--text-sm--line-height);
+    }
+
+    strong,
+    b {
+        font-weight: 700;
+    }
+
+    label {
+        font-weight: 600;
+    }
+
+    button,
+    .btn,
+    [type='submit'] {
+        font-family: var(--font-sans);
+        font-weight: 700;
+    }
+
+    /* Arabic needs looser leading and zero tracking for clarity. */
+    [dir='rtl'] body {
+        line-height: 1.8;
+        letter-spacing: 0;
     }
 
     [dir='rtl'] h1,
@@ -96,10 +181,12 @@
     [dir='rtl'] h4,
     [dir='rtl'] h5 {
         letter-spacing: 0;
+        line-height: 1.45;
     }
 
     [dir='rtl'] .tabular {
         font-feature-settings: 'tnum';
+        font-variant-numeric: tabular-nums;
     }
 
     [x-cloak] {
@@ -111,7 +198,7 @@
      */
     body.theme-v2 {
         --font-sans: 'Tajawal', 'Inter', ui-sans-serif, system-ui, sans-serif;
-        --font-display: 'Tajawal', 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+        --font-display: 'Tajawal', 'Inter', ui-sans-serif, system-ui, sans-serif;
         --color-primary-50: #eff6ff;
         --color-primary-100: #dbeafe;
         --color-primary-200: #bfdbfe;
@@ -155,13 +242,30 @@
         --radius-card: 20px;
         --shadow-card: 0 4px 20px rgb(15 42 95 / 0.06);
         font-family: var(--font-sans);
+        font-size: var(--text-base);
+        font-weight: 500;
+        line-height: 1.8;
         background-color: #f8fafc;
         color: #0f172a;
     }
 
+    /* English keeps Inter for Latin glyphs; Tajawal still covers Arabic snippets. */
     html[lang='en'] body.theme-v2 {
         --font-sans: 'Inter', 'Tajawal', ui-sans-serif, system-ui, sans-serif;
-        --font-display: 'Plus Jakarta Sans', 'Inter', ui-sans-serif, system-ui, sans-serif;
+        --font-display: 'Inter', 'Tajawal', ui-sans-serif, system-ui, sans-serif;
+        font-weight: 400;
+        line-height: 1.65;
+        letter-spacing: -0.011em;
+    }
+
+    html[lang='en'] body.theme-v2 h1,
+    html[lang='en'] body.theme-v2 h2,
+    html[lang='en'] body.theme-v2 h3,
+    html[lang='en'] body.theme-v2 h4,
+    html[lang='en'] body.theme-v2 h5 {
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1.25;
     }
 
     body.theme-v2 h1,
@@ -176,13 +280,32 @@
         border-radius: 12px;
     }
 
+    /* Nav / dock labels stay legible without looking sparse. */
+    body.theme-v2 .mobile-dock {
+        font-weight: 600;
+    }
+
+    body.theme-v2 .field-input,
+    body.theme-v2 input,
+    body.theme-v2 select,
+    body.theme-v2 textarea {
+        font-family: var(--font-sans);
+        font-weight: 500;
+    }
+
     /*
      * Phone shell: keep the public site stable like a mini-SPA / webview
      * (no rubber-band jump, no focus zoom cascade, safe-area for the dock).
      */
+    html {
+        overflow-x: clip;
+    }
+
     body.theme-v2 {
         overscroll-behavior-y: none;
         touch-action: manipulation;
+        overflow-x: clip;
+        min-height: 100dvh;
     }
 
     body.app-sheet-open {
@@ -193,6 +316,17 @@
     body.app-sheet-open .mobile-dock {
         visibility: hidden;
         pointer-events: none;
+    }
+
+    /* Side menu: freeze page scroll; keep bottom dock tappable to toggle close. */
+    body.menu-open {
+        overflow: hidden;
+        overscroll-behavior: none;
+        touch-action: none;
+    }
+
+    body.menu-open .mobile-menu-panel {
+        touch-action: pan-y;
     }
 
     .app-sheet {
@@ -233,11 +367,42 @@
 
     @media (max-width: 639px) {
         .hero-stage {
-            padding-block: 1.75rem 2.5rem;
+            padding-block: 1.25rem 1.75rem;
+            overflow-x: clip;
         }
 
         .hero-search-scene {
             display: none;
+        }
+
+        /*
+         * Mobile results are positioned with visualViewport (fixed) in JS so they
+         * stay inside the screen above the dock / keyboard — do not expand the page.
+         */
+        .hero-search-results {
+            position: fixed;
+            inset-inline: 0.75rem;
+            top: auto;
+            max-height: min(40dvh, 14rem);
+            box-shadow: 0 16px 40px rgb(15 42 95 / 0.18);
+        }
+    }
+
+    /* iPhone SE / mini denser chrome */
+    @media (max-width: 390px) {
+        .hero-stage {
+            padding-block: 1rem 1.35rem;
+            padding-inline: 0.85rem;
+        }
+
+        .mobile-dock {
+            inset-inline: 0.4rem;
+            bottom: 0.4rem;
+        }
+
+        .mobile-dock .dock-label {
+            font-size: 0.5625rem;
+            letter-spacing: 0;
         }
     }
 }
@@ -521,9 +686,11 @@
     border-radius: 0.625rem;
     border: 1px solid var(--color-ink-300);
     background-color: white;
-    padding: 0.5rem 0.75rem;
+    padding: 0.625rem 0.875rem;
     /* 16px minimum — iOS Safari zooms the page when focused inputs are smaller. */
     font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.5;
     color: var(--color-ink-900);
     touch-action: manipulation;
 }
@@ -546,6 +713,169 @@
     color: var(--color-ink-700);
 }
 
+/*
+ * Mobile horizontal rails: exactly 2 tiles on phones (no 3rd peek).
+ * home-rail-pages: full-width specialty pages (2×3 grid).
+ * Desktop falls back to a normal grid.
+ */
+@utility home-rail {
+    display: flex;
+    gap: 0.75rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 0.25rem;
+    padding-block: 0.15rem 0.4rem;
+    -webkit-overflow-scrolling: touch;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.home-rail::-webkit-scrollbar {
+    display: none;
+}
+
+.home-rail > * {
+    flex: 0 0 calc((100% - 0.75rem) / 2);
+    scroll-snap-align: start;
+    min-width: 0;
+    height: auto;
+    align-self: stretch;
+}
+
+.home-rail-pages > * {
+    flex-basis: 100%;
+}
+
+.home-rail-page {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(3, auto);
+    gap: 0.625rem;
+    align-content: start;
+}
+
+.home-rail-specialty {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 0.625rem;
+    overflow: hidden;
+    border-radius: 0.875rem;
+    border: 1px solid var(--color-ink-200);
+    background: #fff;
+    padding: 0.625rem;
+    transition: border-color 0.15s ease;
+}
+
+.home-rail-specialty:hover {
+    border-color: var(--color-primary-300);
+}
+
+.home-rail-specialty__media {
+    width: 2.75rem;
+    height: 2.75rem;
+    flex-shrink: 0;
+    border-radius: 0.625rem;
+}
+
+.home-rail-specialty__body {
+    min-width: 0;
+    flex: 1;
+    text-align: start;
+}
+
+.home-rail-specialty__name {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--color-ink-900);
+}
+
+.home-rail-specialty__meta {
+    display: block;
+    margin-top: 0.125rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.6875rem;
+    line-height: 1.3;
+    color: var(--color-ink-500);
+}
+
+@media (min-width: 390px) {
+    .home-rail-page {
+        gap: 0.75rem;
+    }
+
+    .home-rail-specialty {
+        gap: 0.75rem;
+        padding: 0.75rem;
+        border-radius: 1rem;
+    }
+
+    .home-rail-specialty__media {
+        width: 3.25rem;
+        height: 3.25rem;
+        border-radius: 0.75rem;
+    }
+
+    .home-rail-specialty__name {
+        font-size: 0.875rem;
+    }
+
+    .home-rail-specialty__meta {
+        font-size: 0.75rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .home-rail {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        overflow: visible;
+        scroll-snap-type: none;
+        padding-block: 0;
+    }
+
+    .home-rail > * {
+        flex: unset;
+        min-width: 0;
+        width: auto;
+    }
+
+    .home-rail-page {
+        display: contents;
+    }
+}
+
+@media (min-width: 1024px) {
+    .home-rail {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .home-rail-4 {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+.home-rail-bleed {
+    margin-inline: -0.75rem;
+    padding-inline: 0.75rem;
+}
+
+@media (min-width: 768px) {
+    .home-rail-bleed {
+        margin-inline: 0;
+        padding-inline: 0;
+    }
+}
+
+
 .rich-toolbar-btn:hover {
     background-color: white;
     color: var(--color-primary-800);
@@ -553,21 +883,23 @@
 
 .rich-content h2 {
     margin: 1.25rem 0 0.5rem;
-    font-size: 1.15rem;
-    font-weight: 700;
+    font-size: 1.25rem;
+    font-weight: 800;
     color: var(--color-ink-900);
 }
 
 .rich-content h3,
 .rich-content h4 {
     margin: 1rem 0 0.4rem;
-    font-size: 1.05rem;
-    font-weight: 600;
+    font-size: 1.125rem;
+    font-weight: 700;
     color: var(--color-ink-900);
 }
 
 .rich-content p {
     margin-bottom: 0.75rem;
+    font-weight: 500;
+    line-height: 1.8;
 }
 
 .rich-content ul,

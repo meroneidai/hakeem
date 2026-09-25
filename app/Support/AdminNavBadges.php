@@ -10,6 +10,7 @@ use App\Models\Booking;
 use App\Models\Clinic;
 use App\Models\Promotion;
 use App\Models\SupportTicket;
+use Illuminate\Support\Facades\Schema;
 
 final class AdminNavBadges
 {
@@ -20,16 +21,28 @@ final class AdminNavBadges
      */
     public function all(): array
     {
-        return [
-            'bookings' => Booking::query()->where('status', BookingStatus::Pending)->count(),
-            'promotions' => Promotion::query()->where('approval_status', OfferApprovalStatus::Pending)->count(),
-            'support' => SupportTicket::unresolved()->count(),
-            'agent' => AgentConversation::query()
-                ->where(function ($query) {
+        $promotionsPending = 0;
+        if (Schema::hasColumn((new Promotion)->getTable(), 'approval_status')) {
+            $promotionsPending = Promotion::query()->where('approval_status', OfferApprovalStatus::Pending)->count();
+        }
+
+        $agentUnread = 0;
+        if (Schema::hasTable('agent_conversations')) {
+            $agentQuery = AgentConversation::query();
+            if (Schema::hasColumn('agent_conversations', 'admin_seen_at')) {
+                $agentQuery->where(function ($query) {
                     $query->whereNull('admin_seen_at')
                         ->orWhereColumn('last_message_at', '>', 'admin_seen_at');
-                })
-                ->count(),
+                });
+            }
+            $agentUnread = $agentQuery->count();
+        }
+
+        return [
+            'bookings' => Booking::query()->where('status', BookingStatus::Pending)->count(),
+            'promotions' => $promotionsPending,
+            'support' => SupportTicket::unresolved()->count(),
+            'agent' => $agentUnread,
             'clinics' => Clinic::query()->where('verification_status', VerificationStatus::Pending)->count(),
         ];
     }

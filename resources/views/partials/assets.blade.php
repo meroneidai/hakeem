@@ -1,5 +1,6 @@
 <link rel="preconnect" href="https://fonts.bunny.net">
-<link href="https://fonts.bunny.net/css?family=almarai:400,700,800|ibm-plex-sans-arabic:400,500,600,700|inter:400,500,600,700|tajawal:400,500,700,800|plus-jakarta-sans:500,600,700&display=swap" rel="stylesheet">
+{{-- Tajawal for Arabic UI; Inter kept as Latin fallback for English pages. --}}
+<link href="https://fonts.bunny.net/css?family=tajawal:400,500,600,700,800|inter:400,500,600,700&display=swap" rel="stylesheet">
 
 @if (file_exists(public_path('build/manifest.json')))
     @vite(['resources/css/app.css', 'resources/js/app.js'])

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Schema;
 
 #[Fillable([
     'clinic_id', 'title_ar', 'title_en', 'slug', 'category', 'description_ar', 'description_en',
@@ -134,14 +135,21 @@ class Promotion extends Model
 
     public function scopeRunning(Builder $query): Builder
     {
-        return $query->where('approval_status', OfferApprovalStatus::Approved)
-            ->where('is_active', true)
+        if (Schema::hasColumn($query->getModel()->getTable(), 'approval_status')) {
+            $query->where('approval_status', OfferApprovalStatus::Approved);
+        }
+
+        return $query->where('is_active', true)
             ->where('starts_at', '<=', now())
             ->where('ends_at', '>=', now());
     }
 
     public function scopePendingApproval(Builder $query): Builder
     {
+        if (! Schema::hasColumn($query->getModel()->getTable(), 'approval_status')) {
+            return $query->whereRaw('0 = 1');
+        }
+
         return $query->where('approval_status', OfferApprovalStatus::Pending);
     }
 

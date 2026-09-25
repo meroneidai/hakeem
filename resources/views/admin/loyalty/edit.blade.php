@@ -26,7 +26,11 @@
         </x-card>
         <x-card :title="__('admin.loyalty.campaign_status')">
             @if ($campaign)
-                <p class="text-sm font-semibold text-success-700">{{ __('admin.loyalty.campaign_live') }}</p>
+                @if ($campaign['banner'] ?? true)
+                    <p class="text-sm font-semibold text-success-700">{{ __('admin.loyalty.campaign_live') }}</p>
+                @else
+                    <p class="text-sm font-semibold text-warning-700">{{ __('admin.loyalty.campaign_live_hidden') }}</p>
+                @endif
                 <p class="mt-1 text-sm text-ink-600">{{ $campaign['headline'] }}</p>
                 <p class="mt-1 text-xs text-ink-500">{{ $campaign['body'] }}</p>
             @else
@@ -56,6 +60,9 @@
                 <x-checkbox name="loyalty[signup_bonus_enabled]" :label="__('admin.loyalty.signup_enabled')"
                             :checked="(bool) $values['loyalty.signup_bonus_enabled']"
                             :hint="__('admin.loyalty.signup_hint')"/>
+                <x-checkbox name="loyalty[signup_banner_enabled]" :label="__('admin.loyalty.signup_banner_enabled')"
+                            :checked="(bool) ($values['loyalty.signup_banner_enabled'] ?? true)"
+                            :hint="__('admin.loyalty.signup_banner_hint')"/>
                 <x-field :label="__('admin.loyalty.signup_amount')" name="loyalty.signup_bonus_amount" required>
                     <x-input name="loyalty[signup_bonus_amount]" type="number" min="0" step="1"
                              :value="$values['loyalty.signup_bonus_amount']" dir="ltr"/>

@@ -7,27 +7,27 @@
         </x-slot:crumbs>
     </x-catalog-hero>
 
-    <div class="mx-auto max-w-2xl px-4 py-8">
-
-        <x-card class="mb-4">
-            <div class="flex items-center gap-3">
+    <div class="mx-auto max-w-3xl px-3 py-6 min-[390px]:px-4 sm:py-10">
+        <div class="mb-5 overflow-hidden rounded-[1.5rem] bg-white shadow-sm ring-1 ring-ink-100">
+            <div class="flex items-center gap-3 bg-gradient-to-l from-primary-50 to-white p-4 sm:p-5">
                 <x-media
                     :src="\App\Support\PublicImage::url($doctor->profile_photo_path)"
                     :alt="$doctor->name"
-                    class="size-14 rounded-2xl"
+                    class="size-16 rounded-2xl ring-2 ring-white"
                 />
-                <div>
+                <div class="min-w-0 text-start">
                     <p class="font-semibold text-ink-900">{{ $doctor->name }}</p>
                     <p class="text-sm text-ink-500">{{ $doctor->specialty?->name }}</p>
+                    <x-rating class="mt-1" :average="$doctor->ratingAverage()" :count="$doctor->ratingCount()"/>
                 </div>
             </div>
-        </x-card>
+        </div>
 
-        <x-card>
+        <div class="overflow-hidden rounded-[1.5rem] bg-white shadow-[0_12px_40px_rgba(15,42,95,0.08)] ring-1 ring-ink-100">
             <form
                 method="POST"
                 action="{{ route('book.doctors.store', $doctor) }}"
-                class="space-y-6"
+                class="divide-y divide-ink-100"
                 @day-changed="selected = ''; load()"
                 x-data="{
                     address: @js((string) old('clinic_address_id', $addresses->first()?->id)),
@@ -103,8 +103,11 @@
             >
                 @csrf
 
-                <section class="space-y-3">
-                    <p class="text-xs font-semibold uppercase tracking-wide text-ink-400">{{ __('booking.steps.service') }}</p>
+                <section class="space-y-3 p-4 sm:p-6">
+                    <p class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-ink-400">
+                        <span class="grid size-6 place-items-center rounded-full bg-primary-600 text-[11px] font-bold text-white">1</span>
+                        {{ __('booking.steps.service') }}
+                    </p>
                     <x-field :label="__('booking.service')" name="service_type_id" required>
                         <x-select
                             name="service_type_id"
@@ -115,12 +118,15 @@
                             @change="duration = null; selected = ''; load()"
                         />
                     </x-field>
-                    <p class="text-sm font-medium text-primary-700" x-show="durationLabel" x-text="durationLabel"></p>
+                    <p class="rounded-xl bg-primary-50 px-3 py-2 text-sm font-medium text-primary-700" x-show="durationLabel" x-text="durationLabel"></p>
                 </section>
 
-                <section class="space-y-3">
+                <section class="space-y-3 p-4 sm:p-6">
                     <div>
-                        <p class="text-xs font-semibold uppercase tracking-wide text-ink-400">{{ __('booking.steps.location') }}</p>
+                        <p class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-ink-400">
+                            <span class="grid size-6 place-items-center rounded-full bg-primary-600 text-[11px] font-bold text-white">2</span>
+                            {{ __('booking.steps.location') }}
+                        </p>
                         <p class="mt-1 text-sm text-ink-500">{{ __('booking.branch_hint') }}</p>
                     </div>
 
@@ -130,7 +136,7 @@
                         <div class="space-y-2" role="radiogroup" aria-label="{{ __('booking.branch') }}">
                             @foreach ($addresses as $address)
                                 <label
-                                    class="flex cursor-pointer gap-3 rounded-2xl border p-3 transition"
+                                    class="flex cursor-pointer gap-3 rounded-2xl border p-3.5 transition"
                                     :class="address === @js((string) $address->id)
                                         ? 'border-primary-400 bg-primary-50 ring-1 ring-primary-200'
                                         : 'border-ink-200 bg-white hover:border-primary-200'"
@@ -144,7 +150,7 @@
                                         @change="duration = null; selected = ''; load()"
                                         @checked((string) old('clinic_address_id', $addresses->first()?->id) === (string) $address->id)
                                     >
-                                    <span class="min-w-0 flex-1">
+                                    <span class="min-w-0 flex-1 text-start">
                                         <span class="block font-semibold text-ink-900">
                                             {{ $address->clinic?->name }}
                                             <span class="font-normal text-ink-500">· {{ $address->displayName() }}</span>
@@ -165,9 +171,12 @@
                     @endif
                 </section>
 
-                <section class="space-y-3">
+                <section class="space-y-3 p-4 sm:p-6">
                     <div>
-                        <p class="text-xs font-semibold uppercase tracking-wide text-ink-400">{{ __('booking.steps.when') }}</p>
+                        <p class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-ink-400">
+                            <span class="grid size-6 place-items-center rounded-full bg-primary-600 text-[11px] font-bold text-white">3</span>
+                            {{ __('booking.steps.when') }}
+                        </p>
                         <p class="mt-1 text-sm text-ink-500">{{ __('booking.when_hint') }}</p>
                     </div>
 
@@ -180,7 +189,7 @@
                             <template x-for="slot in slots" :key="slot.starts_at">
                                 <button
                                     type="button"
-                                    class="rounded-full px-3 py-1.5 text-sm ring-1 transition"
+                                    class="rounded-full px-3.5 py-2 text-sm font-medium ring-1 transition"
                                     :class="selected === slot.starts_at ? 'bg-primary-600 text-white ring-primary-600' : 'bg-white text-ink-700 ring-ink-200 hover:ring-primary-300'"
                                     @click="selected = slot.starts_at"
                                     x-text="slot.label"
@@ -203,7 +212,7 @@
                     <div
                         x-cloak
                         x-show="selected"
-                        class="rounded-2xl border border-success-200 bg-success-50 px-3 py-2 text-sm text-success-900"
+                        class="rounded-2xl border border-success-200 bg-success-50 px-3 py-2.5 text-sm text-success-900"
                     >
                         <span class="font-medium">{{ __('booking.selected_slot') }}:</span>
                         <span class="tabular" x-text="selectedLabel"></span>
@@ -211,37 +220,46 @@
                     </div>
                 </section>
 
-                @if (($maxSessions ?? 1) > 1 || ($requiresEvaluation ?? false))
-                    <x-field :label="__('booking.sessions')" name="session_count" :hint="__('booking.sessions_hint')">
-                        <x-input type="number" name="session_count" min="1" max="30" :value="old('session_count', 1)" dir="ltr"/>
+                <section class="space-y-4 p-4 sm:p-6">
+                    <p class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-ink-400">
+                        <span class="grid size-6 place-items-center rounded-full bg-accent-500 text-[11px] font-bold text-white">4</span>
+                        {{ __('booking.payment') }}
+                    </p>
+
+                    @if (($maxSessions ?? 1) > 1 || ($requiresEvaluation ?? false))
+                        <x-field :label="__('booking.sessions')" name="session_count" :hint="__('booking.sessions_hint')">
+                            <x-input type="number" name="session_count" min="1" max="30" :value="old('session_count', 1)" dir="ltr"/>
+                        </x-field>
+                    @endif
+
+                    @if ($requiresEvaluation ?? false)
+                        <p class="text-xs text-ink-500">{{ __('booking.evaluation_gate_hint') }}</p>
+                    @endif
+
+                    @include('bookings._payment_modes', ['filterPaymentsByService' => true])
+
+                    <div x-show="needsHome" x-cloak>
+                        <x-field :label="__('booking.home_address')" name="patient_home_address" :required="true">
+                            <x-input name="patient_home_address" :value="old('patient_home_address')" maxlength="255"/>
+                        </x-field>
+                    </div>
+
+                    <x-field :label="__('booking.notes')" name="notes">
+                        <x-textarea name="notes" rows="3"/>
                     </x-field>
-                @endif
 
-                @if ($requiresEvaluation ?? false)
-                    <p class="text-xs text-ink-500">{{ __('booking.evaluation_gate_hint') }}</p>
-                @endif
-
-                @include('bookings._payment_modes', ['filterPaymentsByService' => true])
-
-                <div x-show="needsHome" x-cloak>
-                    <x-field :label="__('booking.home_address')" name="patient_home_address" :required="true">
-                        <x-input name="patient_home_address" :value="old('patient_home_address')" maxlength="255"/>
-                    </x-field>
-                </div>
-
-                <x-field :label="__('booking.notes')" name="notes">
-                    <x-textarea name="notes" rows="3"/>
-                </x-field>
-
-                <x-button
-                    variant="accent"
-                    class="w-full"
-                    x-bind:disabled="! selected || ! address || ! service"
-                >
-                    {{ __('booking.submit') }}
-                </x-button>
-                <p class="text-center text-xs text-ink-400" x-show="! selected">{{ __('booking.select_slot_first') }}</p>
+                    <x-button
+                        variant="accent"
+                        class="w-full"
+                        size="lg"
+                        x-bind:disabled="! selected || ! address || ! service"
+                    >
+                        <x-icon name="calendar" class="size-4"/>
+                        {{ __('booking.submit') }}
+                    </x-button>
+                    <p class="text-center text-xs text-ink-400" x-show="! selected">{{ __('booking.select_slot_first') }}</p>
+                </section>
             </form>
-        </x-card>
+        </div>
     </div>
 </x-layouts.public>

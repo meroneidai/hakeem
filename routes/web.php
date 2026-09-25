@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin;
+use App\Http\Controllers\AgentSpeechController;
 use App\Http\Controllers\Api\V1\AgentController;
 use App\Http\Controllers\Api\V1\SlotController;
 use App\Http\Controllers\AppointmentController;
@@ -53,6 +54,9 @@ Route::get('.well-known/hakeem-app-links.json', [DeeplinkController::class, 'app
 Route::post('agent/messages', [AgentController::class, 'store'])
     ->middleware('throttle:20,1')
     ->name('agent.messages');
+Route::post('agent/speech', AgentSpeechController::class)
+    ->middleware('throttle:20,1')
+    ->name('agent.speech');
 
 Route::get('doctors', [DoctorDirectoryController::class, 'index'])->name('doctors.index');
 Route::get('doctors/{doctor:slug}/slots', SlotController::class)->name('doctors.slots');
@@ -212,6 +216,7 @@ Route::middleware(['auth', 'internal-staff'])
         // Operations
         Route::get('bookings', [Admin\BookingController::class, 'index'])->name('bookings.index');
         Route::get('bookings/create', [Admin\BookingController::class, 'create'])->name('bookings.create');
+        Route::get('bookings/patients/lookup', [Admin\BookingController::class, 'lookupPatient'])->name('bookings.patients.lookup');
         Route::post('bookings', [Admin\BookingController::class, 'store'])->name('bookings.store');
         Route::get('bookings/{booking}', [Admin\BookingController::class, 'show'])->name('bookings.show');
         Route::put('bookings/{booking}', [Admin\BookingController::class, 'update'])->name('bookings.update');
